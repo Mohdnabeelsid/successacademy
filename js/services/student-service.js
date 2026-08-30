@@ -40,6 +40,9 @@ async function createAuthUserSecondary(email, password) {
     if (error.message.includes("User already registered") || error.message.includes("already exists")) {
       throw new Error(`The login account "${email}" already exists in Supabase Auth. Please remove this email from Supabase Dashboard (Authentication → Users) before creating this student again.`);
     }
+    if (error.message.includes("rate limit") || error.status === 429 || error.code === "over_email_send_rate_limit") {
+      throw new Error(`Supabase Email Rate Limit Exceeded. Please turn OFF 'Confirm email' in Supabase Dashboard (Authentication ➔ Providers ➔ Email ➔ Confirm email = OFF) to allow instant student imports.`);
+    }
     throw error;
   }
 
@@ -176,12 +179,16 @@ export async function bulkImportStudents(rows, defaultBranch = "MAN") {
       });
       results.success++;
 
-      // Small delay between signups to avoid hitting auth rate limits
+      // Small delay between signups to avoid rate limiting
       if (i < rows.length - 1) {
-        await new Promise((res) => setTimeout(res, 150));
+        await new Promise((res) => setTimeout(res, 200));
       }
     } catch (err) {
       results.failed.push({ row, error: err.message });
+      // If we hit email rate limit, stop the loop immediately so the error message is displayed
+      if (err.message.includes("Confirm email") || err.message.includes("Rate Limit")) {
+        break;
+      }
     }
   }
   return results;
