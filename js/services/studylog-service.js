@@ -1,5 +1,6 @@
 // ==========================================================================
 // STUDY LOG SERVICE — SUPABASE
+// Logs are auto-approved on submission. No admin approval needed.
 // ==========================================================================
 
 import { TABLES } from "../config/supabase-config.js";
@@ -32,7 +33,8 @@ export async function addStudyLog(studentId, log) {
     durationMinutes: Number(log.durationMinutes),
     chapter: log.chapter || "",
     notes: log.notes || "",
-    status: log.status || LOG_STATUS.PENDING,
+    // Always auto-approved on submission
+    status: LOG_STATUS.APPROVED,
     adminComment: log.adminComment || ""
   });
 }
@@ -47,30 +49,21 @@ export async function getAllLogs(max = 500) {
   return getAllRows(TABLES.STUDY_LOGS, { orderByField: "date", direction: "desc", max });
 }
 
-export async function getPendingLogs() {
-  const logs = await getRowsWhere(TABLES.STUDY_LOGS, "status", "==", LOG_STATUS.PENDING);
-  logs.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-  return logs;
-}
-
-export async function updateLogStatus(logId, status, adminComment = "") {
-  return updateRowById(TABLES.STUDY_LOGS, logId, { status, adminComment });
-}
-
 export async function deleteLog(logId) {
   return deleteRowById(TABLES.STUDY_LOGS, logId);
 }
 
-/** Calculates current daily streak (consecutive days with at least one approved log). */
+/** Calculates current daily streak (consecutive days with at least one log). */
 export function calcStreak(logs) {
-  const approvedDates = new Set(
-    logs.filter((l) => l.status === LOG_STATUS.APPROVED).map((l) => l.date)
+  // Count all submitted logs (no approval required)
+  const logDates = new Set(
+    logs.filter((l) => Number(l.durationMinutes) > 0).map((l) => l.date)
   );
   let streak = 0;
   let cursor = new Date();
   while (true) {
     const iso = cursor.toISOString().slice(0, 10);
-    if (approvedDates.has(iso)) {
+    if (logDates.has(iso)) {
       streak++;
       cursor.setDate(cursor.getDate() - 1);
     } else {
@@ -82,7 +75,7 @@ export function calcStreak(logs) {
 
 function minutesInRange(logs, startDate, endDate) {
   return logs
-    .filter((l) => l.status === LOG_STATUS.APPROVED && l.date >= startDate && l.date <= endDate)
+    .filter((l) => Number(l.durationMinutes) > 0 && l.date >= startDate && l.date <= endDate)
     .reduce((sum, l) => sum + (Number(l.durationMinutes) || 0), 0);
 }
 
@@ -104,12 +97,12 @@ export function calcMonthlyHours(logs) {
 
 export function calcTotalHours(logs) {
   const mins = logs
-    .filter((l) => l.status === LOG_STATUS.APPROVED)
+    .filter((l) => Number(l.durationMinutes) > 0)
     .reduce((s, l) => s + (Number(l.durationMinutes) || 0), 0);
   return +(mins / 60).toFixed(1);
 }
 
-/** Builds a Set of ISO date strings that have an approved log — for calendar rendering. */
+/** Builds a Set of ISO date strings that have a submitted log — for calendar rendering. */
 export function loggedDateSet(logs) {
-  return new Set(logs.filter((l) => l.status === LOG_STATUS.APPROVED).map((l) => l.date));
+  return new Set(logs.filter((l) => Number(l.durationMinutes) > 0).map((l) => l.date));
 }

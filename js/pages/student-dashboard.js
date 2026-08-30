@@ -47,6 +47,42 @@ let student;
   document.getElementById("close-log-modal").addEventListener("click", () => modal.classList.remove("active"));
   modal.addEventListener("click", (e) => { if (e.target === modal) modal.classList.remove("active"); });
 
+  // Leave / Inability to study modal wiring
+  const leaveModal = document.getElementById("leave-modal");
+  const openLeaveBtn = document.getElementById("open-leave-modal");
+  const closeLeaveBtn = document.getElementById("close-leave-modal");
+  if (openLeaveBtn && leaveModal) {
+    document.getElementById("leave-date").value = new Date().toISOString().slice(0, 10);
+    openLeaveBtn.addEventListener("click", () => leaveModal.classList.add("active"));
+    closeLeaveBtn?.addEventListener("click", () => leaveModal.classList.remove("active"));
+    leaveModal.addEventListener("click", (e) => { if (e.target === leaveModal) leaveModal.classList.remove("active"); });
+
+    document.getElementById("leave-form")?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = e.target.querySelector("button[type=submit]");
+      btn.disabled = true;
+      try {
+        await addStudyLog(student.id, {
+          date: document.getElementById("leave-date").value,
+          subject: "⚠️ Inability to Study / Leave",
+          durationMinutes: 0,
+          chapter: document.getElementById("leave-reason").value,
+          notes: document.getElementById("leave-notes").value,
+          status: "Approved"
+        });
+        toast.success("Inability to study reported successfully.");
+        leaveModal.classList.remove("active");
+        e.target.reset();
+        document.getElementById("leave-date").value = new Date().toISOString().slice(0, 10);
+        await refreshData();
+      } catch (err) {
+        toast.error(err.message || "Could not submit report.");
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  }
+
   document.getElementById("log-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const btn = e.target.querySelector("button[type=submit]");
@@ -64,7 +100,7 @@ let student;
         chapter: document.getElementById("log-chapter").value,
         notes: document.getElementById("log-notes").value
       });
-      toast.success("Study log submitted for review.");
+      toast.success("Study log submitted and counted!");
       modal.classList.remove("active");
       e.target.reset();
       document.getElementById("log-date").value = new Date().toISOString().slice(0, 10);
@@ -94,16 +130,23 @@ async function refreshData() {
   recentEl.innerHTML = recent.length
     ? recent
         .map((l) => {
-          const badge =
-            l.status === LOG_STATUS.APPROVED
-              ? '<span class="badge badge-success">Approved</span>'
-              : l.status === LOG_STATUS.CORRECTION
-              ? '<span class="badge badge-danger">Needs Correction</span>'
-              : '<span class="badge badge-warning">Pending</span>';
+          const isLeave = Number(l.durationMinutes) === 0 || (l.subject && l.subject.includes("Leave"));
+          const badge = isLeave
+            ? '<span class="badge badge-warning" style="background:#FFFBEB; color:#D97706; border:1px solid #FCD34D;">Leave / No Study</span>'
+            : '<span class="badge badge-success">Logged ✓</span>';
+
+          const title = isLeave
+            ? `⚠️ ${l.chapter || "Inability Reported"}`
+            : `${l.subject} · ${l.durationMinutes} min`;
+
+          const subtitle = isLeave
+            ? `${l.date}${l.notes ? " · " + l.notes : ""}`
+            : `${l.date}${l.chapter ? " · " + l.chapter : ""}`;
+
           return `<div class="flex items-center justify-between" style="padding:10px 0;border-bottom:1px solid var(--c-border);">
             <div>
-              <div style="font-size:var(--fs-sm);font-weight:600;">${l.subject} · ${l.durationMinutes} min</div>
-              <div style="font-size:var(--fs-xs);color:var(--c-slate-500);">${l.date}${l.chapter ? " · " + l.chapter : ""}</div>
+              <div style="font-size:var(--fs-sm);font-weight:600;">${title}</div>
+              <div style="font-size:var(--fs-xs);color:var(--c-slate-500);">${subtitle}</div>
             </div>
             ${badge}
           </div>`;

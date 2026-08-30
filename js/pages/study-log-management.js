@@ -1,11 +1,11 @@
 import { requireAuth } from "../services/auth-service.js";
 import { renderSidebar } from "../components/sidebar.js";
 import { toast } from "../components/toast.js";
-import { getAllLogs, updateLogStatus, LOG_STATUS, addStudyLog } from "../services/studylog-service.js";
+import { getAllLogs, deleteLog, LOG_STATUS, addStudyLog } from "../services/studylog-service.js";
 import { listStudents } from "../services/student-service.js";
 import { getSubjectsForClass } from "../services/subject-service.js";
 
-let admin, allLogs = [], studentMap = {}, activeStatus = "Pending";
+let admin, allLogs = [], studentMap = {}, activeFilter = "All";
 
 (async function init() {
   admin = await requireAuth("admin", "admin-login.html");
@@ -15,15 +15,17 @@ let admin, allLogs = [], studentMap = {}, activeStatus = "Pending";
   allLogs = logs;
   studentMap = Object.fromEntries(students.map((s) => [s.id, s]));
 
-  // Populate student select for admin log creation modal
+  // Populate student selects for admin modals
   const studentSelect = document.getElementById("admin-log-student");
-  if (studentSelect) {
-    studentSelect.innerHTML = '<option value="">Select student</option>' +
-      students
-        .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
-        .map((s) => `<option value="${s.id}">${s.name} (${s.admissionNumber})</option>`)
-        .join("");
-  }
+  const leaveStudentSelect = document.getElementById("admin-leave-student");
+  const studentOpts = '<option value="">Select student</option>' +
+    students
+      .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+      .map((s) => `<option value="${s.id}">${s.name} (${s.admissionNumber})</option>`)
+      .join("");
+
+  if (studentSelect) studentSelect.innerHTML = studentOpts;
+  if (leaveStudentSelect) leaveStudentSelect.innerHTML = studentOpts;
 
   render();
   document.getElementById("page-loader").classList.add("done");
@@ -31,40 +33,39 @@ let admin, allLogs = [], studentMap = {}, activeStatus = "Pending";
 })();
 
 function render() {
-  const filtered = activeStatus === "All" ? allLogs : allLogs.filter((l) => l.status === activeStatus);
+  const filtered = activeFilter === "All"
+    ? allLogs
+    : allLogs.filter((l) => Number(l.durationMinutes) === 0 || (l.subject && l.subject.includes("Leave")));
+
   const body = document.getElementById("logs-body");
 
   if (!filtered.length) {
-    body.innerHTML = `<tr><td colspan="7"><div class="empty-state"><h4>Nothing here</h4>No logs in this category.</div></td></tr>`;
+    body.innerHTML = `<tr><td colspan="7"><div class="empty-state"><h4>Nothing here</h4>No logs found.</div></td></tr>`;
     return;
   }
 
   body.innerHTML = filtered
     .map((l) => {
       const s = studentMap[l.studentId];
-      const badge =
-        l.status === LOG_STATUS.APPROVED
-          ? '<span class="badge badge-success">Approved</span>'
-          : l.status === LOG_STATUS.CORRECTION
-          ? '<span class="badge badge-danger">Needs Correction</span>'
-          : '<span class="badge badge-warning">Pending</span>';
+      const isLeave = Number(l.durationMinutes) === 0 || (l.subject && l.subject.includes("Leave"));
 
-      const actions =
-        l.status === LOG_STATUS.PENDING
-          ? `<div class="flex gap-2">
-              <button class="btn btn-primary btn-sm" data-approve="${l.id}">Approve</button>
-              <button class="btn btn-ghost btn-sm" data-correct="${l.id}">Request Correction</button>
-              <button class="btn btn-ghost btn-sm" data-reject="${l.id}" style="color:var(--c-danger);">Reject</button>
-            </div>`
-          : `<span style="font-size:var(--fs-xs);color:var(--c-slate-500);">${l.adminComment || "—"}</span>`;
+      const typeBadge = isLeave
+        ? '<span class="badge badge-warning" style="background:#FFFBEB; color:#D97706; border:1px solid #FCD34D;">⚠️ Leave / No Study</span>'
+        : '<span class="badge badge-success">✓ Logged</span>';
+
+      const subject = isLeave ? `⚠️ ${l.chapter || "Inability Reported"}` : l.subject;
+      const chapterNotes = isLeave ? (l.notes || "—") : (l.chapter || "—");
+      const duration = isLeave ? "—" : `${l.durationMinutes} min`;
+
+      const actions = `<button class="btn btn-ghost btn-sm" data-delete="${l.id}" style="color:var(--c-danger);">Delete</button>`;
 
       return `<tr>
         <td>${s ? s.name : "Unknown"}</td>
         <td>${l.date}</td>
-        <td>${l.subject}</td>
-        <td>${l.chapter || "—"}</td>
-        <td>${l.durationMinutes} min</td>
-        <td>${badge}</td>
+        <td>${subject}</td>
+        <td>${chapterNotes}</td>
+        <td>${duration}</td>
+        <td>${typeBadge}</td>
         <td>${actions}</td>
       </tr>`;
     })
@@ -76,52 +77,23 @@ function wireEvents() {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
-      activeStatus = btn.dataset.status;
+      activeFilter = btn.dataset.status;
       render();
     });
   });
 
   document.getElementById("logs-body").addEventListener("click", async (e) => {
-    const approveId = e.target.dataset.approve;
-    const correctId = e.target.dataset.correct;
-    const rejectId = e.target.dataset.reject;
-
-    if (approveId) {
-      await updateLogStatus(approveId, LOG_STATUS.APPROVED);
-      updateLocal(approveId, LOG_STATUS.APPROVED);
-      toast.success("Log approved.");
+    const deleteId = e.target.dataset.delete;
+    if (deleteId) {
+      if (!confirm("Delete this log entry permanently?")) return;
+      await deleteLog(deleteId);
+      allLogs = allLogs.filter((l) => l.id !== deleteId);
+      toast.success("Log entry deleted.");
       render();
     }
-    if (rejectId) {
-      if (!confirm("Reject this log entry? It will be marked Needs Correction.")) return;
-      await updateLogStatus(rejectId, LOG_STATUS.CORRECTION, "Rejected by admin.");
-      updateLocal(rejectId, LOG_STATUS.CORRECTION, "Rejected by admin.");
-      toast.success("Log rejected.");
-      render();
-    }
-    if (correctId) {
-      document.getElementById("comment-log-id").value = correctId;
-      document.getElementById("comment-modal").classList.add("active");
-    }
   });
 
-  document.getElementById("close-comment-modal").addEventListener("click", () => {
-    document.getElementById("comment-modal").classList.remove("active");
-  });
-
-  document.getElementById("comment-form").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const id = document.getElementById("comment-log-id").value;
-    const comment = document.getElementById("comment-text").value;
-    await updateLogStatus(id, LOG_STATUS.CORRECTION, comment);
-    updateLocal(id, LOG_STATUS.CORRECTION, comment);
-    toast.success("Correction requested.");
-    document.getElementById("comment-modal").classList.remove("active");
-    document.getElementById("comment-form").reset();
-    render();
-  });
-
-  // Admin Log Modal Event Listeners
+  // Admin Log Modal
   const studentSelect = document.getElementById("admin-log-student");
   const adminModal = document.getElementById("admin-log-modal");
   const adminForm = document.getElementById("admin-log-form");
@@ -161,23 +133,17 @@ function wireEvents() {
       }
       const hidden = document.getElementById("admin-log-duration");
       if (hidden) hidden.value = "";
-      
       adminModal.classList.add("active");
     });
   }
 
-  const closeAdminLogModalBtn = document.getElementById("close-admin-log-modal");
-  if (closeAdminLogModalBtn) {
-    closeAdminLogModalBtn.addEventListener("click", () => {
-      adminModal.classList.remove("active");
-    });
-  }
+  document.getElementById("close-admin-log-modal")?.addEventListener("click", () => {
+    adminModal.classList.remove("active");
+  });
 
-  if (adminModal) {
-    adminModal.addEventListener("click", (e) => {
-      if (e.target === adminModal) adminModal.classList.remove("active");
-    });
-  }
+  adminModal?.addEventListener("click", (e) => {
+    if (e.target === adminModal) adminModal.classList.remove("active");
+  });
 
   if (adminForm) {
     adminForm.addEventListener("submit", async (e) => {
@@ -189,16 +155,14 @@ function wireEvents() {
         return;
       }
       if (btn) btn.disabled = true;
-      
+
       const studentId = studentSelect.value;
       const logData = {
         date: document.getElementById("admin-log-date").value,
         subject: document.getElementById("admin-log-subject").value,
         durationMinutes: durationVal,
         chapter: document.getElementById("admin-log-chapter").value,
-        notes: document.getElementById("admin-log-notes").value,
-        status: document.getElementById("admin-log-status").value,
-        adminComment: ""
+        notes: document.getElementById("admin-log-notes").value
       };
 
       try {
@@ -206,8 +170,6 @@ function wireEvents() {
         toast.success("Study log entry added.");
         adminModal.classList.remove("active");
         adminForm.reset();
-        
-        // Refresh logs list
         const logs = await getAllLogs();
         allLogs = logs;
         render();
@@ -220,20 +182,53 @@ function wireEvents() {
   }
 
   wireAdminTimePicker();
-}
 
-function updateLocal(id, status, comment = "") {
-  const log = allLogs.find((l) => l.id === id);
-  if (log) {
-    log.status = status;
-    log.adminComment = comment;
+  // Admin leave modal wiring
+  const adminLeaveModal = document.getElementById("admin-leave-modal");
+  const adminOpenLeaveBtn = document.getElementById("admin-open-leave-btn");
+  const closeAdminLeaveModal = document.getElementById("close-admin-leave-modal");
+  if (adminOpenLeaveBtn && adminLeaveModal) {
+    document.getElementById("admin-leave-date").value = new Date().toISOString().slice(0, 10);
+    adminOpenLeaveBtn.addEventListener("click", () => adminLeaveModal.classList.add("active"));
+    closeAdminLeaveModal?.addEventListener("click", () => adminLeaveModal.classList.remove("active"));
+    adminLeaveModal.addEventListener("click", (e) => { if (e.target === adminLeaveModal) adminLeaveModal.classList.remove("active"); });
+
+    document.getElementById("admin-leave-form")?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = e.target.querySelector("button[type=submit]");
+      const studentId = document.getElementById("admin-leave-student").value;
+      if (!studentId) {
+        toast.error("Please select a student.");
+        return;
+      }
+      btn.disabled = true;
+      try {
+        await addStudyLog(studentId, {
+          date: document.getElementById("admin-leave-date").value,
+          subject: "⚠️ Inability to Study / Leave",
+          durationMinutes: 0,
+          chapter: document.getElementById("admin-leave-reason").value,
+          notes: document.getElementById("admin-leave-notes").value
+        });
+        toast.success("Student inability report recorded.");
+        adminLeaveModal.classList.remove("active");
+        e.target.reset();
+        document.getElementById("admin-leave-date").value = new Date().toISOString().slice(0, 10);
+        const logs = await getAllLogs();
+        allLogs = logs;
+        render();
+      } catch (err) {
+        toast.error(err.message || "Could not record leave report.");
+      } finally {
+        btn.disabled = false;
+      }
+    });
   }
 }
 
 function populateAdminSubjects(studentClass) {
   const select = document.getElementById("admin-log-subject");
   if (!select) return;
-
   select.innerHTML = '<option value="">Select subject</option>';
   const subjects = getSubjectsForClass(studentClass);
   subjects.forEach((subj) => {
@@ -253,7 +248,7 @@ function wireAdminTimePicker() {
   if (!startEl || !endEl) return;
 
   function calcDuration() {
-    const start = startEl.value;   // "HH:MM"
+    const start = startEl.value;
     const end   = endEl.value;
 
     if (!start || !end) {
