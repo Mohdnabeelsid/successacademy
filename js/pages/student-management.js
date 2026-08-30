@@ -13,6 +13,7 @@ import {
   excelTemplateRows
 } from "../services/student-service.js";
 import { getStudentLogs, LOG_STATUS, addStudyLog } from "../services/studylog-service.js";
+import { getSubjectsForClass } from "../services/subject-service.js";
 
 let admin;
 let allStudents = [];
@@ -624,21 +625,7 @@ function renderSubjectAnalytics() {
     : `<div class="empty-state">No approved study time recorded</div>`;
 }
 
-function getSubjectsForClass(studentClass) {
-  const cls = Number(studentClass);
-  const common = ["English", "Maths", "Malayalam", "Hindi"];
-  let extra = [];
-  if (cls >= 5 && cls <= 8) {
-    extra = ["Basic Science", "Social Science", "Computer", "Other"];
-  } else if (cls >= 9 && cls <= 10) {
-    extra = ["Physics", "Chemistry", "Biology", "History", "Geography", "Computer", "Other"];
-  } else if (cls >= 11 && cls <= 12) {
-    extra = ["Physics", "Chemistry", "Biology", "Computer Science", "Economics", "History", "Other"];
-  } else {
-    extra = ["Basic Science", "Social Science", "Computer", "Other"];
-  }
-  return [...common, ...extra];
-}
+
 
 function createBulkAddRow(dateVal = "", subjectVal = "", startTimeVal = "", endTimeVal = "", durationVal = "", chapterVal = "", notesVal = "") {
   const tbody = document.getElementById("pm-bulk-add-tbody");

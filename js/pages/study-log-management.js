@@ -3,6 +3,7 @@ import { renderSidebar } from "../components/sidebar.js";
 import { toast } from "../components/toast.js";
 import { getAllLogs, updateLogStatus, LOG_STATUS, addStudyLog } from "../services/studylog-service.js";
 import { listStudents } from "../services/student-service.js";
+import { getSubjectsForClass } from "../services/subject-service.js";
 
 let admin, allLogs = [], studentMap = {}, activeStatus = "Pending";
 
@@ -230,25 +231,11 @@ function updateLocal(id, status, comment = "") {
 }
 
 function populateAdminSubjects(studentClass) {
-  const cls = Number(studentClass);
   const select = document.getElementById("admin-log-subject");
   if (!select) return;
 
   select.innerHTML = '<option value="">Select subject</option>';
-
-  const common = ["English", "Maths", "Malayalam", "Hindi"];
-  let extra = [];
-  if (cls >= 5 && cls <= 8) {
-    extra = ["Basic Science", "Social Science", "Computer", "Other"];
-  } else if (cls >= 9 && cls <= 10) {
-    extra = ["Physics", "Chemistry", "Biology", "History", "Geography", "Computer", "Other"];
-  } else if (cls >= 11 && cls <= 12) {
-    extra = ["Physics", "Chemistry", "Biology", "Computer Science", "Economics", "History", "Other"];
-  } else {
-    extra = ["Basic Science", "Social Science", "Computer", "Other"];
-  }
-
-  const subjects = [...common, ...extra];
+  const subjects = getSubjectsForClass(studentClass);
   subjects.forEach((subj) => {
     const opt = document.createElement("option");
     opt.value = subj;

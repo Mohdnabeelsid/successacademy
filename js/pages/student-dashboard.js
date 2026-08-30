@@ -112,34 +112,18 @@ async function refreshData() {
     : `<div class="empty-state"><h4>No logs yet</h4>Add your first study log to start your streak.</div>`;
 }
 
+import { getSubjectsForClass } from "../services/subject-service.js";
+
 /**
  * Populate the subject dropdown based on the student's class.
- * Class 5–8  → Social Science (not separate History & Geography)
- * Class 9–10 → History, Geography as separate subjects
- * Class 11–12 → Science stream subjects
  */
 function populateSubjects(studentClass) {
-  const cls = Number(studentClass);
   const select = document.getElementById("log-subject");
   if (!select) return;
+  select.innerHTML = '<option value="">Select subject</option>';
 
-  // Always present
-  const common = ["English", "Maths", "Malayalam", "Hindi"];
-
-  let extra = [];
-  if (cls >= 5 && cls <= 8) {
-    extra = ["Basic Science", "Social Science", "Computer", "Other"];
-  } else if (cls >= 9 && cls <= 10) {
-    extra = ["Physics", "Chemistry", "Biology", "History", "Geography", "Computer", "Other"];
-  } else if (cls >= 11 && cls <= 12) {
-    extra = ["Physics", "Chemistry", "Biology", "Computer Science", "Economics", "History", "Other"];
-  } else {
-    // Fallback if class is unknown
-    extra = ["Basic Science", "Social Science", "Computer", "Other"];
-  }
-
-  const subjects = [...common, ...extra];
-  subjects.forEach(subj => {
+  const subjects = getSubjectsForClass(studentClass);
+  subjects.forEach((subj) => {
     const opt = document.createElement("option");
     opt.value = subj;
     opt.textContent = subj;
