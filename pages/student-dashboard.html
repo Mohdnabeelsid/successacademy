@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Dashboard — SUCCESS Learning Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/variables.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+
+<div class="page-loader" id="page-loader"><div class="spinner spinner-dark"></div></div>
+
+<div class="app-shell">
+  <div id="sidebar-root"></div>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="flex items-center gap-3">
+        <button class="btn-icon menu-toggle" id="menu-toggle">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div>
+          <h1 id="greeting">Welcome back</h1>
+          <div class="topbar-sub" id="today-label"></div>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm" id="open-log-modal">+ Add Study Log</button>
+    </header>
+
+    <div class="page-body">
+      <div class="stat-grid">
+        <div class="card card-stat"><div class="stat-label">Current Streak</div><div class="stat-value" id="stat-streak">—</div></div>
+        <div class="card card-stat"><div class="stat-label">Weekly Hours</div><div class="stat-value" id="stat-weekly">—</div></div>
+        <div class="card card-stat"><div class="stat-label">Monthly Hours</div><div class="stat-value" id="stat-monthly">—</div></div>
+        <div class="card card-stat"><div class="stat-label">Total Approved Hours</div><div class="stat-value" id="stat-total">—</div></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin-bottom:var(--sp-4);">Study Calendar</h3>
+          <div class="calendar" id="calendar"></div>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom:var(--sp-4);">Recent Logs</h3>
+          <div id="recent-logs"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Add Study Log Modal -->
+<div class="modal-overlay" id="log-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Add Study Log</h3>
+      <button class="btn-icon" id="close-log-modal">✕</button>
+    </div>
+    <form id="log-form">
+      <div class="field">
+        <label for="log-date">Date</label>
+        <input type="date" id="log-date" required>
+      </div>
+      <div class="field">
+        <label for="log-subject">Subject</label>
+        <select id="log-subject" required>
+          <option value="">Select subject</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Study Time</label>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <div style="flex:1;">
+            <label for="log-start-time" style="font-size:0.75rem;color:var(--c-slate-500);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">From</label>
+            <input type="time" id="log-start-time" required style="width:100%;margin-top:4px;">
+          </div>
+          <div style="flex:1;">
+            <label for="log-end-time" style="font-size:0.75rem;color:var(--c-slate-500);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">To</label>
+            <input type="time" id="log-end-time" required style="width:100%;margin-top:4px;">
+          </div>
+        </div>
+        <div id="log-duration-display" style="margin-top:10px;padding:10px 14px;background:var(--c-slate-50);border:1px solid var(--c-border);border-radius:var(--r-sm);font-size:0.875rem;color:var(--c-slate-500);min-height:40px;">
+          Duration will appear here after selecting times.
+        </div>
+        <!-- hidden field carries the calculated minutes for form submission -->
+        <input type="hidden" id="log-duration">
+      </div>
+      <div class="field">
+        <label for="log-chapter">Chapter Name</label>
+        <input type="text" id="log-chapter" placeholder="e.g. Photosynthesis">
+      </div>
+      <div class="field">
+        <label for="log-notes">Notes</label>
+        <textarea id="log-notes" placeholder="What did you cover / find difficult?"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Submit Log</button>
+    </form>
+  </div>
+</div>
+
+<div id="toast-region"></div>
+<script type="module" src="../js/pages/student-dashboard.js"></script>
+</body>
+</html>

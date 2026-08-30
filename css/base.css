@@ -1,0 +1,80 @@
+/* ==========================================================================
+   BASE / RESET
+   ========================================================================== */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  color: var(--c-ink);
+  background: var(--surface-1);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.55;
+  font-size: var(--fs-base);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--c-dark);
+}
+
+h1 { font-size: var(--fs-3xl); }
+h2 { font-size: var(--fs-2xl); }
+h3 { font-size: var(--fs-xl); }
+h4 { font-size: var(--fs-md); }
+
+p { color: var(--c-slate-700); }
+
+a { color: inherit; text-decoration: none; }
+
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+
+input, select, textarea { font-family: inherit; font-size: inherit; color: inherit; }
+
+img, svg { display: block; max-width: 100%; }
+
+ul, ol { list-style: none; }
+
+::selection { background: var(--c-primary); color: var(--c-white); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--c-slate-300); border-radius: var(--r-full); }
+::-webkit-scrollbar-thumb:hover { background: var(--c-slate-500); }
+
+/* Utility */
+.container { max-width: var(--container-max); margin: 0 auto; padding: 0 var(--sp-6); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+.hidden { display: none !important; }
+.flex { display: flex; }
+.flex-col { display: flex; flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-2 { gap: var(--sp-2); }
+.gap-3 { gap: var(--sp-3); }
+.gap-4 { gap: var(--sp-4); }
+.text-center { text-align: center; }
+.w-full { width: 100%; }
+
+/* Focus ring — accessibility, kept subtle to match premium aesthetic */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+/* Fade/slide-in animation utility, staggered via inline delay */
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  animation: revealUp var(--dur-slow) var(--ease-out) forwards;
+}
+@keyframes revealUp {
+  to { opacity: 1; transform: translateY(0); }
+}

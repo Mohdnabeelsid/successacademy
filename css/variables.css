@@ -1,0 +1,98 @@
+/* ==========================================================================
+   SUCCESS LEARNING LOG — Design Tokens
+   Brand: Success Academy — "From Classrooms to Careers."
+   ========================================================================== */
+
+:root {
+  /* Brand Colors */
+  --c-primary: #0FA15D;
+  --c-primary-dark: #0a7a6e;
+  --c-secondary: #1F7A78;
+  --c-teal: #0e9fa1;
+  --c-emerald: #10A873;
+  --c-blue: #2E4C8C;
+  --c-dark: #071A17;
+  --c-dark-forest-teal: #0E3B36;
+  --c-white: #FFFFFF;
+  --c-beige: #D8C7AA;
+
+  /* Neutrals */
+  --c-ink: #0B1F1B;
+  --c-slate-900: #101917;
+  --c-slate-700: #33433F;
+  --c-slate-500: #64756F;
+  --c-slate-300: #A9B8B2;
+  --c-slate-100: #E7EEEA;
+  --c-slate-50: #F6F8F6;
+  --c-border: #E2E9E5;
+
+  /* Status */
+  --c-success: #0FA15D;
+  --c-warning: #C88A2E;
+  --c-danger: #C13F3F;
+  --c-info: #2E4C8C;
+
+  /* Surfaces */
+  --surface-0: #FFFFFF;
+  --surface-1: #F6F8F6;
+  --surface-2: #EFF4F1;
+  --surface-dark: #071A17;
+  --surface-dark-2: #0C2620;
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #0FA15D 0%, #0e9fa1 100%);
+  --gradient-dark: linear-gradient(160deg, #071A17 0%, #0C2620 60%, #0a3a30 100%);
+  --gradient-mesh: radial-gradient(circle at 20% 20%, rgba(15,161,93,0.18), transparent 45%),
+                    radial-gradient(circle at 80% 0%, rgba(46,76,140,0.16), transparent 40%),
+                    radial-gradient(circle at 50% 100%, rgba(14,159,161,0.14), transparent 45%);
+
+  /* Typography */
+  --font-display: 'Playfair Display', 'Georgia', serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Type Scale */
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.875rem;
+  --fs-base: 1rem;
+  --fs-md: 1.125rem;
+  --fs-lg: 1.375rem;
+  --fs-xl: 1.75rem;
+  --fs-2xl: 2.25rem;
+  --fs-3xl: 3rem;
+  --fs-4xl: 3.75rem;
+
+  /* Spacing */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+  --sp-8: 64px;
+  --sp-9: 96px;
+
+  /* Radius */
+  --r-sm: 8px;
+  --r-md: 14px;
+  --r-lg: 22px;
+  --r-xl: 32px;
+  --r-full: 999px;
+
+  /* Shadow */
+  --shadow-sm: 0 2px 8px rgba(7, 26, 23, 0.06);
+  --shadow-md: 0 8px 24px rgba(7, 26, 23, 0.08);
+  --shadow-lg: 0 20px 48px rgba(7, 26, 23, 0.14);
+  --shadow-glow: 0 0 0 1px rgba(15,161,93,0.16), 0 12px 32px rgba(15,161,93,0.16);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 160ms;
+  --dur-med: 320ms;
+  --dur-slow: 600ms;
+
+  /* Layout */
+  --sidebar-w: 264px;
+  --topbar-h: 72px;
+  --container-max: 1200px;
+}

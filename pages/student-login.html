@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Login — SUCCESS Learning Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/variables.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/auth.css">
+</head>
+<body>
+
+<div class="auth-shell">
+  <div class="auth-side">
+    <div class="auth-side-content">
+      <div class="nav-brand" style="color:#fff;"><div class="mark">SA</div> Success Learning Log</div>
+      <div class="quote">"Not just better marks. Better confidence, discipline, and direction." Log today's effort — build tomorrow's habit.</div>
+      <div class="quote-by">Success Academy — Student Portal</div>
+    </div>
+    <a href="../index.html" style="color:rgba(255,255,255,0.6);font-size:var(--fs-xs);">← Back to home</a>
+  </div>
+
+  <div class="auth-form-wrap">
+    <div class="auth-card">
+      <div class="brand-mark"><div class="mark">SA</div></div>
+      <h1>Student Sign In</h1>
+      <p class="sub">Log your study hours and track your streak.</p>
+
+      <div class="auth-error" id="auth-error"></div>
+
+      <form id="student-login-form">
+        <div class="field">
+          <label for="admission">Admission Number</label>
+          <input type="text" id="admission" required autocomplete="username" placeholder="SA2026001">
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" required autocomplete="current-password" placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="submit-btn">Sign In</button>
+      </form>
+
+      <div class="auth-links">
+        <a href="admin-login.html">Admin login →</a>
+        <a href="../index.html">Back to home</a>
+      </div>
+      <p class="auth-footer-note">Forgot your password? Contact your branch admin.</p>
+    </div>
+  </div>
+</div>
+
+<div id="toast-region"></div>
+<script type="module" src="../js/pages/student-login.js"></script>
+</body>
+</html>

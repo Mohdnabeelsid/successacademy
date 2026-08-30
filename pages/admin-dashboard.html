@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — SUCCESS Learning Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/variables.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+
+<div class="page-loader" id="page-loader"><div class="spinner spinner-dark"></div></div>
+
+<div class="app-shell">
+  <div id="sidebar-root"></div>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="flex items-center gap-3">
+        <button class="btn-icon menu-toggle" id="menu-toggle">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div>
+          <h1>Admin Dashboard</h1>
+          <div class="topbar-sub" id="today-label"></div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <a href="study-log-management.html" class="btn btn-primary btn-sm">Review Logs</a>
+      </div>
+    </header>
+
+    <div class="page-body">
+      <div class="stat-grid">
+        <div class="card card-stat"><div class="stat-label">Total Students</div><div class="stat-value" id="stat-students">—</div></div>
+        <div class="card card-stat"><div class="stat-label">Pending Approvals</div><div class="stat-value" id="stat-pending">—</div></div>
+        <div class="card card-stat"><div class="stat-label">Logs This Week</div><div class="stat-value" id="stat-weeklogs">—</div></div>
+        <div class="card card-stat"><div class="stat-label">Avg. Streak</div><div class="stat-value" id="stat-streak">—</div></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="flex items-center justify-between" style="margin-bottom:var(--sp-4);">
+            <h3>Pending Study Logs</h3>
+            <a href="study-log-management.html" style="font-size:var(--fs-xs);color:var(--c-primary);font-weight:600;">View all →</a>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Student</th><th>Date</th><th>Subject</th><th>Duration</th><th>Status</th></tr></thead>
+              <tbody id="pending-table-body">
+                <tr><td colspan="5"><div class="empty-state">Loading…</div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-bottom:var(--sp-4);">Top Streaks This Week</h3>
+          <div id="leaderboard-mini"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast-region"></div>
+<script type="module" src="../js/pages/admin-dashboard.js"></script>
+</body>
+</html>

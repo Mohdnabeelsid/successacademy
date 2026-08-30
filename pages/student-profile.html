@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Profile — SUCCESS Learning Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/variables.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<style>
+  .profile-head { display:flex; align-items:center; gap:var(--sp-5); margin-bottom:var(--sp-6); }
+  .profile-head .avatar { width:72px; height:72px; font-size:var(--fs-xl); }
+  .bar-row { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+  .bar-row .lbl { width:110px; font-size:var(--fs-xs); color:var(--c-slate-700); flex-shrink:0; }
+  .bar-row .val { width:56px; font-size:var(--fs-xs); color:var(--c-slate-500); text-align:right; flex-shrink:0; }
+</style>
+</head>
+<body>
+
+<div class="page-loader" id="page-loader"><div class="spinner spinner-dark"></div></div>
+
+<div class="app-shell">
+  <div id="sidebar-root"></div>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="flex items-center gap-3">
+        <button class="btn-icon menu-toggle" id="menu-toggle">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <h1>My Profile</h1>
+      </div>
+    </header>
+
+    <div class="page-body">
+      <div class="card profile-head">
+        <div class="avatar" id="profile-avatar">—</div>
+        <div>
+          <h2 id="profile-name" style="margin-bottom:4px;">—</h2>
+          <div style="color:var(--c-slate-500);font-size:var(--fs-sm);" id="profile-meta">—</div>
+        </div>
+      </div>
+
+      <div class="grid-panels">
+        <div class="card">
+          <h3 style="margin-bottom:var(--sp-4);">Study Calendar</h3>
+          <div class="calendar" id="calendar"></div>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom:var(--sp-4);">Subject-wise Study Time</h3>
+          <div id="subject-bars"></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:var(--sp-5);">
+        <h3 style="margin-bottom:var(--sp-4);">Learning History</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Day</th><th>Subject</th><th>Chapter</th><th>Duration</th><th>Status</th></tr></thead>
+            <tbody id="history-body"><tr><td colspan="6"><div class="empty-state">Loading…</div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast-region"></div>
+<script type="module" src="../js/pages/student-profile.js"></script>
+</body>
+</html>

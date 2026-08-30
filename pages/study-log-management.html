@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Log Management — SUCCESS Learning Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/variables.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+
+<div class="page-loader" id="page-loader"><div class="spinner spinner-dark"></div></div>
+
+<div class="app-shell">
+  <div id="sidebar-root"></div>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="flex items-center gap-3">
+        <button class="btn-icon menu-toggle" id="menu-toggle">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <h1>Study Log Management</h1>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-primary btn-sm" id="add-log-btn">+ Add Log Entry</button>
+      </div>
+    </header>
+
+    <div class="page-body">
+      <div class="tabs">
+        <button class="tab-btn active" data-status="Pending">Pending</button>
+        <button class="tab-btn" data-status="Approved">Approved</button>
+        <button class="tab-btn" data-status="Needs Correction">Needs Correction</button>
+        <button class="tab-btn" data-status="All">All</button>
+      </div>
+
+      <div class="card" style="padding:0;">
+        <div class="table-wrap" style="border:none;">
+          <table>
+            <thead><tr><th>Student</th><th>Date</th><th>Subject</th><th>Chapter</th><th>Duration</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="logs-body"><tr><td colspan="7"><div class="empty-state">Loading…</div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Correction comment modal -->
+<div class="modal-overlay" id="comment-modal">
+  <div class="modal">
+    <div class="modal-header"><h3>Request Correction</h3><button class="btn-icon" id="close-comment-modal">✕</button></div>
+    <form id="comment-form">
+      <input type="hidden" id="comment-log-id">
+      <div class="field">
+        <label for="comment-text">Comment for student</label>
+        <textarea id="comment-text" placeholder="e.g. Please specify the exact chapter covered." required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Send Correction Request</button>
+    </form>
+  </div>
+</div>
+
+<!-- Admin Add Study Log Modal -->
+<div class="modal-overlay" id="admin-log-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Add Study Log</h3>
+      <button class="btn-icon" id="close-admin-log-modal">✕</button>
+    </div>
+    <form id="admin-log-form">
+      <div class="field">
+        <label for="admin-log-student">Student</label>
+        <select id="admin-log-student" required>
+          <option value="">Select student</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="admin-log-date">Date</label>
+        <input type="date" id="admin-log-date" required>
+      </div>
+      <div class="field">
+        <label for="admin-log-subject">Subject</label>
+        <select id="admin-log-subject" required disabled>
+          <option value="">Select student first</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Study Time</label>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <div style="flex:1;">
+            <label for="admin-log-start-time" style="font-size:0.75rem;color:var(--c-slate-500);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">From</label>
+            <input type="time" id="admin-log-start-time" required style="width:100%;margin-top:4px;">
+          </div>
+          <div style="flex:1;">
+            <label for="admin-log-end-time" style="font-size:0.75rem;color:var(--c-slate-500);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">To</label>
+            <input type="time" id="admin-log-end-time" required style="width:100%;margin-top:4px;">
+          </div>
+        </div>
+        <div id="admin-log-duration-display" style="margin-top:10px;padding:10px 14px;background:var(--c-slate-50);border:1px solid var(--c-border);border-radius:var(--r-sm);font-size:0.875rem;color:var(--c-slate-500);min-height:40px;">
+          Duration will appear here after selecting times.
+        </div>
+        <!-- hidden field carries the calculated minutes for form submission -->
+        <input type="hidden" id="admin-log-duration">
+      </div>
+      <div class="field">
+        <label for="admin-log-chapter">Chapter Name</label>
+        <input type="text" id="admin-log-chapter" placeholder="e.g. Photosynthesis">
+      </div>
+      <div class="field">
+        <label for="admin-log-notes">Notes / Comments</label>
+        <textarea id="admin-log-notes" placeholder="Any notes or comments about this study session"></textarea>
+      </div>
+      <div class="field">
+        <label for="admin-log-status">Initial Status</label>
+        <select id="admin-log-status" required>
+          <option value="Approved" selected>Approved</option>
+          <option value="Pending">Pending</option>
+          <option value="Needs Correction">Needs Correction</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" id="admin-log-save-btn">Add Log Entry</button>
+    </form>
+  </div>
+</div>
+
+<div id="toast-region"></div>
+<script type="module" src="../js/pages/study-log-management.js"></script>
+</body>
+</html>

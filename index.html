@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SUCCESS ACADEMY — Student Transformation Academy | Alappuzha</title>
+  <meta name="description" content="SUCCESS ACADEMY is a student transformation academy in Alappuzha. We develop disciplined, confident, and future-ready students through mentorship that goes beyond academics. Enquire today." />
+  <meta name="keywords" content="SUCCESS ACADEMY, student transformation, Alappuzha academy, Mannancherry academy, NextGen program, student mentorship, From Classrooms to Careers" />
+  <meta name="author" content="SUCCESS ACADEMY" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="SUCCESS ACADEMY — From Classrooms to Careers." />
+  <meta property="og:description" content="Developing disciplined, confident, and future-ready students through mentorship beyond academics." />
+  <meta property="og:type" content="website" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/landing.css" />
+</head>
+
+<body>
+
+  <!-- ═══════════════════════════════════════
+       NAVIGATION
+  ═══════════════════════════════════════ -->
+  <nav class="nav" id="main-nav" role="navigation" aria-label="Main navigation">
+    <div class="nav-inner">
+
+      <!-- Logo -->
+      <a href="#hero" class="nav-logo" aria-label="SUCCESS ACADEMY home">
+        <div class="nav-logo-mark" aria-hidden="true">SA</div>
+        <span class="nav-logo-text">SUCCESS ACADEMY</span>
+      </a>
+
+      <!-- Desktop links -->
+      <ul class="nav-links" role="list">
+        <li><a href="#why">Why SUCCESS</a></li>
+        <li><a href="#nextgen">NextGen</a></li>
+        <li><a href="#programs">Programs</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+
+      <!-- Actions -->
+      <div class="nav-actions">
+
+        <!-- Portal dropdown -->
+        <div class="portal-wrapper" id="portal-wrapper">
+          <button
+            class="portal-toggle"
+            id="portal-toggle"
+            aria-haspopup="true"
+            aria-expanded="false"
+            aria-controls="portal-dropdown"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Portal Login
+            <svg class="portal-toggle-chevron" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+
+          <div class="portal-dropdown" id="portal-dropdown" role="menu">
+            <a href="pages/student-login.html" class="portal-dropdown-item" role="menuitem">
+              <div class="portal-dropdown-icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <div class="portal-dropdown-label">
+                <strong>Student Portal</strong>
+                <span>Access your dashboard</span>
+              </div>
+            </a>
+            <a href="pages/admin-login.html" class="portal-dropdown-item" role="menuitem">
+              <div class="portal-dropdown-icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
+              </div>
+              <div class="portal-dropdown-label">
+                <strong>Admin Portal</strong>
+                <span>Academy management</span>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <a href="#contact" class="btn btn-primary btn-sm">Enquire Now</a>
+
+        <!-- Hamburger -->
+        <button class="nav-hamburger" id="menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobile-menu" aria-modal="true" role="dialog" aria-label="Navigation menu">
+    <div class="mobile-menu-header">
+      <a href="#hero" class="nav-logo" aria-label="SUCCESS ACADEMY">
+        <div class="nav-logo-mark" aria-hidden="true">SA</div>
+        <span style="font-family: var(--font-display); font-weight: 700; font-size: 1.0625rem; color: #fff;">SUCCESS ACADEMY</span>
+      </a>
+      <button class="mobile-menu-close" id="mobile-close" aria-label="Close menu">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <nav class="mobile-menu-links" aria-label="Mobile navigation">
+      <a href="#why">Why SUCCESS</a>
+      <a href="#nextgen">NextGen</a>
+      <a href="#programs">Programs</a>
+      <a href="#about">About Us</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <div class="mobile-menu-footer">
+      <a href="pages/student-login.html" class="btn btn-ghost-dark">Student Portal</a>
+      <a href="#contact" class="btn btn-primary">Enquire Now</a>
+    </div>
+  </div>
+
+  <main>
+
+    <!-- ═══════════════════════════════════════
+         SECTION 1 — HERO
+    ═══════════════════════════════════════ -->
+    <section class="hero" id="hero" aria-label="Hero">
+      <div class="hero-grid" aria-hidden="true"></div>
+      <div class="hero-orb hero-orb-1" aria-hidden="true"></div>
+      <div class="hero-orb hero-orb-2" aria-hidden="true"></div>
+
+      <div class="hero-inner">
+        <!-- Content -->
+        <div class="hero-content">
+          <div class="hero-eyebrow" data-animate>
+            <span class="hero-eyebrow-dot" aria-hidden="true"></span>
+            Student Transformation Academy · Alappuzha
+          </div>
+
+          <h1 class="hero-title" data-animate data-delay="80">
+            From<br />
+            <em>Classrooms</em><br />
+            to Careers.
+          </h1>
+
+          <p class="hero-subtitle" data-animate data-delay="160">
+            At SUCCESS ACADEMY, we develop disciplined, confident, and future-ready students through structured mentorship that extends far beyond academics.
+          </p>
+
+          <div class="hero-actions" data-animate data-delay="240">
+            <a href="#contact" class="btn btn-primary btn-lg btn-icon" id="hero-enquire-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16z"/></svg>
+              Enquire Now
+            </a>
+            <a href="#why" class="btn btn-ghost-dark btn-lg">
+              Explore Programs
+              <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            </a>
+          </div>
+
+          <div class="hero-trust-strip" data-animate data-delay="320">
+            <div class="hero-trust-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              Structured Mentorship
+            </div>
+            <div class="hero-trust-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              Academic Excellence
+            </div>
+            <div class="hero-trust-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              Future Readiness
+            </div>
+          </div>
+        </div>
+
+        <!-- Visual card -->
+        <div class="hero-visual" aria-hidden="true">
+          <div class="hero-visual-card" data-animate="fade-right" data-delay="120">
+            <div class="hero-stat-grid">
+              <div class="hero-stat-item">
+                <div class="hero-stat-number" data-count="500">0</div>
+                <div class="hero-stat-label">Students Transformed</div>
+              </div>
+              <div class="hero-stat-item">
+                <div class="hero-stat-number" data-count="2">0</div>
+                <div class="hero-stat-label">Academy Branches</div>
+              </div>
+              <div class="hero-stat-item">
+                <div class="hero-stat-number" data-count="6">0</div>
+                <div class="hero-stat-label">Core Life Skills</div>
+              </div>
+              <div class="hero-stat-item">
+                <div class="hero-stat-number" data-count="100">0</div>
+                <div class="hero-stat-label">% Personal Attention</div>
+              </div>
+            </div>
+            <p class="hero-visual-tagline">
+              "We shape who your child <strong>becomes</strong>,<br />not just the marks they score."
+            </p>
+          </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════
+         ANNOUNCEMENT — ONAM EXAM STUDY PLAN
+    ═══════════════════════════════════════ -->
+    <section class="announcement-section" aria-label="Latest Announcements">
+      <div class="container">
+        <div class="announcement-card" data-animate>
+          <div class="announcement-badge">
+            <span class="announcement-pulse"></span>
+            LATEST RESOURCE
+          </div>
+          <div class="announcement-content">
+            <h3 class="announcement-title">SSLC Onam Exam Study Plan</h3>
+            <p class="announcement-desc">
+              Boost your preparation with our meticulously designed study plan tailored for Class 10 / SSLC students. Download the PDF now to guide your daily schedule.
+            </p>
+          </div>
+          <div class="announcement-action">
+            <a href="downloads/onam-exam-sslc-study-plan.pdf" download="SSLC_Onam_Exam_Study_Plan.pdf" class="btn btn-primary btn-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" x2="12" y1="15" y2="3"/>
+              </svg>
+              Download Study Plan (PDF)
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════
+         SECTION 2 — WHY SUCCESS ACADEMY
+    ═══════════════════════════════════════ -->
+    <section class="section section--alt" id="why" aria-labelledby="why-title">
+      <div class="container">
+        <div class="why-grid">
+
+          <!-- Left: Narrative -->
+          <div class="why-content">
+            <span class="eyebrow" data-animate>Why SUCCESS ACADEMY</span>
+            <h2 class="section-title" id="why-title" data-animate data-delay="80">
+              We don't just prepare students for exams.
+            </h2>
+            <blockquote class="why-intro-quote" data-animate data-delay="160">
+              "Every child entering our doors leaves as a more capable, more confident, and more self-aware human being."
+            </blockquote>
+            <p class="section-subtitle" style="margin-top:24px;" data-animate data-delay="200">
+              Tuition centres measure success in marks. We measure it in the quality of the person your child becomes. At SUCCESS ACADEMY, academic coaching is just the foundation. What we build on top of it is character.
+            </p>
+            <div class="why-cta" data-animate data-delay="260">
+              <a href="#contact" class="btn btn-ghost-light btn-icon">
+                Enquire for Admission
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </a>
+            </div>
+          </div>
+
+          <!-- Right: 6 pillars grid -->
+          <div class="why-cards" role="list">
+
+            <article class="why-card" role="listitem" data-animate data-delay="0">
+              <div class="why-card-icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+              </div>
+              <h3>Academic Excellence</h3>
+              <p>Strong conceptual understanding built through personalised attention, not crowded classrooms.</p>
+            </article>
+
+            <article class="why-card" role="listitem" data-animate data-delay="80">
+              <div class="why-card-icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <h3>Discipline &amp; Habits</h3>
+              <p>Students develop structured study routines and the self-discipline that sustains lifelong success.</p>
+            </article>
+
+            <article class="why-card" role="listitem" data-animate data-delay="160">
+              <div class="why-card-icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
+              </div>
+              <h3>Confidence</h3>
+              <p>Students learn to speak up, stand tall, and approach challenges with courage and clarity.</p>
+            </article>
+
+            <article class="why-card" role="listitem" data-animate data-delay="0">
+              <div class="why-card-icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              </div>
+              <h3>Leadership</h3>
+              <p>We nurture initiative, accountability, and the ability to inspire and lead others.</p>
+            </article>
+
+            <article class="why-card" role="listitem" data-animate data-delay="80">
+              <div class="why-card-icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              </div>
+              <h3>Communication</h3>
+              <p>Clear thinking and articulate expression — skills that open doors long after examinations end.</p>
+            </article>
+
+            <article class="why-card" role="listitem" data-animate data-delay="160">
+              <div class="why-card-icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+              </div>
+              <h3>Future Readiness</h3>
+              <p>Career awareness, goal-setting, and the mindset to thrive in an uncertain world.</p>
+            </article>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════
+         SECTION 3 — NEXTGEN
+    ═══════════════════════════════════════ -->
+    <section class="nextgen-section" id="nextgen" aria-labelledby="nextgen-title">
+      <div class="nextgen-bg-accent" aria-hidden="true"></div>
+      <div class="container">
+        <div class="nextgen-inner">
+
+          <!-- Left: Content -->
+          <div class="nextgen-content">
+            <div class="nextgen-badge" data-animate>
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              Flagship Initiative
+            </div>
+
+            <h2 class="nextgen-title" id="nextgen-title" data-animate data-delay="80">
+              Introducing<br /><span style="color: var(--c-primary);">NextGen.</span>
+            </h2>
+
+            <p class="nextgen-desc" data-animate data-delay="160">
+              A structured student development journey designed to transform who your child <em>is</em> — not just what they know. Every SUCCESS student is enrolled into NextGen from day one.
+            </p>
+
+            <div class="nextgen-pillars" data-animate data-delay="220">
+
+              <div class="nextgen-pillar">
+                <div class="nextgen-pillar-icon" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                </div>
+                <div class="nextgen-pillar-text">
+                  <strong>Confidence Building</strong>
+                  <span>Structured sessions that build self-belief and courage to speak up</span>
+                </div>
+              </div>
+
+              <div class="nextgen-pillar">
+                <div class="nextgen-pillar-icon" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <div class="nextgen-pillar-text">
+                  <strong>Discipline &amp; Routine</strong>
+                  <span>Daily habits and study systems that create lasting consistency</span>
+                </div>
+              </div>
+
+              <div class="nextgen-pillar">
+                <div class="nextgen-pillar-icon" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                </div>
+                <div class="nextgen-pillar-text">
+                  <strong>Communication</strong>
+                  <span>Public speaking, articulation, and the ability to express ideas clearly</span>
+                </div>
+              </div>
+
+              <div class="nextgen-pillar">
+                <div class="nextgen-pillar-icon" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <div class="nextgen-pillar-text">
+                  <strong>Leadership</strong>
+                  <span>Taking initiative, working in teams, and learning to lead with responsibility</span>
+                </div>
+              </div>
+
+              <div class="nextgen-pillar">
+                <div class="nextgen-pillar-icon" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+                </div>
+                <div class="nextgen-pillar-text">
+                  <strong>Career Awareness</strong>
+                  <span>Goal-setting, career exploration, and the mindset for long-term ambition</span>
+                </div>
+              </div>
+
+            </div>
+
+            <div data-animate data-delay="320">
+              <a href="#contact" class="btn btn-primary btn-icon">
+                Enquire About NextGen
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </a>
+            </div>
+          </div>
+
+          <!-- Right: Journey card -->
+          <div class="nextgen-visual" data-animate="fade-right" data-delay="160">
+            <div class="nextgen-visual-card">
+              <p style="font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-bottom: 28px;">The NextGen Journey</p>
+
+              <div class="nextgen-journey">
+
+                <div class="nextgen-journey-step">
+                  <div class="nextgen-journey-bullet">01</div>
+                  <div class="nextgen-journey-body">
+                    <strong>Assessment &amp; Onboarding</strong>
+                    <p>We understand every student's strengths, gaps, and personal ambitions before designing their journey.</p>
+                  </div>
+                </div>
+
+                <div class="nextgen-journey-step">
+                  <div class="nextgen-journey-bullet">02</div>
+                  <div class="nextgen-journey-body">
+                    <strong>Weekly Mentorship Sessions</strong>
+                    <p>Dedicated sessions beyond academics — for mindset, confidence, and personal growth.</p>
+                  </div>
+                </div>
+
+                <div class="nextgen-journey-step">
+                  <div class="nextgen-journey-bullet">03</div>
+                  <div class="nextgen-journey-body">
+                    <strong>Real-World Skill Building</strong>
+                    <p>Public speaking activities, leadership tasks, and communication exercises integrated into learning.</p>
+                  </div>
+                </div>
+
+                <div class="nextgen-journey-step">
+                  <div class="nextgen-journey-bullet">04</div>
+                  <div class="nextgen-journey-body">
+                    <strong>Progress &amp; Accountability</strong>
+                    <p>Regular check-ins ensure every student is growing — academically and as a person.</p>
+                  </div>
+                </div>
+
+                <div class="nextgen-journey-step">
+                  <div class="nextgen-journey-bullet">05</div>
+                  <div class="nextgen-journey-body">
+                    <strong>Future-Ready Graduate</strong>
+                    <p>A confident, disciplined, academically strong student ready for their next chapter.</p>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════
+         SECTION 4 — PROGRAMS
+    ═══════════════════════════════════════ -->
+    <section class="section" id="programs" aria-labelledby="programs-title">
+      <div class="container">
+
+        <div class="section-head section-head--center">
+          <span class="eyebrow" data-animate>Our Programs</span>
+          <h2 class="section-title" id="programs-title" data-animate data-delay="80">
+            Every program is a transformation pathway.
+          </h2>
+          <p class="section-subtitle" data-animate data-delay="160">
+            We offer structured academic programs for students from Class 5 to Class 12, each designed not just for exam success, but for personal growth.
+          </p>
+        </div>
+
+        <div class="programs-grid">
+
+          <!-- Featured: Tuition 5-10 -->
+          <article class="program-card program-card--featured" data-animate data-delay="0">
+            <div class="program-card-accent" aria-hidden="true"></div>
+            <div class="program-badge program-badge--dark">
+              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              Most Popular
+            </div>
+            <h3>Foundation Tuition<br /><span style="color: rgba(255,255,255,0.45); font-size: 1rem; font-family: var(--font-body); font-weight: 500;">Class 5 – Class 10</span></h3>
+            <p>The formative years are everything. Our foundation program builds unshakeable academic habits, subject clarity, and the self-belief students need to carry through their entire academic life.</p>
+            <ul class="program-outcomes" aria-label="Program outcomes">
+              <li>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                Deep conceptual understanding in all subjects
+              </li>
+              <li>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                Structured study habits built from day one
+              </li>
+              <li>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                Personal attention in small, focused batches
+              </li>
+              <li>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                NextGen development program included
+              </li>
+            </ul>
+            <a href="#contact" class="btn btn-primary btn-icon">
+              Enquire Now
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </a>
+          </article>
+
+          <!-- Tuition 11-12 -->
+          <article class="program-card" data-animate data-delay="100">
+            <div class="program-badge program-badge--primary">Class 11 – 12</div>
+            <h3>Senior Tuition</h3>
+            <p>A critical two-year window. We prepare students for board exams with depth, rigour, and the pressure resilience they need to perform when it counts.</p>
+            <ul class="program-outcomes" aria-label="Program outcomes">
+              <li>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                Board exam focused curriculum
+              </li>
+              <li>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                Exam strategy &amp; confidence under pressure
+              </li>
+              <li>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                Regular assessments &amp; feedback
+              </li>
+            </ul>
+            <a href="#contact" class="btn btn-ghost-light btn-sm">Enquire Now</a>
+          </article>
+
+          <!-- NextGen -->
+          <article class="program-card" data-animate data-delay="180">
+            <div class="program-badge program-badge--blue">
+              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              Flagship
+            </div>
+            <h3>NextGen Program</h3>
+            <p>Exclusively for SUCCESS students — a holistic development initiative that shapes character, confidence, and career readiness.</p>
+            <ul class="program-outcomes" aria-label="Program outcomes">
+              <li>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                Weekly mentorship beyond textbooks
+              </li>
+              <li>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                Public speaking &amp; leadership
+              </li>
+              <li>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                Included with all tuition programs
+              </li>
+            </ul>
+            <a href="#nextgen" class="btn btn-ghost-light btn-sm">Learn More</a>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════
+         SECTION 5 — TESTIMONIALS
+    ═══════════════════════════════════════ -->
+    <section class="section section--alt testimonials-section" id="testimonials" aria-labelledby="testimonials-title">
+      <div class="container">
+
+        <div class="section-head section-head--center">
+          <span class="eyebrow" data-animate>Parent Stories</span>
+          <h2 class="section-title" id="testimonials-title" data-animate data-delay="80">
+            What parents are saying.
+          </h2>
+          <p class="section-subtitle" data-animate data-delay="160">
+            The best proof of transformation is the stories parents share — about the children they see coming home from SUCCESS ACADEMY.
+          </p>
+        </div>
+
+        <div class="testimonials-grid" id="testimonial-track">
+
+          <article class="testimonial-card testimonial-card--featured" data-animate data-delay="0">
+            <div class="testimonial-quote-mark" aria-hidden="true">"</div>
+            <div class="testimonial-stars" aria-label="5 out of 5 stars">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <p class="testimonial-text">
+              "When my son joined SUCCESS ACADEMY, he was quiet, disorganised, and never spoke in front of others. Within six months, I saw a completely different child. He started a study routine on his own, his marks improved dramatically — and most importantly, he now speaks with confidence. That transformation is priceless."
+            </p>
+            <div class="testimonial-meta">
+              <div class="testimonial-avatar" aria-hidden="true">RN</div>
+              <div class="testimonial-info">
+                <strong>Rema Nair</strong>
+                <span>Parent of a Class 9 student · Alappuzha</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="testimonial-card" data-animate data-delay="100">
+            <div class="testimonial-quote-mark" aria-hidden="true">"</div>
+            <div class="testimonial-stars" aria-label="5 out of 5 stars">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <p class="testimonial-text">
+              "I visited three academies before choosing SUCCESS. The difference was clear from the very first conversation — they spoke about my daughter as a person, not just as a student. What they deliver is exactly what they promise. She is more responsible, more focused, and genuinely excited about learning."
+            </p>
+            <div class="testimonial-meta">
+              <div class="testimonial-avatar" aria-hidden="true">SM</div>
+              <div class="testimonial-info">
+                <strong>Sindhu Menon</strong>
+                <span>Parent of a Class 7 student · Mannancherry</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="testimonial-card" data-animate data-delay="180">
+            <div class="testimonial-quote-mark" aria-hidden="true">"</div>
+            <div class="testimonial-stars" aria-label="5 out of 5 stars">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <p class="testimonial-text">
+              "The teachers here genuinely know my child — his strengths, his struggles, and what motivates him. SUCCESS Academy doesn't treat students as roll numbers. My son's board exam results were outstanding, but what made me proudest was seeing him lead his school's annual function with complete confidence."
+            </p>
+            <div class="testimonial-meta">
+              <div class="testimonial-avatar" aria-hidden="true">AK</div>
+              <div class="testimonial-info">
+                <strong>Arun Kumar</strong>
+                <span>Parent of a Class 12 student · Alappuzha</span>
+              </div>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════
+         SECTION 6 — ABOUT
+    ═══════════════════════════════════════ -->
+    <section class="section" id="about" aria-labelledby="about-title">
+      <div class="container">
+        <div class="about-grid">
+
+          <!-- Left: Story -->
+          <div class="about-content">
+            <span class="eyebrow" data-animate>Our Story</span>
+            <h2 id="about-title" data-animate data-delay="80">
+              Built on one simple belief.
+            </h2>
+            <p data-animate data-delay="140">
+              SUCCESS ACADEMY was founded in Alappuzha on a belief that education should do more than fill answer sheets. It should fill students with purpose, direction, and the character to succeed anywhere in life.
+            </p>
+            <p data-animate data-delay="180">
+              "From Classrooms to Careers" is not a tagline we chose to sound impressive. It is a commitment we make to every parent who trusts us with their child. We see your son or daughter as a future leader — not a mark sheet.
+            </p>
+            <p data-animate data-delay="220">
+              Every teacher at SUCCESS ACADEMY is a mentor first. Every session is designed not just to improve scores, but to sharpen the habits, mindset, and identity of each student who walks through our doors.
+            </p>
+
+            <div class="about-values" data-animate data-delay="280">
+              <div class="about-value">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                Students first, always
+              </div>
+              <div class="about-value">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                Mentors, not teachers
+              </div>
+              <div class="about-value">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                Character over marks
+              </div>
+              <div class="about-value">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                Consistent accountability
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Pull-quote card -->
+          <div class="about-visual" data-animate="fade-right" data-delay="120">
+            <div class="about-visual-card">
+              <div class="about-visual-pattern" aria-hidden="true"></div>
+              <div class="about-visual-content">
+                <blockquote class="about-pullquote">
+                  "Every student deserves more than <em>marks</em>. They deserve to discover who they truly are."
+                </blockquote>
+                <div class="about-branches" aria-label="Our branches">
+                  <div class="about-branch">
+                    <div class="about-branch-dot" aria-hidden="true"></div>
+                    <div>
+                      <strong>Alappuzha Branch</strong>
+                      <span>Main Campus · Open for Admissions</span>
+                    </div>
+                  </div>
+                  <div class="about-branch">
+                    <div class="about-branch-dot" aria-hidden="true"></div>
+                    <div>
+                      <strong>Mannancherry Branch</strong>
+                      <span>Open for Admissions</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════
+         SECTION 7 — ENQUIRY
+    ═══════════════════════════════════════ -->
+    <section class="enquiry-section" id="contact" aria-labelledby="enquiry-title">
+      <div class="enquiry-bg" aria-hidden="true"></div>
+      <div class="container">
+        <div class="enquiry-inner">
+
+          <!-- Left: Info -->
+          <div class="enquiry-info">
+            <span class="eyebrow eyebrow--light" data-animate>Enquire Now</span>
+            <h2 class="enquiry-info-title" id="enquiry-title" data-animate data-delay="80">
+              Begin your child's<br /><em>transformation</em> today.
+            </h2>
+            <p class="enquiry-info-desc" data-animate data-delay="140">
+              Fill in the form and our team will reach out to you within 24 hours to answer all your questions and guide you through the next steps.
+            </p>
+
+            <div class="enquiry-steps" data-animate data-delay="200">
+              <div class="enquiry-step">
+                <div class="enquiry-step-num" aria-hidden="true">1</div>
+                <div class="enquiry-step-body">
+                  <strong>Submit your enquiry</strong>
+                  <span>Fill the short form — takes under 2 minutes</span>
+                </div>
+              </div>
+              <div class="enquiry-step">
+                <div class="enquiry-step-num" aria-hidden="true">2</div>
+                <div class="enquiry-step-body">
+                  <strong>Our team calls you</strong>
+                  <span>We answer your questions and share batch details</span>
+                </div>
+              </div>
+              <div class="enquiry-step">
+                <div class="enquiry-step-num" aria-hidden="true">3</div>
+                <div class="enquiry-step-body">
+                  <strong>Visit the branch</strong>
+                  <span>Meet our mentors and experience the academy</span>
+                </div>
+              </div>
+              <div class="enquiry-step">
+                <div class="enquiry-step-num" aria-hidden="true">4</div>
+                <div class="enquiry-step-body">
+                  <strong>Student joins SUCCESS</strong>
+                  <span>A new chapter begins</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="enquiry-contact-list" data-animate data-delay="280">
+              <div class="enquiry-contact-item">
+                <div class="enquiry-contact-icon" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16z"/></svg>
+                </div>
+                <div class="enquiry-contact-text">
+                  <strong>+91 80755 66063</strong>&ensp;·&ensp;<strong>+91 80899 20551</strong><br />
+                  Mon – Sat, 9 AM – 7 PM
+                </div>
+              </div>
+              <div class="enquiry-contact-item">
+                <div class="enquiry-contact-icon" aria-hidden="true">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                </div>
+                <div class="enquiry-contact-text">
+                  Alappuzha &amp; Mannancherry, Kerala
+                </div>
+              </div>
+              <div class="enquiry-contact-item">
+                <a
+                  href="https://wa.me/918075566063?text=Hello%2C+I%27d+like+to+enquire+about+admissions+at+SUCCESS+ACADEMY."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="btn btn-primary btn-icon btn-sm"
+                  id="whatsapp-btn"
+                  style="margin-top: 8px;"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                  Chat on WhatsApp
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Form -->
+          <div class="enquiry-form-card" data-animate="fade-right" data-delay="80">
+            <div id="form-wrap">
+              <h3 class="enquiry-form-title">Send an Enquiry</h3>
+              <p class="enquiry-form-sub">Our admissions team will respond within 24 hours.</p>
+
+              <form id="enquiry-form" novalidate aria-label="Admission enquiry form">
+                <div class="form-grid">
+
+                  <div class="field">
+                    <label for="f-student-name">Student Name</label>
+                    <input
+                      type="text"
+                      id="f-student-name"
+                      name="studentName"
+                      placeholder="Full name"
+                      required
+                      autocomplete="off"
+                    />
+                    <span class="field-error" role="alert">Please enter the student's name.</span>
+                  </div>
+
+                  <div class="field">
+                    <label for="f-parent-name">Parent Name</label>
+                    <input
+                      type="text"
+                      id="f-parent-name"
+                      name="parentName"
+                      placeholder="Your name"
+                      required
+                      autocomplete="name"
+                    />
+                    <span class="field-error" role="alert">Please enter your name.</span>
+                  </div>
+
+                  <div class="field">
+                    <label for="f-phone">Phone Number</label>
+                    <input
+                      type="tel"
+                      id="f-phone"
+                      name="phone"
+                      placeholder="10-digit mobile number"
+                      required
+                      autocomplete="tel"
+                      maxlength="10"
+                      inputmode="numeric"
+                    />
+                    <span class="field-error" role="alert">Enter a valid 10-digit mobile number.</span>
+                  </div>
+
+                  <div class="field">
+                    <label for="f-class">Student's Class</label>
+                    <select id="f-class" name="class" required>
+                      <option value="" disabled selected>Select class</option>
+                      <option value="5">Class 5</option>
+                      <option value="6">Class 6</option>
+                      <option value="7">Class 7</option>
+                      <option value="8">Class 8</option>
+                      <option value="9">Class 9</option>
+                      <option value="10">Class 10</option>
+                      <option value="11">Class 11</option>
+                      <option value="12">Class 12</option>
+                    </select>
+                    <span class="field-error" role="alert">Please select the student's class.</span>
+                  </div>
+
+                  <div class="field form-full">
+                    <label for="f-branch">Preferred Branch</label>
+                    <select id="f-branch" name="branch" required>
+                      <option value="" disabled selected>Select branch</option>
+                      <option value="alappuzha">Alappuzha</option>
+                      <option value="mannancherry">Mannancherry</option>
+                      <option value="either">Either branch (flexible)</option>
+                    </select>
+                    <span class="field-error" role="alert">Please select your preferred branch.</span>
+                  </div>
+
+                  <div class="field form-full">
+                    <label for="f-message">Message <span style="font-weight:400; text-transform:none; color:var(--c-slate-300); letter-spacing:0;">(optional)</span></label>
+                    <textarea
+                      id="f-message"
+                      name="message"
+                      placeholder="Any specific questions or information about your child you'd like to share…"
+                      rows="3"
+                    ></textarea>
+                  </div>
+
+                </div>
+
+                <button type="submit" class="btn btn-primary form-submit-btn" id="form-submit-btn">
+                  Submit Enquiry
+                  <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </button>
+              </form>
+            </div>
+
+            <!-- Success state -->
+            <div class="form-success" id="form-success" role="status" aria-live="polite">
+              <div class="form-success-icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <h3>Enquiry Sent!</h3>
+              <p>Thank you for reaching out. Our admissions team will call you within <strong>24 hours</strong> to discuss everything about joining SUCCESS ACADEMY.</p>
+              <a href="https://wa.me/918075566063?text=Hello%2C+I+just+submitted+an+enquiry+for+SUCCESS+ACADEMY." target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-icon" style="margin-top:24px; width:100%; justify-content:center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                Also send via WhatsApp
+              </a>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ═══════════════════════════════════════
+       FOOTER
+  ═══════════════════════════════════════ -->
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-inner">
+
+        <!-- Brand -->
+        <div class="footer-brand">
+          <div class="footer-brand-name">
+            <div class="footer-brand-mark" aria-hidden="true">SA</div>
+            SUCCESS ACADEMY
+          </div>
+          <p class="footer-tagline">
+            "From Classrooms to Careers." — A Student Transformation Academy serving Alappuzha since our founding.
+          </p>
+          <div class="footer-contact" aria-label="Contact numbers">
+            <a href="tel:+918075566063">+91 80755 66063</a>
+            <a href="tel:+918089920551">+91 80899 20551</a>
+          </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="footer-col" aria-label="Quick links">
+          <p class="footer-col-title">Navigate</p>
+          <a href="#why">Why SUCCESS</a>
+          <a href="#nextgen">NextGen Program</a>
+          <a href="#programs">Programs</a>
+          <a href="#testimonials">Parent Stories</a>
+          <a href="#about">About Us</a>
+          <a href="#contact">Enquire Now</a>
+        </div>
+
+        <!-- Branches -->
+        <div class="footer-col" aria-label="Branch locations">
+          <p class="footer-col-title">Our Branches</p>
+          <a href="#contact">Alappuzha Branch</a>
+          <a href="#contact">Mannancherry Branch</a>
+          <a href="pages/student-login.html">Student Portal</a>
+          <a href="pages/admin-login.html">Admin Portal</a>
+        </div>
+
+      </div>
+
+      <div class="footer-bottom">
+        <span>© 2025 SUCCESS ACADEMY. All rights reserved.</span>
+        <span>Designed with purpose · Built for transformation.</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JavaScript -->
+  <script src="js/landing.js" defer></script>
+
+</body>
+</html>

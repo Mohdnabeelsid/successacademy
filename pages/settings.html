@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings — SUCCESS Learning Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/variables.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+
+<div class="page-loader" id="page-loader"><div class="spinner spinner-dark"></div></div>
+
+<div class="app-shell">
+  <div id="sidebar-root"></div>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="flex items-center gap-3">
+        <button class="btn-icon menu-toggle" id="menu-toggle">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <h1>Settings</h1>
+      </div>
+    </header>
+
+    <div class="page-body">
+      <div class="card" style="max-width:480px;">
+        <h3 style="margin-bottom:var(--sp-2);">Account</h3>
+        <p style="font-size:var(--fs-sm);color:var(--c-slate-500);margin-bottom:var(--sp-5);" id="account-info">—</p>
+
+        <h4 style="margin-bottom:var(--sp-4);">Change Password</h4>
+        <form id="password-form">
+          <div class="field"><label for="current-password">Current Password</label><input type="password" id="current-password" required></div>
+          <div class="field"><label for="new-password">New Password</label><input type="password" id="new-password" required minlength="6"></div>
+          <div class="field"><label for="confirm-password">Confirm New Password</label><input type="password" id="confirm-password" required minlength="6"></div>
+          <button type="submit" class="btn btn-primary" id="password-save-btn">Update Password</button>
+        </form>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast-region"></div>
+<script type="module" src="../js/pages/settings.js"></script>
+</body>
+</html>

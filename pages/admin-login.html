@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login — SUCCESS Learning Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/variables.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/auth.css">
+</head>
+<body>
+
+<div class="auth-shell">
+  <div class="auth-side">
+    <div class="auth-side-content">
+      <div class="nav-brand" style="color:#fff;"><div class="mark">SA</div> Success Learning Log</div>
+      <div class="quote">"From Classrooms to Careers." Every log approved here is a step in a student's transformation.</div>
+      <div class="quote-by">Success Academy — Administration Portal</div>
+    </div>
+    <a href="../index.html" style="color:rgba(255,255,255,0.6);font-size:var(--fs-xs);">← Back to home</a>
+  </div>
+
+  <div class="auth-form-wrap">
+    <div class="auth-card">
+      <div class="brand-mark"><div class="mark">SA</div></div>
+      <h1>Admin Sign In</h1>
+      <p class="sub">Manage students, review study logs, and track branch performance.</p>
+
+      <div class="auth-error" id="auth-error"></div>
+
+      <form id="admin-login-form">
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" required autocomplete="username" placeholder="admin@successacademy.app">
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" required autocomplete="current-password" placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="submit-btn">Sign In</button>
+      </form>
+
+      <div class="auth-links">
+        <a href="student-login.html">Student login →</a>
+        <a href="../index.html">Back to home</a>
+      </div>
+      <p class="auth-footer-note">Success Academy · Alappuzha · Mannancherry · Sharjah</p>
+    </div>
+  </div>
+</div>
+
+<div id="toast-region"></div>
+<script type="module" src="../js/pages/admin-login.js"></script>
+</body>
+</html>

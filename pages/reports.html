@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reports — SUCCESS Learning Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/variables.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<div class="page-loader" id="page-loader"><div class="spinner spinner-dark"></div></div>
+
+<div class="app-shell">
+  <div id="sidebar-root"></div>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="flex items-center gap-3">
+        <button class="btn-icon menu-toggle" id="menu-toggle">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <h1>Reports &amp; Leaderboard</h1>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost btn-sm" id="export-csv-btn">Export CSV</button>
+        <button class="btn btn-primary btn-sm" id="export-excel-btn">Export Excel</button>
+      </div>
+    </header>
+
+    <div class="page-body">
+      <div class="filter-bar">
+        <select id="filter-branch">
+          <option value="">All Branches</option>
+          <option value="ALP">Alappuzha</option>
+          <option value="MAN">Mannancherry</option>
+          <option value="UAE">Sharjah</option>
+        </select>
+        <select id="filter-class">
+          <option value="">All Classes</option>
+          <option>3</option><option>4</option><option>5</option><option>6</option><option>7</option>
+          <option>8</option><option>9</option><option>10</option>
+        </select>
+        <select id="rank-by">
+          <option value="streak">Rank by Study Streak</option>
+          <option value="hours">Rank by Study Hours</option>
+          <option value="active">Rank by Most Active</option>
+        </select>
+      </div>
+
+      <div class="card" style="padding:0;">
+        <div class="table-wrap" style="border:none;">
+          <table>
+            <thead><tr><th>Rank</th><th>Student</th><th>Admission No.</th><th>Class</th><th>Branch</th><th>Streak</th><th>Total Hours</th><th>Logs Approved</th></tr></thead>
+            <tbody id="leaderboard-body"><tr><td colspan="8"><div class="empty-state">Loading…</div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast-region"></div>
+<script type="module" src="../js/pages/reports.js"></script>
+</body>
+</html>

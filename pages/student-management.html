@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Management — SUCCESS Learning Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/variables.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  .bulk-table input, .bulk-table select {
+    padding: 8px 12px;
+    border: 1.5px solid var(--c-border);
+    border-radius: var(--r-md);
+    font-size: var(--fs-xs);
+    width: 100%;
+    background: var(--surface-0);
+  }
+  .bulk-table input:focus, .bulk-table select:focus {
+    outline: none;
+    border-color: var(--c-primary);
+  }
+  .bulk-table input[readonly] {
+    background: var(--c-slate-50);
+    color: var(--c-slate-500);
+    cursor: not-allowed;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-loader" id="page-loader"><div class="spinner spinner-dark"></div></div>
+
+<div class="app-shell">
+  <div id="sidebar-root"></div>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="flex items-center gap-3">
+        <button class="btn-icon menu-toggle" id="menu-toggle">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <h1>Student Management</h1>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost btn-sm" id="download-template-btn">Download Excel Template</button>
+        <button class="btn btn-ghost btn-sm" id="import-btn">Excel Import</button>
+        <input type="file" id="import-file" accept=".xlsx,.xls,.csv" class="hidden">
+        <button class="btn btn-primary btn-sm" id="add-student-btn">+ Add Student</button>
+      </div>
+    </header>
+
+    <div class="page-body">
+      <div class="filter-bar">
+        <div class="search-input">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="search-input" placeholder="Search by name, admission no, phone…">
+        </div>
+        <select id="filter-branch">
+          <option value="">All Branches</option>
+          <option value="ALP">Alappuzha (ALP)</option>
+          <option value="MAN">Mannancherry (MAN)</option>
+          <option value="UAE">Sharjah (UAE)</option>
+        </select>
+        <select id="filter-class">
+          <option value="">All Classes</option>
+          <option>3</option><option>4</option><option>5</option><option>6</option><option>7</option>
+          <option>8</option><option>9</option><option>10</option><option>11</option><option>12</option>
+        </select>
+      </div>
+
+      <div class="card" style="padding:0;">
+        <div class="table-wrap" style="border:none;">
+          <table>
+            <thead><tr><th>Student</th><th>Admission No.</th><th>Class</th><th>Branch</th><th>Phone</th><th>Login</th><th>Actions</th></tr></thead>
+            <tbody id="students-body"><tr><td colspan="7"><div class="empty-state">Loading…</div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Add / Edit Student Modal -->
+<div class="modal-overlay" id="student-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">Add Student</h3>
+      <button class="btn-icon" id="close-student-modal">✕</button>
+    </div>
+    <form id="student-form">
+      <input type="hidden" id="student-id">
+      <div class="field"><label for="s-name">Full Name</label><input type="text" id="s-name" required></div>
+      <div class="field"><label for="s-admission">Admission Number</label><input type="text" id="s-admission" required></div>
+      <div class="field">
+        <label for="s-class">Class</label>
+        <select id="s-class" required>
+          <option value="">Select class</option>
+          <option>3</option><option>4</option><option>5</option><option>6</option><option>7</option>
+          <option>8</option><option>9</option><option>10</option><option>11 Science</option>
+          <option>11 Commerce</option><option>12 Science</option><option>12 Commerce</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="s-branch">Branch</label>
+        <select id="s-branch" required>
+          <option value="ALP">Alappuzha (ALP)</option>
+          <option value="MAN" selected>Mannancherry (MAN)</option>
+          <option value="UAE">Sharjah (UAE)</option>
+        </select>
+      </div>
+      <div class="field"><label for="s-phone">Parent Phone</label><input type="tel" id="s-phone"></div>
+      <div class="field"><label for="s-parent">Parent Name</label><input type="text" id="s-parent"></div>
+      <button type="submit" class="btn btn-primary btn-block" id="student-save-btn">Save Student</button>
+    </form>
+  </div>
+</div>
+
+<!-- Generated credentials modal -->
+<div class="modal-overlay" id="creds-modal">
+  <div class="modal">
+    <div class="modal-header"><h3>Login Credentials</h3><button class="btn-icon" id="close-creds-modal">✕</button></div>
+    <p style="font-size:var(--fs-sm);color:var(--c-slate-500);margin-bottom:var(--sp-4);">Share these with the student/parent. This password is shown only once.</p>
+    <div class="card" style="background:var(--surface-1);">
+      <div style="font-size:var(--fs-xs);color:var(--c-slate-500);text-transform:uppercase;">Admission Number</div>
+      <div id="creds-admission" style="font-family:var(--font-display);font-size:var(--fs-lg);margin-bottom:var(--sp-3);"></div>
+      <div style="font-size:var(--fs-xs);color:var(--c-slate-500);text-transform:uppercase;">Password</div>
+      <div id="creds-password" style="font-family:var(--font-display);font-size:var(--fs-lg);"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Student Profile Detail Modal -->
+<div class="modal-overlay" id="profile-modal">
+  <div class="modal" style="max-width:800px; width:90%;">
+    <div class="modal-header">
+      <h3 id="profile-modal-title">Student Profile</h3>
+      <button class="btn-icon" id="close-profile-modal">✕</button>
+    </div>
+    
+    <div class="modal-body" style="padding-top:0;">
+      <!-- Profile Header -->
+      <div class="flex items-center gap-4" style="margin-bottom:var(--sp-4); padding-bottom:var(--sp-4); border-bottom:1px solid var(--c-border);">
+        <div class="avatar" id="pm-avatar" style="width:64px;height:64px;font-size:var(--fs-lg);">?</div>
+        <div>
+          <h2 id="pm-name" style="margin:0;font-size:var(--fs-lg);font-weight:700;">—</h2>
+          <div id="pm-meta" style="color:var(--c-slate-500);font-size:var(--fs-sm);margin-top:2px;">—</div>
+        </div>
+      </div>
+      
+      <!-- Tabs for Weekly, Monthly, Subject Analytics -->
+      <div class="tabs" style="margin-bottom:var(--sp-4);">
+        <button class="tab-btn active" id="tab-pm-weekly">Weekly View</button>
+        <button class="tab-btn" id="tab-pm-monthly">Monthly View</button>
+        <button class="tab-btn" id="tab-pm-subjects">Subject Analytics</button>
+        <button class="tab-btn" id="tab-pm-bulk-add">Bulk Add Logs</button>
+      </div>
+      
+      <!-- Content Areas -->
+      <!-- Weekly Content -->
+      <div id="pm-content-weekly" class="tab-content active">
+        <div class="card card-stat" style="margin-bottom:var(--sp-4); background:var(--surface-1);">
+          <div class="stat-label">Weekly Hours (Approved)</div>
+          <div class="stat-value" id="pm-weekly-hours">0 hrs</div>
+        </div>
+        <div class="table-wrap" style="max-height: 250px; overflow-y: auto;">
+          <table>
+            <thead><tr><th>Date</th><th>Day</th><th>Subject</th><th>Chapter</th><th>Duration</th></tr></thead>
+            <tbody id="pm-weekly-table-body">
+              <tr><td colspan="5"><div class="empty-state">No logs for this week</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Monthly Content -->
+      <div id="pm-content-monthly" class="tab-content" style="display:none;">
+        <div class="card card-stat" style="margin-bottom:var(--sp-4); background:var(--surface-1);">
+          <div class="stat-label">Monthly Hours (Approved)</div>
+          <div class="stat-value" id="pm-monthly-hours">0 hrs</div>
+        </div>
+        <div class="table-wrap" style="max-height: 250px; overflow-y: auto;">
+          <table>
+            <thead><tr><th>Date</th><th>Day</th><th>Subject</th><th>Chapter</th><th>Duration</th><th>Status</th></tr></thead>
+            <tbody id="pm-monthly-table-body">
+              <tr><td colspan="6"><div class="empty-state">No logs for this month</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Subject Content -->
+      <div id="pm-content-subjects" class="tab-content" style="display:none;">
+        <h4 style="margin-bottom:var(--sp-3); font-weight:600;">Subject-wise Study Time</h4>
+        <div id="pm-subject-bars" style="display:flex; flex-direction:column; gap:var(--sp-3);">
+          <div class="empty-state">No approved study time recorded</div>
+        </div>
+      </div>
+      
+      <!-- Bulk Add Logs Content -->
+      <div id="pm-content-bulk-add" class="tab-content" style="display:none;">
+        <h4 style="margin-bottom:var(--sp-2); font-weight:600;">Bulk Add Study Logs</h4>
+        <p style="font-size:var(--fs-xs); color:var(--c-slate-500); margin-bottom:var(--sp-4);">Add multiple study log entries at once. All submitted logs will be marked as "Approved" by default.</p>
+        
+        <form id="pm-bulk-add-form">
+          <div class="table-wrap" style="margin-bottom:var(--sp-4); max-height: 300px; overflow-y: auto;">
+            <table class="bulk-table" style="min-width: 850px; width: 100%;">
+              <thead>
+                <tr>
+                  <th style="width: 140px;">Date</th>
+                  <th style="width: 160px;">Subject</th>
+                  <th style="width: 110px;">Start Time</th>
+                  <th style="width: 110px;">End Time</th>
+                  <th style="width: 90px;">Duration (min)</th>
+                  <th>Chapter</th>
+                  <th>Notes</th>
+                  <th style="width: 50px; text-align: center;"></th>
+                </tr>
+              </thead>
+              <tbody id="pm-bulk-add-tbody">
+                <!-- Rows will be added dynamically here -->
+              </tbody>
+            </table>
+          </div>
+          
+          <div class="flex justify-between items-center" style="margin-top:var(--sp-3);">
+            <button type="button" class="btn btn-ghost btn-sm" id="pm-bulk-add-row-btn">+ Add Row</button>
+            <button type="submit" class="btn btn-primary btn-sm" id="pm-bulk-submit-btn">Save All Logs</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-region"></div>
+<script type="module" src="../js/pages/student-management.js"></script>
+</body>
+</html>
