@@ -299,28 +299,48 @@ function wireEvents() {
 
   // Excel import
   const fileInput = document.getElementById("import-file");
-  document.getElementById("import-btn").addEventListener("click", () => fileInput.click());
-  fileInput.addEventListener("change", async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (evt) => {
+  const importBtn = document.getElementById("import-btn");
+  if (importBtn && fileInput) {
+    importBtn.addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
       try {
-        const wb = XLSX.read(evt.target.result, { type: "binary" });
+        const arrayBuffer = await file.arrayBuffer();
+        const data = new Uint8Array(arrayBuffer);
+        const wb = XLSX.read(data, { type: "array" });
         const ws = wb.Sheets[wb.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(ws);
+
+        if (!rows || rows.length === 0) {
+          toast.error("The uploaded Excel file appears to be empty.");
+          return;
+        }
+
         toast.info(`Importing ${rows.length} students…`);
         const result = await bulkImportStudents(rows, "MAN");
-        toast.success(`Imported ${result.success} students. ${result.failed.length} failed.`);
+
+        if (result.failed.length > 0) {
+          console.error("Bulk import failed rows:", result.failed);
+          const firstErr = result.failed[0].error;
+          if (result.success > 0) {
+            toast.warning(`Imported ${result.success} students. ${result.failed.length} failed. (${firstErr})`);
+          } else {
+            toast.error(`Import failed: ${firstErr}`);
+          }
+        } else {
+          toast.success(`Successfully imported all ${result.success} students!`);
+        }
         await refreshList();
       } catch (err) {
-        toast.error("Import failed. Check the file format.");
+        console.error("Excel import error:", err);
+        toast.error("Import failed: " + (err.message || "Invalid file format. Check the file or download template."));
       } finally {
         fileInput.value = "";
       }
-    };
-    reader.readAsBinaryString(file);
-  });
+    });
+  }
 }
 
 function showCredentials(admission, password) {
