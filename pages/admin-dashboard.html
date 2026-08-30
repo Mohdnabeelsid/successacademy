@@ -30,6 +30,10 @@
         </div>
       </div>
       <div class="topbar-actions">
+        <button class="btn btn-sm" id="open-whatsapp-modal-btn" style="background:#25D366; color:#fff; border:none; display:inline-flex; align-items:center; gap:6px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984 0 1.762.459 3.48 1.332 5.001l-1.416 5.169 5.291-1.387c1.464.798 3.118 1.218 4.78 1.218h.004c5.506 0 9.99-4.479 9.991-9.985 0-2.668-1.039-5.176-2.926-7.062-1.886-1.887-4.394-2.936-7.066-2.938zm5.952 14.161c-.248.694-1.446 1.332-1.996 1.411-.5.072-1.154.103-3.342-.782-2.798-1.131-4.605-3.974-4.745-4.161-.139-.187-1.137-1.517-1.137-2.893 0-1.376.72-2.054.978-2.336.257-.282.56-.352.747-.352.187 0 .373.002.535.01.173.008.405-.065.633.482.235.565.798 1.944.868 2.086.07.142.117.307.023.493-.093.187-.14.305-.28.468-.14.164-.294.366-.42.492-.14.14-.286.294-.123.574.164.28 0.727 1.202 1.56 1.943 1.071.954 1.975 1.25 2.255 1.39.28.14.444.117.607-.07.164-.187.7-0.817.887-1.097.187-.28.373-.233.63-.14.257.093 1.633.77 1.913.91.28.14.467.21.537.327.07.117.07.676-.178 1.37z"/></svg>
+          WhatsApp Reminders
+        </button>
         <a href="study-log-management.html" class="btn btn-primary btn-sm">Review Logs</a>
       </div>
     </header>
@@ -65,6 +69,83 @@
       </div>
     </div>
   </main>
+</div>
+
+<!-- WhatsApp Class Reminder Broadcast Modal -->
+<div class="modal-overlay" id="whatsapp-modal">
+  <div class="modal" style="max-width:700px; width:90%;">
+    <div class="modal-header">
+      <div class="flex items-center gap-2">
+        <div style="background:#25D366; color:#fff; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984 0 1.762.459 3.48 1.332 5.001l-1.416 5.169 5.291-1.387c1.464.798 3.118 1.218 4.78 1.218h.004c5.506 0 9.99-4.479 9.991-9.985 0-2.668-1.039-5.176-2.926-7.062-1.886-1.887-4.394-2.936-7.066-2.938zm5.952 14.161c-.248.694-1.446 1.332-1.996 1.411-.5.072-1.154.103-3.342-.782-2.798-1.131-4.605-3.974-4.745-4.161-.139-.187-1.137-1.517-1.137-2.893 0-1.376.72-2.054.978-2.336.257-.282.56-.352.747-.352.187 0 .373.002.535.01.173.008.405-.065.633.482.235.565.798 1.944.868 2.086.07.142.117.307.023.493-.093.187-.14.305-.28.468-.14.164-.294.366-.42.492-.14.14-.286.294-.123.574.164.28 0.727 1.202 1.56 1.943 1.071.954 1.975 1.25 2.255 1.39.28.14.444.117.607-.07.164-.187.7-0.817.887-1.097.187-.28.373-.233.63-.14.257.093 1.633.77 1.913.91.28.14.467.21.537.327.07.117.07.676-.178 1.37z"/></svg>
+        </div>
+        <h3 style="margin:0;">WhatsApp Class Reminder</h3>
+      </div>
+      <button class="btn-icon" id="close-wa-modal">✕</button>
+    </div>
+
+    <div class="modal-body" style="padding-top:0;">
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:var(--sp-4);">
+        <div class="field" style="margin:0;">
+          <label for="wa-class-select">Select Class</label>
+          <select id="wa-class-select">
+            <option value="">All Classes</option>
+            <option value="3">Class 3</option>
+            <option value="4">Class 4</option>
+            <option value="5">Class 5</option>
+            <option value="6">Class 6</option>
+            <option value="7">Class 7</option>
+            <option value="8">Class 8</option>
+            <option value="9">Class 9</option>
+            <option value="10">Class 10</option>
+            <option value="11 Science">Class 11 Science</option>
+            <option value="11 Commerce">Class 11 Commerce</option>
+            <option value="12 Science">Class 12 Science</option>
+            <option value="12 Commerce">Class 12 Commerce</option>
+          </select>
+        </div>
+        <div class="field" style="margin:0;">
+          <label for="wa-date-input">Select Date</label>
+          <input type="date" id="wa-date-input">
+        </div>
+      </div>
+
+      <div class="card" style="padding:12px 16px; background:var(--surface-1); margin-bottom:var(--sp-4); display:flex; justify-content:between; align-items:center;">
+        <div>
+          <div style="font-size:var(--fs-xs); color:var(--c-slate-500); text-transform:uppercase;">Non-Submitting Students</div>
+          <div id="wa-count-label" style="font-size:var(--fs-md); font-weight:700; color:var(--c-danger);">Calculating...</div>
+        </div>
+        <div id="wa-missing-names-pill" style="font-size:var(--fs-xs); color:var(--c-slate-600);"></div>
+      </div>
+
+      <div class="field">
+        <label for="wa-message-template">Message Template (Customizable)</label>
+        <textarea id="wa-message-template" rows="5" style="width:100%; font-family:inherit; font-size:var(--fs-xs); padding:10px; border:1px solid var(--c-border); border-radius:var(--r-md); background:var(--surface-0);">📢 *SUCCESS ACADEMY — STUDY LOG REMINDER*
+*Class:* {class}
+*Date:* {date}
+
+Dear Parents, the following {count} student(s) have NOT submitted their study log for today:
+
+{student_list}
+
+⚠️ *Please ensure your child logs their study hours today.*
+Thank you!</textarea>
+        <div style="font-size:11px; color:var(--c-slate-400); margin-top:4px;">Placeholders available: <code>{class}</code>, <code>{date}</code>, <code>{count}</code>, <code>{student_list}</code></div>
+      </div>
+
+      <div class="field">
+        <label>Generated WhatsApp Message Preview</label>
+        <div id="wa-message-preview" style="white-space:pre-wrap; background:#DCF8C6; color:#075E54; font-family:inherit; font-size:var(--fs-xs); padding:12px; border-radius:var(--r-md); border:1px solid #C2E7B0; max-height:140px; overflow-y:auto;"></div>
+      </div>
+
+      <div class="flex justify-between items-center" style="margin-top:var(--sp-4);">
+        <button type="button" class="btn btn-ghost btn-sm" id="wa-copy-btn">📋 Copy Message</button>
+        <button type="button" class="btn btn-sm" id="wa-send-btn" style="background:#25D366; color:#fff; border:none; padding:8px 16px; font-weight:600;">
+          📲 Send to Class WhatsApp Group
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div id="toast-region"></div>
