@@ -100,7 +100,7 @@ export function getSubjectsForClass(studentClass) {
     ];
   }
 
-  // Default / Fallback for Class 3, 4, etc.
+  // Default / Fallback (Class 5-7)
   return [
     "Social Science",
     "Hindi",
