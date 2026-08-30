@@ -321,16 +321,16 @@ function wireEvents() {
         toast.info(`Importing ${rows.length} students…`);
         const result = await bulkImportStudents(rows, "MAN");
 
+        let msg = `Imported ${result.success} new students.`;
+        if (result.skipped > 0) msg += ` ${result.skipped} skipped (already in database).`;
+
         if (result.failed.length > 0) {
           console.error("Bulk import failed rows:", result.failed);
-          const firstErr = result.failed[0].error;
-          if (result.success > 0) {
-            toast.warning(`Imported ${result.success} students. ${result.failed.length} failed. (${firstErr})`);
-          } else {
-            toast.error(`Import failed: ${firstErr}`);
-          }
+          const firstFail = result.failed[0];
+          msg += ` ${result.failed.length} failed (e.g. Row ${firstFail.rowNum}: ${firstFail.error}).`;
+          toast.warning(msg);
         } else {
-          toast.success(`Successfully imported all ${result.success} students!`);
+          toast.success(msg);
         }
         await refreshList();
       } catch (err) {

@@ -37,11 +37,20 @@ async function createAuthUserSecondary(email, password) {
   });
 
   if (error) {
+    // If account already exists in Supabase Auth, attempt recovery by signing in
     if (error.message.includes("User already registered") || error.message.includes("already exists")) {
-      throw new Error(`The login account "${email}" already exists in Supabase Auth. Please remove this email from Supabase Dashboard (Authentication → Users) before creating this student again.`);
+      const { data: signInData, error: signInErr } = await secondaryClient.auth.signInWithPassword({
+        email,
+        password
+      });
+      if (!signInErr && signInData?.user) {
+        return signInData.user.id;
+      }
+      throw new Error(`The login account "${email}" already exists in Supabase Auth. Please remove this email from Supabase Dashboard (Authentication → Users) or check credentials.`);
     }
+
     if (error.message.includes("rate limit") || error.status === 429 || error.code === "over_email_send_rate_limit") {
-      throw new Error(`Supabase Email Rate Limit Exceeded. Please turn OFF 'Confirm email' in Supabase Dashboard (Authentication ➔ Providers ➔ Email ➔ Confirm email = OFF) to allow instant student imports.`);
+      throw new Error(`Supabase Email Rate Limit Exceeded. Please turn OFF 'Confirm email' in Supabase Dashboard (Authentication ➔ Providers ➔ Email ➔ Confirm email = OFF).`);
     }
     throw error;
   }
@@ -62,7 +71,7 @@ export async function createStudentWithCredentials(studentData) {
   if (!name) throw new Error("Student name is required.");
   if (!studentClass) throw new Error("Class is required.");
 
-  // 1. Check if a student with this admission number already exists
+  // 1. Check if a student with this admission number already exists in database
   const existingDocs = await getRowsWhere(TABLES.STUDENTS, "admissionNumber", "==", admissionNumber);
   if (existingDocs.length > 0) {
     throw new Error(`A student with admission number "${admissionNumber}" already exists in the database.`);
@@ -71,7 +80,7 @@ export async function createStudentWithCredentials(studentData) {
   const password = studentData.password || randomPassword();
   const email = admissionNumberToEmail(admissionNumber);
 
-  // 2. Create secondary Auth user
+  // 2. Create secondary Auth user (or reuse existing Auth account)
   const uid = await createAuthUserSecondary(email, password);
 
   // 3. Insert student record into Supabase table
@@ -148,7 +157,7 @@ function getRowVal(row, keys) {
 }
 
 export async function bulkImportStudents(rows, defaultBranch = "MAN") {
-  const results = { success: 0, failed: [] };
+  const results = { success: 0, skipped: 0, failed: [] };
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
     try {
@@ -179,15 +188,15 @@ export async function bulkImportStudents(rows, defaultBranch = "MAN") {
       });
       results.success++;
 
-      // Small delay between signups to avoid rate limiting
+      // Small delay between signups to avoid hitting rate limits
       if (i < rows.length - 1) {
-        await new Promise((res) => setTimeout(res, 200));
+        await new Promise((res) => setTimeout(res, 150));
       }
     } catch (err) {
-      results.failed.push({ row, error: err.message });
-      // If we hit email rate limit, stop the loop immediately so the error message is displayed
-      if (err.message.includes("Confirm email") || err.message.includes("Rate Limit")) {
-        break;
+      if (err.message.includes("already exists in the database")) {
+        results.skipped++;
+      } else {
+        results.failed.push({ rowNum: i + 1, admissionNumber: getRowVal(row, ["admissionNumber", "Admission Number"]) || "?", error: err.message });
       }
     }
   }
