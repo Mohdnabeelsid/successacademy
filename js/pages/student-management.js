@@ -297,7 +297,16 @@ function wireEvents() {
     XLSX.writeFile(wb, "student-import-template.xlsx");
   });
 
-  // Excel import
+  // Results modal close handlers
+  const resultsModal = document.getElementById("import-results-modal");
+  const closeResultsModal = () => resultsModal?.classList.remove("active");
+  document.getElementById("close-import-results-modal")?.addEventListener("click", closeResultsModal);
+  document.getElementById("close-import-results-btn")?.addEventListener("click", closeResultsModal);
+  if (resultsModal) {
+    resultsModal.addEventListener("click", (e) => { if (e.target === resultsModal) closeResultsModal(); });
+  }
+
+  // Excel import — automatically starts import when file is picked
   const fileInput = document.getElementById("import-file");
   const importBtn = document.getElementById("import-btn");
   if (importBtn && fileInput) {
@@ -306,7 +315,17 @@ function wireEvents() {
       const file = e.target.files[0];
       if (!file) return;
 
+      const progressModal = document.getElementById("import-progress-modal");
+      const progressBar = document.getElementById("import-progress-bar");
+      const progressPercent = document.getElementById("import-progress-percent");
+      const progressStatus = document.getElementById("import-progress-status");
+
       try {
+        if (progressStatus) progressStatus.textContent = "Reading Excel file...";
+        if (progressBar) progressBar.style.width = "0%";
+        if (progressPercent) progressPercent.textContent = "0%";
+        if (progressModal) progressModal.classList.add("active");
+
         const arrayBuffer = await file.arrayBuffer();
         const data = new Uint8Array(arrayBuffer);
         const wb = XLSX.read(data, { type: "array" });
@@ -314,26 +333,52 @@ function wireEvents() {
         const rows = XLSX.utils.sheet_to_json(ws);
 
         if (!rows || rows.length === 0) {
+          if (progressModal) progressModal.classList.remove("active");
           toast.error("The uploaded Excel file appears to be empty.");
           return;
         }
 
-        toast.info(`Importing ${rows.length} students…`);
-        const result = await bulkImportStudents(rows, "MAN");
+        const result = await bulkImportStudents(rows, "MAN", (progress) => {
+          if (progressBar) progressBar.style.width = `${progress.percent}%`;
+          if (progressPercent) progressPercent.textContent = `${progress.percent}% (${progress.current}/${progress.total})`;
+          if (progressStatus) progressStatus.textContent = `Processing student: ${progress.currentStudent}`;
+        });
 
-        let msg = `Imported ${result.success} new students.`;
-        if (result.skipped > 0) msg += ` ${result.skipped} skipped (already in database).`;
+        // Hide progress modal
+        if (progressModal) progressModal.classList.remove("active");
+
+        // Display results summary report modal
+        document.getElementById("res-total").textContent = result.total || rows.length;
+        document.getElementById("res-success").textContent = result.success;
+        document.getElementById("res-skipped").textContent = result.skipped;
+        document.getElementById("res-failed").textContent = result.failed.length;
+
+        const failuresTbody = document.getElementById("import-failures-tbody");
+        const failuresSection = document.getElementById("import-failures-section");
 
         if (result.failed.length > 0) {
-          console.error("Bulk import failed rows:", result.failed);
-          const firstFail = result.failed[0];
-          msg += ` ${result.failed.length} failed (e.g. Row ${firstFail.rowNum}: ${firstFail.error}).`;
-          toast.warning(msg);
+          if (failuresSection) failuresSection.style.display = "block";
+          if (failuresTbody) {
+            failuresTbody.innerHTML = result.failed
+              .map(
+                (f) => `
+              <tr>
+                <td><strong>${f.rowNum}</strong></td>
+                <td>${f.admissionNumber || "—"}</td>
+                <td>${f.name || "—"}</td>
+                <td style="color:var(--c-danger); font-size:var(--fs-xs);">${f.error}</td>
+              </tr>`
+              )
+              .join("");
+          }
         } else {
-          toast.success(msg);
+          if (failuresSection) failuresSection.style.display = "none";
         }
+
+        if (resultsModal) resultsModal.classList.add("active");
         await refreshList();
       } catch (err) {
+        if (progressModal) progressModal.classList.remove("active");
         console.error("Excel import error:", err);
         toast.error("Import failed: " + (err.message || "Invalid file format. Check the file or download template."));
       } finally {

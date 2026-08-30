@@ -237,6 +237,74 @@
   </div>
 </div>
 
+<!-- Excel Import Progress Modal -->
+<div class="modal-overlay" id="import-progress-modal">
+  <div class="modal" style="max-width:450px; text-align:center;">
+    <h3 style="margin-bottom:var(--sp-2);">Importing Students</h3>
+    <p style="font-size:var(--fs-xs); color:var(--c-slate-500); margin-bottom:var(--sp-4);" id="import-progress-status">Reading Excel file...</p>
+    
+    <div style="background:var(--c-slate-100); height:12px; border-radius:var(--r-full); overflow:hidden; margin-bottom:var(--sp-3);">
+      <div id="import-progress-bar" style="width:0%; height:100%; background:var(--c-primary); transition:width 0.2s ease; border-radius:var(--r-full);"></div>
+    </div>
+    
+    <div id="import-progress-percent" style="font-weight:700; font-size:var(--fs-md); color:var(--c-primary);">0%</div>
+  </div>
+</div>
+
+<!-- Excel Import Results Modal -->
+<div class="modal-overlay" id="import-results-modal">
+  <div class="modal" style="max-width:750px; width:90%;">
+    <div class="modal-header">
+      <h3>Import Summary Report</h3>
+      <button class="btn-icon" id="close-import-results-modal">✕</button>
+    </div>
+    
+    <div class="modal-body" style="padding-top:0;">
+      <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-bottom:var(--sp-4);">
+        <div class="card" style="padding:12px; text-align:center; background:var(--surface-1);">
+          <div style="font-size:var(--fs-xs); color:var(--c-slate-500); text-transform:uppercase;">Total Rows</div>
+          <div id="res-total" style="font-size:var(--fs-xl); font-weight:700;">0</div>
+        </div>
+        <div class="card" style="padding:12px; text-align:center; background:rgba(16,185,129,0.1);">
+          <div style="font-size:var(--fs-xs); color:var(--c-success); text-transform:uppercase;">Imported</div>
+          <div id="res-success" style="font-size:var(--fs-xl); font-weight:700; color:var(--c-success);">0</div>
+        </div>
+        <div class="card" style="padding:12px; text-align:center; background:rgba(245,158,11,0.1);">
+          <div style="font-size:var(--fs-xs); color:var(--c-warning); text-transform:uppercase;">Skipped</div>
+          <div id="res-skipped" style="font-size:var(--fs-xl); font-weight:700; color:var(--c-warning);">0</div>
+        </div>
+        <div class="card" style="padding:12px; text-align:center; background:rgba(239,68,68,0.1);">
+          <div style="font-size:var(--fs-xs); color:var(--c-danger); text-transform:uppercase;">Failed</div>
+          <div id="res-failed" style="font-size:var(--fs-xl); font-weight:700; color:var(--c-danger);">0</div>
+        </div>
+      </div>
+      
+      <div id="import-failures-section">
+        <h4 style="margin-bottom:var(--sp-2); font-weight:600; color:var(--c-slate-800);">Failed Rows & Reasons</h4>
+        <div class="table-wrap" style="max-height: 250px; overflow-y: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:60px;">Row</th>
+                <th style="width:130px;">Admission No</th>
+                <th style="width:150px;">Student Name</th>
+                <th>Failure Reason</th>
+              </tr>
+            </thead>
+            <tbody id="import-failures-tbody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <div class="flex justify-end" style="margin-top:var(--sp-4);">
+        <button class="btn btn-primary btn-sm" id="close-import-results-btn">Close Report</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="toast-region"></div>
 <script type="module" src="../js/pages/student-management.js"></script>
 </body>

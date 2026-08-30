@@ -156,26 +156,35 @@ function getRowVal(row, keys) {
   return "";
 }
 
-export async function bulkImportStudents(rows, defaultBranch = "MAN") {
-  const results = { success: 0, skipped: 0, failed: [] };
+export async function bulkImportStudents(rows, defaultBranch = "MAN", onProgress = null) {
+  const results = { total: rows.length, success: 0, skipped: 0, failed: [] };
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
-    try {
-      const name = getRowVal(row, ["name", "Name", "Student Name", "NAME", "StudentName"]);
-      const admissionNumber = getRowVal(row, ["admissionNumber", "Admission Number", "ADMISSION NUMBER", "Admission No", "AdmissionNo", "admission_number"]);
-      const studentClass = getRowVal(row, ["class", "Class", "CLASS", "Grade"]);
-      const branch = getRowVal(row, ["branch", "Branch", "BRANCH"]) || defaultBranch || "MAN";
-      const phone = getRowVal(row, ["phone", "Phone", "PHONE", "Phone Number", "Mobile"]);
-      const parentName = getRowVal(row, ["parentName", "Parent Name", "PARENT NAME", "ParentName", "Guardian Name"]);
+    const name = getRowVal(row, ["name", "Name", "Student Name", "NAME", "StudentName"]);
+    const admissionNumber = getRowVal(row, ["admissionNumber", "Admission Number", "ADMISSION NUMBER", "Admission No", "AdmissionNo", "admission_number"]);
+    const studentClass = getRowVal(row, ["class", "Class", "CLASS", "Grade"]);
+    const branch = getRowVal(row, ["branch", "Branch", "BRANCH"]) || defaultBranch || "MAN";
+    const phone = getRowVal(row, ["phone", "Phone", "PHONE", "Phone Number", "Mobile"]);
+    const parentName = getRowVal(row, ["parentName", "Parent Name", "PARENT NAME", "ParentName", "Guardian Name"]);
 
+    if (onProgress) {
+      onProgress({
+        current: i + 1,
+        total: rows.length,
+        percent: Math.round(((i + 1) / rows.length) * 100),
+        currentStudent: name || admissionNumber || `Row ${i + 1}`
+      });
+    }
+
+    try {
       if (!admissionNumber) {
-        throw new Error(`Row ${i + 1}: Missing or invalid Admission Number.`);
+        throw new Error("Missing or invalid Admission Number.");
       }
       if (!name) {
-        throw new Error(`Row ${i + 1}: Missing student Name for Admission No "${admissionNumber}".`);
+        throw new Error("Missing student Name.");
       }
       if (!studentClass) {
-        throw new Error(`Row ${i + 1}: Missing Class for student "${name}".`);
+        throw new Error("Missing Class.");
       }
 
       await createStudentWithCredentials({
@@ -188,15 +197,19 @@ export async function bulkImportStudents(rows, defaultBranch = "MAN") {
       });
       results.success++;
 
-      // Small delay between signups to avoid hitting rate limits
       if (i < rows.length - 1) {
-        await new Promise((res) => setTimeout(res, 150));
+        await new Promise((res) => setTimeout(res, 100));
       }
     } catch (err) {
       if (err.message.includes("already exists in the database")) {
         results.skipped++;
       } else {
-        results.failed.push({ rowNum: i + 1, admissionNumber: getRowVal(row, ["admissionNumber", "Admission Number"]) || "?", error: err.message });
+        results.failed.push({
+          rowNum: i + 1,
+          admissionNumber: admissionNumber || "—",
+          name: name || "—",
+          error: err.message
+        });
       }
     }
   }
