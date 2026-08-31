@@ -151,18 +151,33 @@ function updateWhatsAppPreview() {
     targetStudents = targetStudents.filter((s) => String(s.class) === String(classVal));
   }
 
-  // 2. Find students who submitted at least one log on dateVal
-  const submittedStudentIds = new Set(
-    allLogs.filter((l) => l.date === dateVal).map((l) => l.studentId)
+  // Map studentId to leave reason for dateVal
+  const leaveMap = {};
+  allLogs
+    .filter((l) => l.date === dateVal && (Number(l.durationMinutes) === 0 || (l.subject && l.subject.includes("Leave"))))
+    .forEach((l) => {
+      leaveMap[l.studentId] = l.chapter || l.notes || "Inability Reported";
+    });
+
+  // Students who submitted an actual study log (> 0 min)
+  const submittedStudyIds = new Set(
+    allLogs.filter((l) => l.date === dateVal && Number(l.durationMinutes) > 0).map((l) => l.studentId)
   );
 
-  // 3. Identify non-submitting students
-  const missingStudents = targetStudents.filter((s) => !submittedStudentIds.has(s.id));
+  // Identify students without study hours
+  const missingStudents = targetStudents.filter((s) => !submittedStudyIds.has(s.id));
   missingStudents.sort((a, b) => a.name.localeCompare(b.name));
 
   // Format student list string
   const studentListStr = missingStudents.length
-    ? missingStudents.map((s, i) => `${i + 1}. ${s.name}`).join("\n")
+    ? missingStudents
+        .map((s, i) => {
+          const reason = leaveMap[s.id];
+          return reason
+            ? `${i + 1}. ${s.name} (⚠️ Leave Reported: ${reason})`
+            : `${i + 1}. ${s.name}`;
+        })
+        .join("\n")
     : "🎉 All students have submitted their study logs!";
 
   // Format date display

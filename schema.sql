@@ -103,6 +103,54 @@ CREATE TRIGGER trg_users_updated_at BEFORE UPDATE ON public.users FOR EACH ROW E
 DROP TRIGGER IF EXISTS trg_students_updated_at ON public.students;
 CREATE TRIGGER trg_students_updated_at BEFORE UPDATE ON public.students FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
+-- 11. RPC Function to sync password resets in both auth.users and public.students
+CREATE OR REPLACE FUNCTION public.reset_student_password(
+  p_admission text,
+  p_new_password text
+)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_email text;
+BEGIN
+  v_email := lower(p_admission) || '@students.successacademy.app';
+  
+  -- 1. Update Supabase Auth encrypted_password
+  UPDATE auth.users
+  SET encrypted_password = extensions.crypt(p_new_password, extensions.gen_salt('bf'))
+  WHERE lower(email) = v_email;
+
+  -- 2. Update public.students display password
+  UPDATE public.students
+  SET password = p_new_password,
+      pending_password_reset = NULL,
+      pending_password_reset_at = NULL
+  WHERE lower(admission_number) = lower(p_admission);
+
+-- 12. Password Sync Trigger: Automatically syncs password edits in public.students to auth.users
+CREATE OR REPLACE FUNCTION public.trg_sync_student_password_to_auth()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  IF (TG_OP = 'UPDATE') AND (NEW.password IS DISTINCT FROM OLD.password) AND (NEW.email IS NOT NULL) THEN
+    UPDATE auth.users
+    SET encrypted_password = extensions.crypt(NEW.password, extensions.gen_salt('bf'))
+    WHERE lower(email) = lower(NEW.email);
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_sync_student_password ON public.students;
+CREATE TRIGGER trg_sync_student_password
+  AFTER UPDATE OF password ON public.students
+  FOR EACH ROW
+  EXECUTE FUNCTION public.trg_sync_student_password_to_auth();
+
 DROP TRIGGER IF EXISTS trg_study_logs_updated_at ON public.study_logs;
 CREATE TRIGGER trg_study_logs_updated_at BEFORE UPDATE ON public.study_logs FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
@@ -153,9 +201,9 @@ CREATE POLICY "Students read own study_logs" ON public.study_logs FOR SELECT USI
 );
 
 DROP POLICY IF EXISTS "Students insert pending study_logs" ON public.study_logs;
-CREATE POLICY "Students insert pending study_logs" ON public.study_logs FOR INSERT WITH CHECK (
+DROP POLICY IF EXISTS "Students insert own study_logs" ON public.study_logs;
+CREATE POLICY "Students insert own study_logs" ON public.study_logs FOR INSERT WITH CHECK (
   EXISTS (SELECT 1 FROM public.students WHERE id = public.study_logs.student_id AND uid = auth.uid())
-  AND status = 'Pending'
 );
 
 -- RLS Policies for Reference Tables

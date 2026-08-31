@@ -138,11 +138,22 @@ export async function resetStudentPassword(studentId) {
   if (!student) throw new Error("Student not found.");
   const newPassword = randomPassword();
 
-  await updateRowById(TABLES.STUDENTS, studentId, {
-    password: newPassword,
-    pendingPasswordReset: newPassword,
-    pendingPasswordResetAt: new Date().toISOString()
+  const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  
+  // Call RPC to update both auth.users and public.students
+  const { error: rpcErr } = await client.rpc("reset_student_password", {
+    p_admission: student.admissionNumber,
+    p_new_password: newPassword
   });
+
+  if (rpcErr) {
+    console.warn("RPC reset_student_password failed:", rpcErr);
+    await updateRowById(TABLES.STUDENTS, studentId, {
+      password: newPassword,
+      pendingPasswordReset: newPassword,
+      pendingPasswordResetAt: new Date().toISOString()
+    });
+  }
 
   return newPassword;
 }

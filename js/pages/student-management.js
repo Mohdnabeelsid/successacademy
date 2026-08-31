@@ -535,18 +535,23 @@ function renderWeeklyLogs() {
   
   tbody.innerHTML = weeklyLogs
     .map((l) => {
-      const badge =
-        l.status === LOG_STATUS.APPROVED
-          ? '<span class="badge badge-success">Approved</span>'
-          : l.status === LOG_STATUS.CORRECTION
-          ? '<span class="badge badge-danger">Needs Correction</span>'
-          : '<span class="badge badge-warning">Pending</span>';
+      const isLeave = Number(l.durationMinutes) === 0 || (l.subject && l.subject.includes("Leave"));
+      const badge = isLeave
+        ? '<span class="badge badge-warning" style="background:#FFFBEB; color:#D97706; border:1px solid #FCD34D;">Leave / No Study</span>'
+        : l.status === LOG_STATUS.APPROVED
+        ? '<span class="badge badge-success">Approved</span>'
+        : l.status === LOG_STATUS.CORRECTION
+        ? '<span class="badge badge-danger">Needs Correction</span>'
+        : '<span class="badge badge-warning">Pending</span>';
+
+      const subjDisplay = isLeave ? "⚠️ " + (l.chapter || "Inability Reported") : l.subject;
+      const chapterDisplay = isLeave ? (l.notes || "—") : (l.chapter || "—");
           
       return `<tr>
         <td>${l.date}</td>
         <td>${l.day || ""}</td>
-        <td>${l.subject}</td>
-        <td>${l.chapter || "—"}</td>
+        <td>${subjDisplay}</td>
+        <td>${chapterDisplay}</td>
         <td>${l.durationMinutes} min (${badge})</td>
       </tr>`;
     })
@@ -578,18 +583,23 @@ function renderMonthlyLogs() {
   
   tbody.innerHTML = monthlyLogs
     .map((l) => {
-      const badge =
-        l.status === LOG_STATUS.APPROVED
-          ? '<span class="badge badge-success">Approved</span>'
-          : l.status === LOG_STATUS.CORRECTION
-          ? '<span class="badge badge-danger">Needs Correction</span>'
-          : '<span class="badge badge-warning">Pending</span>';
-          
+      const isLeave = Number(l.durationMinutes) === 0 || (l.subject && l.subject.includes("Leave"));
+      const badge = isLeave
+        ? '<span class="badge badge-warning" style="background:#FFFBEB; color:#D97706; border:1px solid #FCD34D;">Leave / No Study</span>'
+        : l.status === LOG_STATUS.APPROVED
+        ? '<span class="badge badge-success">Approved</span>'
+        : l.status === LOG_STATUS.CORRECTION
+        ? '<span class="badge badge-danger">Needs Correction</span>'
+        : '<span class="badge badge-warning">Pending</span>';
+
+      const subjDisplay = isLeave ? "⚠️ " + (l.chapter || "Inability Reported") : l.subject;
+      const chapterDisplay = isLeave ? (l.notes || "—") : (l.chapter || "—");
+
       return `<tr>
         <td>${l.date}</td>
         <td>${l.day || ""}</td>
-        <td>${l.subject}</td>
-        <td>${l.chapter || "—"}</td>
+        <td>${subjDisplay}</td>
+        <td>${chapterDisplay}</td>
         <td>${l.durationMinutes} min</td>
         <td>${badge}</td>
       </tr>`;

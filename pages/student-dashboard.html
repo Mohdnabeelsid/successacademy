@@ -29,7 +29,12 @@
           <div class="topbar-sub" id="today-label"></div>
         </div>
       </div>
-      <button class="btn btn-primary btn-sm" id="open-log-modal">+ Add Study Log</button>
+      <div class="topbar-actions flex gap-2">
+        <button class="btn btn-ghost btn-sm" id="open-leave-modal" style="color:var(--c-warning); border:1px solid var(--c-border);">
+          ⚠️ Report Inability to Study
+        </button>
+        <button class="btn btn-primary btn-sm" id="open-log-modal">+ Add Study Log</button>
+      </div>
     </header>
 
     <div class="page-body">
@@ -99,6 +104,43 @@
         <textarea id="log-notes" placeholder="What did you cover / find difficult?"></textarea>
       </div>
       <button type="submit" class="btn btn-primary btn-block">Submit Log</button>
+    </form>
+  </div>
+</div>
+
+<!-- Report Inability to Study Modal -->
+<div class="modal-overlay" id="leave-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="flex items-center gap-2">
+        <div style="background:#FFFBEB; color:#D97706; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">⚠️</div>
+        <h3 style="margin:0;">Report Inability to Study</h3>
+      </div>
+      <button class="btn-icon" id="close-leave-modal">✕</button>
+    </div>
+    <form id="leave-form">
+      <div class="field">
+        <label for="leave-date">Date</label>
+        <input type="date" id="leave-date" required>
+      </div>
+      <div class="field">
+        <label for="leave-reason">Reason Category</label>
+        <select id="leave-reason" required>
+          <option value="">Select reason</option>
+          <option value="Health Issue / Sick">Medical / Sick / Health Issue</option>
+          <option value="Family Function / Event">Family Function / Marriage / Event</option>
+          <option value="Travel / Out of Station">Travel / Out of Station</option>
+          <option value="School Exam / Preparation">School Exam / Special Preparation</option>
+          <option value="Power / Technical Issue">Power Cut / Internet / Technical Issue</option>
+          <option value="Personal Emergency">Personal Emergency</option>
+          <option value="Other Reason">Other Reason</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="leave-notes">Detailed Explanation</label>
+        <textarea id="leave-notes" placeholder="Please provide details (e.g. Fever, Traveling to hometown, etc.)" required rows="3"></textarea>
+      </div>
+      <button type="submit" class="btn btn-block" style="background:#F59E0B; color:#fff; border:none; font-weight:600;">Submit Inability Report</button>
     </form>
   </div>
 </div>
