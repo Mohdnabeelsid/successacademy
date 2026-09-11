@@ -22,6 +22,8 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 export const TABLES = {
   STUDENTS: "students",
   STUDY_LOGS: "study_logs",
+  EXAMS: "exams",
+  EXAM_MARKS: "exam_marks",
   USERS: "users",
   BRANCHES: "branches",
   CLASSES: "classes",

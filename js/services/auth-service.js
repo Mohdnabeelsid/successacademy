@@ -66,7 +66,8 @@ export async function getStudentByUid(uid) {
     phone: data.phone,
     parentName: data.parent_name,
     email: data.email,
-    loginDisabled: data.login_disabled
+    loginDisabled: data.login_disabled,
+    subjects: data.subjects
   };
 }
 

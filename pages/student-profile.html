@@ -5,33 +5,113 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>My Profile — SUCCESS Learning Log</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../css/variables.css">
 <link rel="stylesheet" href="../css/base.css">
 <link rel="stylesheet" href="../css/components.css">
 <link rel="stylesheet" href="../css/dashboard.css">
 <style>
-  .profile-head { display:flex; align-items:center; gap:var(--sp-5); margin-bottom:var(--sp-6); }
+  .profile-head { display:flex; align-items:center; gap:var(--sp-5); margin-bottom:var(--sp-5); }
   .profile-head .avatar { width:72px; height:72px; font-size:var(--fs-xl); }
   .bar-row { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
-  .bar-row .lbl { width:110px; font-size:var(--fs-xs); color:var(--c-slate-700); flex-shrink:0; }
+  .bar-row .lbl { min-width:130px; width:auto; max-width:180px; font-size:var(--fs-xs); color:var(--c-slate-700); flex-shrink:0; }
   .bar-row .val { width:56px; font-size:var(--fs-xs); color:var(--c-slate-500); text-align:right; flex-shrink:0; }
+
+  /* Frame Generator Styles */
+  .frame-canvas-container {
+    width: 100%;
+    max-width: 440px;
+    margin: 0 auto;
+    position: relative;
+    border-radius: var(--r-md);
+    overflow: hidden;
+    box-shadow: 0 12px 36px rgba(7, 26, 23, 0.15);
+    background: #FFFFFF;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--c-border);
+    touch-action: none;
+    cursor: grab;
+  }
+  .frame-canvas-container:active {
+    cursor: grabbing;
+  }
+  .frame-canvas-container canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+  }
+  .frame-hint-badge {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(7, 26, 23, 0.75);
+    backdrop-filter: blur(6px);
+    color: #FFFFFF;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+    pointer-events: none;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    opacity: 0.9;
+  }
+  .upload-dropzone {
+    border: 2px dashed #0FA15D66;
+    background: rgba(15, 161, 93, 0.04);
+    border-radius: var(--r-md);
+    padding: 20px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .upload-dropzone:hover {
+    border-color: #0FA15D;
+    background: rgba(15, 161, 93, 0.08);
+  }
+  .slider-control-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
+  }
+  .slider-control-row input[type="range"] {
+    flex: 1;
+    accent-color: #0FA15D;
+    height: 6px;
+    cursor: pointer;
+  }
 </style>
 </head>
 <body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
 
 <div class="page-loader" id="page-loader"><div class="spinner spinner-dark"></div></div>
 
 <div class="app-shell">
   <div id="sidebar-root"></div>
 
-  <main class="main">
+  <main class="main" id="main-content" tabindex="-1">
     <header class="topbar">
       <div class="flex items-center gap-3">
         <button class="btn-icon menu-toggle" id="menu-toggle">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
         <h1>My Profile</h1>
+      </div>
+      <div class="topbar-actions flex items-center gap-2">
+        <a href="student-study-logs.html" class="btn btn-ghost btn-sm">
+          📋 My Study Logs
+        </a>
+        <a href="student-exams.html" class="btn btn-ghost btn-sm">
+          🏆 My Exams &amp; Marks
+        </a>
       </div>
     </header>
 
@@ -41,6 +121,57 @@
         <div>
           <h2 id="profile-name" style="margin-bottom:4px;">—</h2>
           <div style="color:var(--c-slate-500);font-size:var(--fs-sm);" id="profile-meta">—</div>
+        </div>
+      </div>
+
+      <!-- My SUCCESS Frame Hero Card -->
+      <div class="card" style="background: linear-gradient(135deg, #071A17 0%, #0E3B36 55%, #132A25 100%); color:#FFFFFF; border: 1.5px solid #1F7A7855; margin-bottom: var(--sp-5); overflow:hidden; position:relative; box-shadow: 0 10px 30px rgba(7, 26, 23, 0.2);">
+        <div style="position:absolute; right:-40px; top:-40px; width:200px; height:200px; background:radial-gradient(circle, rgba(15,161,93,0.3) 0%, transparent 70%); pointer-events:none;"></div>
+        <div class="flex items-center justify-between flex-wrap gap-4" style="position:relative; z-index:1;">
+          <div style="max-width: 580px;">
+            <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(15,161,93,0.22); color:#10B981; border:1px solid rgba(15,161,93,0.4); padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">
+              🎓 Student Announcement
+            </div>
+            <h3 style="margin:0 0 6px 0; font-family:'Montserrat',sans-serif; font-weight:800; font-size:1.5rem; color:#FFFFFF; letter-spacing:0.5px;">
+              My SUCCESS Admission Frame
+            </h3>
+            <div style="color:var(--c-slate-300); font-size:var(--fs-sm); line-height:1.6;">
+              Celebrate the beginning of your journey with SUCCESS ACADEMY. Create and share your personalized 1080×1080 branded admission announcement frame for WhatsApp, Instagram, and Facebook.
+            </div>
+            <div id="frame-saved-status" style="margin-top:10px; font-size:var(--fs-xs); color:#D8C7AA; display:none;">
+              ✓ You have a generated admission frame ready.
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 flex-wrap" id="frame-card-actions">
+            <button type="button" class="btn btn-primary" id="open-frame-modal-btn" style="background:var(--gradient-primary); border:none; padding:10px 22px; font-weight:700; font-size:14px; box-shadow:0 4px 14px rgba(15,161,93,0.4);">
+              ✨ Create My Admission Frame
+            </button>
+            <button type="button" class="btn btn-ghost" id="view-saved-frame-btn" style="display:none; color:#FFFFFF; border:1px solid rgba(255,255,255,0.35);">
+              👁️ View Frame
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- My Enrolled Subjects Configuration Card -->
+      <div class="card" style="margin-bottom:var(--sp-5); border: 1.5px solid #C7D2FE; background: #FAFAFE;">
+        <div class="flex items-center justify-between flex-wrap gap-2" style="margin-bottom:var(--sp-2);">
+          <div>
+            <h3 style="margin:0; display:flex; align-items:center; gap:8px;">
+              <span>📚</span> My Enrolled Subjects
+            </h3>
+            <div style="color:var(--c-slate-600); font-size:var(--fs-xs); margin-top:4px;">
+              Select the subjects and optional languages (e.g. Arabic, Malayalam) you study in <strong id="enrolled-class-name">Class —</strong>.
+            </div>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" id="save-subjects-btn" style="flex-shrink:0;">
+            Save My Subjects
+          </button>
+        </div>
+
+        <div id="subjects-selector-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:10px; margin-top:14px;">
+          <!-- Subject checkboxes dynamically rendered -->
         </div>
       </div>
 
@@ -56,7 +187,10 @@
       </div>
 
       <div class="card" style="margin-top:var(--sp-5);">
-        <h3 style="margin-bottom:var(--sp-4);">Learning History</h3>
+        <div class="flex items-center justify-between" style="margin-bottom:var(--sp-4);">
+          <h3 style="margin:0;">Learning History</h3>
+          <a href="student-study-logs.html" style="font-size:var(--fs-xs);color:var(--c-primary);font-weight:600;">Manage in Study Logs →</a>
+        </div>
         <div class="table-wrap">
           <table>
             <thead><tr><th>Date</th><th>Day</th><th>Subject</th><th>Chapter</th><th>Duration</th><th>Status</th></tr></thead>
@@ -66,6 +200,148 @@
       </div>
     </div>
   </main>
+</div>
+
+<!-- Frame Generator Studio Modal -->
+<div class="modal-overlay" id="frame-generator-modal">
+  <div class="modal" style="max-width:980px; width:100%; max-height:92vh; display:flex; flex-direction:column; overflow:hidden;">
+    <div class="modal-header" style="flex-shrink:0; border-bottom:1px solid var(--c-border); padding:16px 20px;">
+      <div>
+        <div style="display:inline-flex; align-items:center; gap:6px; background:#0FA15D18; color:#0FA15D; border:1px solid #0FA15D44; padding:2px 10px; border-radius:12px; font-size:11px; font-weight:700; text-transform:uppercase; margin-bottom:4px;">
+          Admission Announcement Studio
+        </div>
+        <h3 style="font-family:'Montserrat',sans-serif; font-weight:800; font-size:1.35rem; color:var(--c-text); margin:0;">
+          Create My Admission Frame
+        </h3>
+        <div class="topbar-sub" style="font-size:var(--fs-xs); color:var(--c-slate-500); margin-top:2px;">
+          Premium 1080 × 1080 social announcement for WhatsApp, Instagram &amp; Facebook.
+        </div>
+      </div>
+      <button class="modal-close" id="close-frame-modal">✕</button>
+    </div>
+
+    <div class="modal-body" style="flex:1; overflow-y:auto; padding:20px;">
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:24px; align-items:start;">
+        
+        <!-- Left: Interactive Canvas Live Preview -->
+        <div>
+          <div class="frame-canvas-container" id="canvas-container">
+            <canvas id="frame-canvas" width="1080" height="1080"></canvas>
+            <div class="frame-hint-badge" id="frame-drag-hint" style="display:none;">
+              ✋ Drag photo to reposition
+            </div>
+          </div>
+          <div style="text-align:center; font-size:11px; color:var(--c-slate-500); margin-top:8px;">
+            High-resolution 1080 × 1080 PNG Output • Square Social Media Standard
+          </div>
+        </div>
+
+        <!-- Right: Profile Info & Photo Controls -->
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          
+          <!-- Read-only Student Profile Card -->
+          <div style="background:var(--surface-1); border:1px solid var(--c-border); border-radius:var(--r-md); padding:14px 16px;">
+            <div class="flex items-center justify-between" style="margin-bottom:8px;">
+              <span style="font-size:11px; font-weight:700; color:var(--c-primary); text-transform:uppercase; letter-spacing:0.5px;">
+                🔒 Verified Student Profile
+              </span>
+              <span style="font-size:10px; color:var(--c-slate-400);">Read-only</span>
+            </div>
+            <div style="font-size:16px; font-weight:800; color:var(--c-dark);" id="frame-student-name">
+              —
+            </div>
+            <div style="font-size:12px; font-weight:600; color:var(--c-slate-600); margin-top:2px;" id="frame-student-class-branch">
+              —
+            </div>
+            <div style="font-size:11px; color:var(--c-slate-500); margin-top:4px;">
+              Admission Batch: <strong id="frame-student-year" style="color:var(--c-dark);">—</strong>
+            </div>
+          </div>
+
+          <!-- Upload Photo Dropzone -->
+          <div>
+            <input type="file" id="frame-file-input" accept="image/jpeg,image/png,image/webp,image/jpg" style="display:none;">
+            <div class="upload-dropzone" id="upload-dropzone">
+              <div style="font-size:28px; margin-bottom:6px;">📸</div>
+              <div style="font-weight:700; font-size:14px; color:var(--c-dark);" id="upload-box-title">
+                Upload Student Photograph
+              </div>
+              <div style="font-size:12px; color:var(--c-slate-500); margin-top:4px;">
+                Select a clear portrait (JPG, PNG, or WebP)
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" id="select-photo-btn" style="margin-top:10px; pointer-events:none;">
+                Choose Photo
+              </button>
+            </div>
+          </div>
+
+          <!-- Photo Adjustment Controls -->
+          <div id="photo-controls-box" style="display:none; background:var(--surface-0); border:1px solid var(--c-border); border-radius:var(--r-md); padding:14px 16px;">
+            <div class="flex items-center justify-between" style="margin-bottom:8px;">
+              <label style="font-weight:700; font-size:13px; margin:0; color:var(--c-dark);">
+                Photo Zoom &amp; Crop
+              </label>
+              <span id="zoom-level-label" style="font-size:12px; font-weight:700; color:var(--c-primary);">
+                1.0×
+              </span>
+            </div>
+
+            <!-- Zoom Slider with +/- buttons -->
+            <div class="slider-control-row">
+              <button type="button" class="btn btn-ghost btn-sm" id="zoom-out-btn" style="padding:2px 8px; font-weight:700; font-size:14px;">−</button>
+              <input type="range" id="frame-zoom-slider" min="0.5" max="3.0" step="0.05" value="1.0">
+              <button type="button" class="btn btn-ghost btn-sm" id="zoom-in-btn" style="padding:2px 8px; font-weight:700; font-size:14px;">+</button>
+            </div>
+
+            <div class="flex items-center gap-2" style="margin-top:12px; padding-top:10px; border-top:1px dashed var(--c-border);">
+              <button type="button" class="btn btn-ghost btn-sm" id="rotate-photo-btn" style="flex:1; font-size:12px;">
+                🔄 Rotate 90°
+              </button>
+              <button type="button" class="btn btn-ghost btn-sm" id="reset-photo-btn" style="flex:1; font-size:12px;">
+                ↩️ Reset Position
+              </button>
+            </div>
+          </div>
+
+          <!-- Initial Action Button -->
+          <div id="generate-action-box">
+            <button type="button" class="btn btn-primary" id="generate-frame-btn" style="width:100%; padding:12px; font-size:15px; font-weight:700; box-shadow:0 4px 14px rgba(15,161,93,0.35);">
+              ✨ Generate My Frame
+            </button>
+          </div>
+
+          <!-- Success Panel after Generation -->
+          <div id="frame-success-panel" style="display:none; background:rgba(15,161,93,0.07); border:1.5px solid #0FA15D55; border-radius:var(--r-md); padding:16px;">
+            <div style="font-weight:800; color:#0FA15D; font-size:15px; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+              <span>🎉</span> Your SUCCESS Frame is Ready!
+            </div>
+            <div style="font-size:12px; color:var(--c-slate-600); margin-bottom:14px; line-height:1.5;">
+              High-resolution 1080×1080 frame generated. Download or share directly with friends and family.
+            </div>
+            <div class="flex gap-2 flex-wrap">
+              <button type="button" class="btn btn-primary" id="download-frame-btn" style="flex:1; font-weight:700; padding:10px 14px;">
+                ⬇️ Download Frame
+              </button>
+              <button type="button" class="btn btn-secondary" id="share-frame-btn" style="flex:1; font-weight:700; padding:10px 14px;">
+                📤 Share Frame
+              </button>
+            </div>
+            <button type="button" class="btn btn-ghost btn-xs" id="tweak-frame-btn" style="width:100%; margin-top:10px; color:var(--c-slate-500); font-size:11px;">
+              ✏️ Re-adjust Photo
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer" style="padding:12px 20px; border-top:1px solid var(--c-border); display:flex; justify-content:space-between; align-items:center; background:var(--surface-1);">
+      <span style="font-size:11px; color:var(--c-slate-500); font-style:italic;">
+        SUCCESS ACADEMY • From Classrooms to Careers.
+      </span>
+      <button type="button" class="btn btn-ghost" id="cancel-frame-modal-btn">Close</button>
+    </div>
+  </div>
 </div>
 
 <div id="toast-region"></div>

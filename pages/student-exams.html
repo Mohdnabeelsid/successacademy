@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Exams & Scorecards — SUCCESS Learning Log</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <!-- Chart.js for performance graphs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <div class="page-loader" id="page-loader">
+    <div class="spinner spinner-dark"></div>
+  </div>
+
+  <div class="app-shell">
+    <div id="sidebar-root"></div>
+
+    <main class="main" id="main-content" tabindex="-1">
+      <header class="topbar">
+        <div class="flex items-center gap-3">
+          <button class="btn-icon menu-toggle" id="menu-toggle">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+          <div>
+            <h1>My Exams & Scorecards</h1>
+            <div class="topbar-sub" id="student-class-label">—</div>
+          </div>
+        </div>
+        <div class="topbar-actions flex items-center gap-2">
+          <a href="student-study-logs.html" class="btn btn-ghost btn-sm">
+            📋 My Study Logs
+          </a>
+          <button class="btn btn-primary btn-sm" id="open-enter-marks-modal">
+            ✍️ Enter My Exam Marks
+          </button>
+        </div>
+      </header>
+
+      <div class="page-body">
+        <!-- Stat Grid -->
+        <div class="stat-grid">
+          <div class="card card-stat">
+            <div class="stat-label">Average Percentage</div>
+            <div class="stat-value" id="stat-avg-pct">—</div>
+          </div>
+          <div class="card card-stat">
+            <div class="stat-label">Overall Academic Grade</div>
+            <div class="stat-value" id="stat-overall-grade" style="color:var(--c-primary);">—</div>
+          </div>
+          <div class="card card-stat">
+            <div class="stat-label">Total Tests Taken</div>
+            <div class="stat-value" id="stat-tests-taken">0</div>
+            <div style="font-size:11px; color:var(--c-slate-500); margin-top:2px;">Graded exam papers</div>
+          </div>
+          <div class="card card-stat">
+            <div class="stat-label">Passed Assessments</div>
+            <div class="stat-value" id="stat-tests-passed" style="color:var(--c-success);">0</div>
+            <div style="font-size:11px; color:var(--c-slate-500); margin-top:2px;">Passed of tests taken</div>
+          </div>
+        </div>
+
+        <!-- Performance Chart Section -->
+        <div class="card" style="margin-bottom:var(--sp-5);">
+          <div class="flex items-center justify-between" style="margin-bottom:var(--sp-3);">
+            <div>
+              <h3 style="font-size:var(--fs-base); font-weight:700;">Academic Performance & Progress Graph</h3>
+              <div style="font-size:var(--fs-xs); color:var(--c-slate-500);">Percentage scores across your Onam, Christmas, Unit Tests & Assessments</div>
+            </div>
+            <span class="badge badge-primary" id="chart-summary-badge">Score Trend</span>
+          </div>
+          <div style="height:220px; position:relative;">
+            <canvas id="student-trend-chart"></canvas>
+          </div>
+        </div>
+
+        <!-- Tabs for Results vs Upcoming Schedule -->
+        <div class="tabs">
+          <button class="tab-btn active" id="tab-btn-results">My Results & Scorecards</button>
+          <button class="tab-btn" id="tab-btn-upcoming">Upcoming Scheduled Exams</button>
+        </div>
+
+        <!-- Tab 1: Results & Scorecards -->
+        <div id="tab-content-results">
+          <div class="card" style="padding:0;">
+            <div class="table-wrap" style="border:none;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Exam Title & Type</th>
+                    <th>Subject</th>
+                    <th>Exam Date (IST)</th>
+                    <th>Marks Obtained</th>
+                    <th>Percentage</th>
+                    <th>Grade</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="student-results-body">
+                  <tr><td colspan="8"><div class="empty-state">Loading your results...</div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Upcoming Scheduled Exams -->
+        <div id="tab-content-upcoming" style="display:none;">
+          <div class="card" style="padding:0;">
+            <div class="table-wrap" style="border:none;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Exam Title</th>
+                    <th>Category / Type</th>
+                    <th>Subject</th>
+                    <th>Date & Time (IST)</th>
+                    <th>Max / Pass Marks</th>
+                    <th style="text-align:right;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="upcoming-exams-body">
+                  <tr><td colspan="6"><div class="empty-state">Loading upcoming exams...</div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Student Mark Entry & Sync Modal -->
+  <div class="modal-overlay" id="student-mark-modal">
+    <div class="modal" style="max-width:680px; width:100%; max-height:90vh; display:flex; flex-direction:column;">
+      <div class="modal-header" style="flex-shrink:0;">
+        <div>
+          <h3>Enter Your Exam Marks</h3>
+          <div class="topbar-sub" id="sm-modal-sub">Select a scheduled exam and enter your obtained marks.</div>
+        </div>
+        <button class="modal-close" id="close-student-mark-modal">✕</button>
+      </div>
+
+      <form id="student-mark-form" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
+        <div class="field" style="margin-bottom:var(--sp-3); flex-shrink:0;">
+          <label for="sm-exam-select">Select Scheduled Exam *</label>
+          <select id="sm-exam-select" required>
+            <option value="">Choose a scheduled exam...</option>
+          </select>
+        </div>
+
+        <div id="sm-subjects-section" style="display:none; flex:1; overflow-y:auto; margin-bottom:var(--sp-3);">
+          <div class="flex items-center justify-between" style="margin-bottom:8px;">
+            <label style="margin:0; font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; color:var(--c-slate-700);">
+              Subjects & Obtained Marks
+            </label>
+            <span id="sm-total-summary" style="font-size:var(--fs-xs); font-weight:700; color:var(--c-primary);">Total: —</span>
+          </div>
+
+          <div class="table-wrap marks-table" style="border:1px solid var(--c-border); max-height:300px; overflow-y:auto;">
+            <table style="width:100%;">
+              <thead style="position:sticky; top:0; background:var(--surface-1); z-index:2;">
+                <tr>
+                  <th style="width:32%;">Subject</th>
+                  <th style="width:18%;">Max Marks</th>
+                  <th style="width:25%;">Marks Obtained</th>
+                  <th style="width:25%;">Grade & Status</th>
+                </tr>
+              </thead>
+              <tbody id="sm-subjects-body">
+                <!-- Dynamically populated subjects with inputs and live grade preview -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center" style="padding-top:var(--sp-3); border-top:1px solid var(--c-border); flex-shrink:0;">
+          <button type="button" class="btn btn-ghost" id="cancel-student-mark-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="save-student-mark-btn">Save & Synchronize Marks</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="../js/pages/student-exams.js"></script>
+</body>
+</html>

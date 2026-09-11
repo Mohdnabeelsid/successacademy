@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Student Management — SUCCESS Learning Log</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../css/variables.css">
 <link rel="stylesheet" href="../css/base.css">
 <link rel="stylesheet" href="../css/components.css">
@@ -32,13 +33,14 @@
 </style>
 </head>
 <body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
 
 <div class="page-loader" id="page-loader"><div class="spinner spinner-dark"></div></div>
 
 <div class="app-shell">
   <div id="sidebar-root"></div>
 
-  <main class="main">
+  <main class="main" id="main-content" tabindex="-1">
     <header class="topbar">
       <div class="flex items-center gap-3">
         <button class="btn-icon menu-toggle" id="menu-toggle">
@@ -64,7 +66,6 @@
           <option value="">All Branches</option>
           <option value="ALP">Alappuzha (ALP)</option>
           <option value="MAN">Mannancherry (MAN)</option>
-          <option value="UAE">Sharjah (UAE)</option>
         </select>
         <select id="filter-class">
           <option value="">All Classes</option>
@@ -77,9 +78,14 @@
         <div class="table-wrap" style="border:none;">
           <table>
             <thead><tr><th>Student</th><th>Admission No.</th><th>Class</th><th>Branch</th><th>Phone</th><th>Login</th><th>Actions</th></tr></thead>
-            <tbody id="students-body"><tr><td colspan="7"><div class="empty-state">Loading…</div></td></tr></tbody>
+            <tbody id="students-body">
+              <tr class="skeleton-row" aria-hidden="true"><td><div class="skeleton skeleton-text" style="width:75%;"></div></td><td><div class="skeleton skeleton-text" style="width:70%;"></div></td><td><div class="skeleton skeleton-text" style="width:40%;"></div></td><td><div class="skeleton skeleton-text" style="width:60%;"></div></td><td><div class="skeleton skeleton-text" style="width:80%;"></div></td><td><div class="skeleton skeleton-pill" style="width:65px;"></div></td><td><div class="skeleton skeleton-text" style="width:120px;"></div></td></tr>
+              <tr class="skeleton-row" aria-hidden="true"><td><div class="skeleton skeleton-text" style="width:65%;"></div></td><td><div class="skeleton skeleton-text" style="width:75%;"></div></td><td><div class="skeleton skeleton-text" style="width:40%;"></div></td><td><div class="skeleton skeleton-text" style="width:60%;"></div></td><td><div class="skeleton skeleton-text" style="width:80%;"></div></td><td><div class="skeleton skeleton-pill" style="width:65px;"></div></td><td><div class="skeleton skeleton-text" style="width:120px;"></div></td></tr>
+              <tr class="skeleton-row" aria-hidden="true"><td><div class="skeleton skeleton-text" style="width:80%;"></div></td><td><div class="skeleton skeleton-text" style="width:70%;"></div></td><td><div class="skeleton skeleton-text" style="width:40%;"></div></td><td><div class="skeleton skeleton-text" style="width:60%;"></div></td><td><div class="skeleton skeleton-text" style="width:80%;"></div></td><td><div class="skeleton skeleton-pill" style="width:65px;"></div></td><td><div class="skeleton skeleton-text" style="width:120px;"></div></td></tr>
+            </tbody>
           </table>
         </div>
+        <div id="students-pagination"></div>
       </div>
     </div>
   </main>
@@ -110,7 +116,6 @@
         <select id="s-branch" required>
           <option value="ALP">Alappuzha (ALP)</option>
           <option value="MAN" selected>Mannancherry (MAN)</option>
-          <option value="UAE">Sharjah (UAE)</option>
         </select>
       </div>
       <div class="field"><label for="s-phone">Parent Phone</label><input type="tel" id="s-phone"></div>
@@ -136,7 +141,7 @@
 
 <!-- Student Profile Detail Modal -->
 <div class="modal-overlay" id="profile-modal">
-  <div class="modal" style="max-width:800px; width:90%;">
+  <div class="modal" style="max-width:900px; width:92%; max-height:92vh; overflow-y:auto;">
     <div class="modal-header">
       <h3 id="profile-modal-title">Student Profile</h3>
       <button class="btn-icon" id="close-profile-modal">✕</button>
@@ -148,15 +153,19 @@
         <div class="avatar" id="pm-avatar" style="width:64px;height:64px;font-size:var(--fs-lg);">?</div>
         <div>
           <h2 id="pm-name" style="margin:0;font-size:var(--fs-lg);font-weight:700;">—</h2>
-          <div id="pm-meta" style="color:var(--c-slate-500);font-size:var(--fs-sm);margin-top:2px;">—</div>
+          <div id="pm-meta" style="color:var(--c-slate-500);font-size:var(--fs-sm);margin-top:2px;display:flex;align-items:center;flex-wrap:wrap;gap:8px;">—</div>
         </div>
       </div>
       
-      <!-- Tabs for Weekly, Monthly, Subject Analytics -->
+      <!-- Tabs for Weekly, Monthly, Subject Analytics, Exam Marks, Bulk Add -->
       <div class="tabs" style="margin-bottom:var(--sp-4);">
         <button class="tab-btn active" id="tab-pm-weekly">Weekly View</button>
         <button class="tab-btn" id="tab-pm-monthly">Monthly View</button>
         <button class="tab-btn" id="tab-pm-subjects">Subject Analytics</button>
+        <button class="tab-btn" id="tab-pm-exams">
+          Exam Marks
+          <span class="badge" id="pm-tab-exam-badge" style="margin-left:4px; font-size:10px; padding:1px 6px; background:var(--c-primary); color:#fff; border-radius:10px;">0</span>
+        </button>
         <button class="tab-btn" id="tab-pm-bulk-add">Bulk Add Logs</button>
       </div>
       
@@ -174,6 +183,21 @@
               <tr><td colspan="5"><div class="empty-state">No logs for this week</div></td></tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- Recent Exam Marks Preview in Weekly View -->
+        <div style="margin-top:var(--sp-4); padding-top:var(--sp-3); border-top:1px solid var(--c-border);">
+          <div class="flex items-center justify-between" style="margin-bottom:var(--sp-2);">
+            <h4 style="font-weight:700; margin:0; font-size:var(--fs-sm); display:flex; align-items:center; gap:6px;">
+              <span>📝</span> Recent Exam Results
+            </h4>
+            <button type="button" class="btn btn-ghost btn-sm" id="pm-jump-exams-btn" style="font-size:11px; padding:2px 8px; color:var(--c-primary); font-weight:600;">
+              View Full Scorecard →
+            </button>
+          </div>
+          <div id="pm-weekly-exam-preview">
+            <div class="empty-state" style="padding:12px; font-size:var(--fs-xs);">Loading exam marks...</div>
+          </div>
         </div>
       </div>
       
@@ -198,6 +222,59 @@
         <h4 style="margin-bottom:var(--sp-3); font-weight:600;">Subject-wise Study Time</h4>
         <div id="pm-subject-bars" style="display:flex; flex-direction:column; gap:var(--sp-3);">
           <div class="empty-state">No approved study time recorded</div>
+        </div>
+      </div>
+
+      <!-- Exam Marks Content -->
+      <div id="pm-content-exams" class="tab-content" style="display:none;">
+        <div class="flex items-center justify-between flex-wrap gap-2" style="margin-bottom:var(--sp-3);">
+          <div>
+            <h4 style="margin:0; font-weight:700; font-size:var(--fs-md);">Academic Exams & Marks</h4>
+            <p style="margin:2px 0 0; font-size:var(--fs-xs); color:var(--c-slate-500);">All recorded exam scores, percentages, and grading performance for this student.</p>
+          </div>
+          <a href="admin-exams.html" class="btn btn-ghost btn-sm" style="font-size:11px; padding:4px 10px; border:1px solid var(--c-border); display:inline-flex; align-items:center; gap:4px;">
+            Go to Exams Module ↗
+          </a>
+        </div>
+
+        <!-- Quick Stats Cards -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-bottom:var(--sp-4);">
+          <div class="card card-stat" style="background:var(--surface-1); padding:10px 14px;">
+            <div class="stat-label">Exams Appeared</div>
+            <div class="stat-value" id="pm-exam-count" style="font-size:1.35rem;">0</div>
+          </div>
+          <div class="card card-stat" style="background:var(--surface-1); padding:10px 14px;">
+            <div class="stat-label">Average Score</div>
+            <div class="stat-value" id="pm-exam-avg" style="font-size:1.35rem; color:var(--c-primary);">—</div>
+          </div>
+          <div class="card card-stat" style="background:var(--surface-1); padding:10px 14px;">
+            <div class="stat-label">Passed / Graded</div>
+            <div class="stat-value" id="pm-exam-pass" style="font-size:1.35rem; color:var(--c-success);">0 / 0</div>
+          </div>
+          <div class="card card-stat" style="background:var(--surface-1); padding:10px 14px;">
+            <div class="stat-label">Highest Mark</div>
+            <div class="stat-value" id="pm-exam-highest" style="font-size:1.35rem; color:var(--c-accent);">—</div>
+          </div>
+        </div>
+
+        <!-- Full Exam Table -->
+        <div class="table-wrap" style="max-height: 290px; overflow-y: auto; border:1px solid var(--c-border); border-radius:var(--r-md);">
+          <table style="width:100%;">
+            <thead style="position:sticky; top:0; background:var(--surface-1); z-index:1;">
+              <tr>
+                <th style="width:26%;">Exam</th>
+                <th style="width:18%;">Subject</th>
+                <th style="width:14%;">Date</th>
+                <th style="width:14%;">Marks</th>
+                <th style="width:10%;">Grade</th>
+                <th style="width:10%;">Status</th>
+                <th style="width:8%;">By</th>
+              </tr>
+            </thead>
+            <tbody id="pm-exams-table-body">
+              <tr><td colspan="7"><div class="empty-state">Loading exam marks...</div></td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
       

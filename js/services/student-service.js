@@ -15,6 +15,7 @@ import {
   getRowsWhere,
   getRowById
 } from "./supabase-service.js";
+import { getISTNowIsoTimestamp } from "../utils/date-time.js";
 
 function randomPassword(len = 8) {
   const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
@@ -151,7 +152,7 @@ export async function resetStudentPassword(studentId) {
     await updateRowById(TABLES.STUDENTS, studentId, {
       password: newPassword,
       pendingPasswordReset: newPassword,
-      pendingPasswordResetAt: new Date().toISOString()
+      pendingPasswordResetAt: getISTNowIsoTimestamp()
     });
   }
 

@@ -1,53 +1,61 @@
 import { requireAuth } from "../services/auth-service.js";
 import { renderSidebar } from "../components/sidebar.js";
 import { toast } from "../components/toast.js";
-import { getAllLogs, deleteLog, LOG_STATUS, addStudyLog, dayOfWeek } from "../services/studylog-service.js";
+// Fix #6: LOG_STATUS removed — approval workflow was removed; status no longer used for filtering
+import { getAllLogs, deleteLog, addStudyLog } from "../services/studylog-service.js";
 import { listStudents } from "../services/student-service.js";
 import { getSubjectsForClass } from "../services/subject-service.js";
+import {
+  format12Hour,
+  formatISTTime,
+  formatLogDate,
+  formatISTTimestamp,
+  getISTTodayIso,
+  dayOfWeek
+} from "../utils/date-time.js";
+// Fix #8: import shared escapeHtml instead of duplicating it
+import { escapeHtml } from "../utils/exam-ui.js";
+// Fix #7: import shared wireTimePicker instead of duplicating it
+import { wireTimePicker } from "../utils/time-picker.js";
+import { showConfirmModal } from "../components/confirm-modal.js";
+import { renderPagination } from "../components/pagination.js";
 
 let admin, allLogs = [], studentMap = {}, activeFilter = "All";
+let currentPage = 1;
+const pageSize = 20;
 
+// Fix #10: init() now has try/catch/finally so network errors don't hang the page-loader spinner
 (async function init() {
-  admin = await requireAuth("admin", "admin-login.html");
-  renderSidebar("admin", "logs", { name: admin.name || admin.email, sub: "Branch Admin" });
+  try {
+    admin = await requireAuth("admin", "admin-login.html");
+    renderSidebar("admin", "logs", { name: admin.name || admin.email, sub: "Branch Admin" });
 
-  const [logs, students] = await Promise.all([getAllLogs(), listStudents()]);
-  allLogs = logs;
-  studentMap = Object.fromEntries(students.map((s) => [s.id, s]));
+    const [logs, students] = await Promise.all([getAllLogs(), listStudents()]);
+    allLogs = logs;
+    studentMap = Object.fromEntries(students.map((s) => [s.id, s]));
 
-  // Populate student selects for admin modals
-  const studentSelect = document.getElementById("admin-log-student");
-  const leaveStudentSelect = document.getElementById("admin-leave-student");
-  const studentOpts = '<option value="">Select student</option>' +
-    students
-      .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
-      .map((s) => `<option value="${s.id}">${s.name} (${s.admissionNumber})</option>`)
-      .join("");
+    // Populate student selects for admin modals
+    const studentSelect = document.getElementById("admin-log-student");
+    const leaveStudentSelect = document.getElementById("admin-leave-student");
+    const studentOpts = '<option value="">Select student</option>' +
+      students
+        .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+        .map((s) => `<option value="${s.id}">${escapeHtml(s.name)} (${escapeHtml(s.admissionNumber)})</option>`)
+        .join("");
 
-  if (studentSelect) studentSelect.innerHTML = studentOpts;
-  if (leaveStudentSelect) leaveStudentSelect.innerHTML = studentOpts;
+    if (studentSelect) studentSelect.innerHTML = studentOpts;
+    if (leaveStudentSelect) leaveStudentSelect.innerHTML = studentOpts;
 
-  render();
-  document.getElementById("page-loader").classList.add("done");
-  wireEvents();
+    render();
+    wireEvents();
+  } catch (err) {
+    console.error("Study log management init error:", err);
+    toast.error("Failed to load study logs. Please refresh the page.");
+  } finally {
+    // Always hide the loader, even on error, so the page doesn't spin forever
+    document.getElementById("page-loader")?.classList.add("done");
+  }
 })();
-
-function format12Hour(timeStr) {
-  if (!timeStr) return "—";
-  if (timeStr.includes("AM") || timeStr.includes("PM") || timeStr.includes("am") || timeStr.includes("pm")) {
-    return timeStr;
-  }
-  const parts = timeStr.split(":");
-  if (parts.length >= 2) {
-    let h = parseInt(parts[0], 10);
-    const m = parts[1].padStart(2, "0");
-    const ampm = h >= 12 ? "PM" : "AM";
-    h = h % 12;
-    h = h ? h : 12;
-    return `${String(h).padStart(2, "0")}:${m} ${ampm}`;
-  }
-  return timeStr;
-}
 
 function getLogTimeRange(log) {
   if (log.startTime && log.endTime) {
@@ -67,15 +75,15 @@ function getLogTimeRange(log) {
         const duration = Number(log.durationMinutes || 0);
         if (duration > 0) {
           const startD = new Date(endD.getTime() - duration * 60000);
-          const startStr = startD.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-          const endStr = endD.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+          const startStr = formatISTTime(startD);
+          const endStr = formatISTTime(endD);
           return {
             start: startStr,
             end: endStr,
             rangeStr: `${startStr} – ${endStr}`
           };
         } else {
-          const timeStr = endD.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+          const timeStr = formatISTTime(endD);
           return {
             start: timeStr,
             end: timeStr,
@@ -93,46 +101,10 @@ function getLogTimeRange(log) {
   };
 }
 
-function formatLogDate(dateStr) {
-  if (!dateStr) return "—";
-  try {
-    const parts = dateStr.split("-");
-    if (parts.length === 3) {
-      const date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-      return date.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-    }
-  } catch (e) {}
-  return dateStr;
-}
+// Fix #8: escapeHtml removed — now imported from ../utils/exam-ui.js
 
-function formatFullTimestamp(isoStr) {
-  if (!isoStr) return "—";
-  try {
-    const d = new Date(isoStr);
-    if (!isNaN(d.getTime())) {
-      return d.toLocaleString("en-IN", {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit"
-      });
-    }
-  } catch (e) {}
-  return isoStr;
-}
-
-function escapeHtml(str) {
-  if (!str) return "";
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
+// Fix #6: render() filter logic documented clearly.
+// activeFilter is "All" (show everything) or "Leave" (show only leave/no-study entries).
 function render() {
   const filtered = activeFilter === "All"
     ? allLogs
@@ -142,10 +114,16 @@ function render() {
 
   if (!filtered.length) {
     body.innerHTML = `<tr><td colspan="8"><div class="empty-state"><h4>Nothing here</h4>No logs found.</div></td></tr>`;
+    const paginationEl = document.getElementById("logs-pagination");
+    if (paginationEl) paginationEl.innerHTML = "";
     return;
   }
 
-  body.innerHTML = filtered
+  const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+  if (currentPage > totalPages) currentPage = totalPages;
+  const pagedLogs = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  body.innerHTML = pagedLogs
     .map((l) => {
       const s = studentMap[l.studentId];
       const isLeave = Number(l.durationMinutes) === 0 || (l.subject && l.subject.includes("Leave"));
@@ -191,6 +169,17 @@ function render() {
       </tr>`;
     })
     .join("");
+
+  renderPagination({
+    container: "logs-pagination",
+    totalItems: filtered.length,
+    pageSize: pageSize,
+    currentPage: currentPage,
+    onPageChange: (newPage) => {
+      currentPage = newPage;
+      render();
+    }
+  });
 }
 
 function openViewLogModal(logId) {
@@ -321,7 +310,13 @@ function openViewLogModal(logId) {
   if (modalDeleteBtn) {
     modalDeleteBtn.addEventListener("click", async () => {
       const deleteId = modalDeleteBtn.dataset.modalDelete;
-      if (!confirm("Delete this log entry permanently?")) return;
+      const confirmed = await showConfirmModal({
+        title: "Delete Log Entry",
+        message: "Are you sure you want to permanently delete this log entry? This cannot be undone.",
+        confirmText: "Delete Log",
+        confirmVariant: "danger"
+      });
+      if (!confirmed) return;
       try {
         await deleteLog(deleteId);
         allLogs = allLogs.filter((l) => l.id !== deleteId);
@@ -343,6 +338,7 @@ function wireEvents() {
       document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       activeFilter = btn.dataset.status;
+      currentPage = 1;
       render();
     });
   });
@@ -359,7 +355,13 @@ function wireEvents() {
     const deleteBtn = e.target.closest("[data-delete]");
     if (deleteBtn) {
       const deleteId = deleteBtn.dataset.delete;
-      if (!confirm("Delete this log entry permanently?")) return;
+      const confirmed = await showConfirmModal({
+        title: "Delete Log Entry",
+        message: "Are you sure you want to permanently delete this log entry? This cannot be undone.",
+        confirmText: "Delete Log",
+        confirmVariant: "danger"
+      });
+      if (!confirmed) return;
       try {
         await deleteLog(deleteId);
         allLogs = allLogs.filter((l) => l.id !== deleteId);
@@ -414,7 +416,7 @@ function wireEvents() {
   if (addLogBtn) {
     addLogBtn.addEventListener("click", () => {
       adminForm.reset();
-      document.getElementById("admin-log-date").value = new Date().toISOString().slice(0, 10);
+      document.getElementById("admin-log-date").value = getISTTodayIso();
       const subjectSelect = document.getElementById("admin-log-subject");
       if (subjectSelect) {
         subjectSelect.disabled = true;
@@ -451,11 +453,16 @@ function wireEvents() {
       }
       if (btn) btn.disabled = true;
 
+      const startTimeVal = document.getElementById("admin-log-start-time")?.value || "";
+      const endTimeVal   = document.getElementById("admin-log-end-time")?.value || "";
+
       const studentId = studentSelect.value;
       const logData = {
         date: document.getElementById("admin-log-date").value,
         subject: document.getElementById("admin-log-subject").value,
         durationMinutes: durationVal,
+        startTime: startTimeVal,
+        endTime: endTimeVal,
         chapter: document.getElementById("admin-log-chapter").value,
         notes: document.getElementById("admin-log-notes").value
       };
@@ -476,14 +483,20 @@ function wireEvents() {
     });
   }
 
-  wireAdminTimePicker();
+  // Fix #7: use shared wireTimePicker with admin log modal's element IDs
+  wireTimePicker({
+    startId:   "admin-log-start-time",
+    endId:     "admin-log-end-time",
+    displayId: "admin-log-duration-display",
+    hiddenId:  "admin-log-duration"
+  });
 
   // Admin leave modal wiring
   const adminLeaveModal = document.getElementById("admin-leave-modal");
   const adminOpenLeaveBtn = document.getElementById("admin-open-leave-btn");
   const closeAdminLeaveModal = document.getElementById("close-admin-leave-modal");
   if (adminOpenLeaveBtn && adminLeaveModal) {
-    document.getElementById("admin-leave-date").value = new Date().toISOString().slice(0, 10);
+    document.getElementById("admin-leave-date").value = getISTTodayIso();
     adminOpenLeaveBtn.addEventListener("click", () => adminLeaveModal.classList.add("active"));
     closeAdminLeaveModal?.addEventListener("click", () => adminLeaveModal.classList.remove("active"));
     adminLeaveModal.addEventListener("click", (e) => { if (e.target === adminLeaveModal) adminLeaveModal.classList.remove("active"); });
@@ -508,7 +521,7 @@ function wireEvents() {
         toast.success("Student inability report recorded.");
         adminLeaveModal.classList.remove("active");
         e.target.reset();
-        document.getElementById("admin-leave-date").value = new Date().toISOString().slice(0, 10);
+        document.getElementById("admin-leave-date").value = getISTTodayIso();
         const logs = await getAllLogs();
         allLogs = logs;
         render();
@@ -534,49 +547,6 @@ function populateAdminSubjects(studentClass) {
   });
 }
 
-function wireAdminTimePicker() {
-  const startEl = document.getElementById("admin-log-start-time");
-  const endEl   = document.getElementById("admin-log-end-time");
-  const display = document.getElementById("admin-log-duration-display");
-  const hidden  = document.getElementById("admin-log-duration");
+// Fix #7: wireAdminTimePicker removed — replaced with shared wireTimePicker from ../utils/time-picker.js
+// Called in wireEvents() below with the correct element IDs for the admin log modal.
 
-  if (!startEl || !endEl) return;
-
-  function calcDuration() {
-    const start = startEl.value;
-    const end   = endEl.value;
-
-    if (!start || !end) {
-      hidden.value = "";
-      display.textContent = "Duration will appear here after selecting times.";
-      display.style.color = "var(--c-slate-500)";
-      display.style.fontWeight = "400";
-      return;
-    }
-
-    const [sh, sm] = start.split(":").map(Number);
-    const [eh, em] = end.split(":").map(Number);
-    let totalMins = (eh * 60 + em) - (sh * 60 + sm);
-
-    if (totalMins <= 0) {
-      hidden.value = "";
-      display.textContent = "⚠ End time must be after start time.";
-      display.style.color = "var(--c-danger)";
-      display.style.fontWeight = "600";
-      return;
-    }
-
-    hidden.value = String(totalMins);
-    const hrs  = Math.floor(totalMins / 60);
-    const mins = totalMins % 60;
-    const label = hrs > 0
-      ? `${hrs}h ${mins > 0 ? mins + "m" : ""}`.trim()
-      : `${mins} minutes`;
-    display.textContent = `✓ Study duration: ${label}`;
-    display.style.color = "var(--c-primary)";
-    display.style.fontWeight = "600";
-  }
-
-  startEl.addEventListener("change", calcDuration);
-  endEl.addEventListener("change",   calcDuration);
-}

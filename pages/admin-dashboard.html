@@ -6,8 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard — SUCCESS Learning Log</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="../css/variables.css">
   <link rel="stylesheet" href="../css/base.css">
@@ -16,6 +17,7 @@
 </head>
 
 <body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
 
   <div class="page-loader" id="page-loader">
     <div class="spinner spinner-dark"></div>
@@ -24,7 +26,7 @@
   <div class="app-shell">
     <div id="sidebar-root"></div>
 
-    <main class="main">
+    <main class="main" id="main-content" tabindex="-1">
       <header class="topbar">
         <div class="flex items-center gap-3">
           <button class="btn-icon menu-toggle" id="menu-toggle">
@@ -48,6 +50,7 @@
             </svg>
             WhatsApp Reminders
           </button>
+          <a href="admin-exams.html" class="btn btn-ghost btn-sm" style="border:1px solid var(--c-border);">📝 Exams & Marks</a>
           <a href="study-log-management.html" class="btn btn-primary btn-sm">Review Logs</a>
         </div>
       </header>

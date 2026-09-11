@@ -3,6 +3,9 @@ import { renderSidebar } from "../components/sidebar.js";
 import { toast } from "../components/toast.js";
 import { listStudents } from "../services/student-service.js";
 import { getAllLogs, LOG_STATUS, calcStreak } from "../services/studylog-service.js";
+import { formatISTFullDate, getISTWeekRange, getISTTodayIso } from "../utils/date-time.js";
+// Fix #9: import escapeHtml to prevent XSS when rendering student names/subjects into innerHTML
+import { escapeHtml } from "../utils/exam-ui.js";
 
 let allStudents = [];
 let allLogs = [];
@@ -12,9 +15,7 @@ let allLogs = [];
     const admin = await requireAuth("admin", "admin-login.html");
     renderSidebar("admin", "dashboard", { name: admin.name || admin.email, sub: "Branch Admin" });
 
-    document.getElementById("today-label").textContent = new Date().toLocaleDateString("en-IN", {
-      weekday: "long", year: "numeric", month: "long", day: "numeric"
-    });
+    document.getElementById("today-label").textContent = formatISTFullDate();
 
     const [studentsData, logsData] = await Promise.all([listStudents(), getAllLogs()]);
     allStudents = studentsData;
@@ -25,10 +26,7 @@ let allLogs = [];
     const pending = allLogs.filter((l) => l.status === LOG_STATUS.PENDING);
     document.getElementById("stat-pending").textContent = pending.length;
 
-    const now = new Date();
-    const weekStart = new Date(now);
-    weekStart.setDate(now.getDate() - now.getDay());
-    const weekStartIso = weekStart.toISOString().slice(0, 10);
+    const { startIso: weekStartIso } = getISTWeekRange();
     const weekLogs = allLogs.filter((l) => l.date >= weekStartIso);
     document.getElementById("stat-weeklogs").textContent = weekLogs.length;
 
@@ -47,15 +45,16 @@ let allLogs = [];
     if (!pending.length) {
       tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><h4>All caught up</h4>No study logs waiting for review.</div></td></tr>`;
     } else {
+      // Fix #9: escape all dynamic values before inserting into innerHTML
       tbody.innerHTML = pending
         .slice(0, 8)
         .map((l) => {
           const s = studentMap[l.studentId];
           return `<tr>
-            <td>${s ? s.name : "Unknown"}</td>
-            <td>${l.date}</td>
-            <td>${l.subject}</td>
-            <td>${l.durationMinutes} min</td>
+            <td>${s ? escapeHtml(s.name) : "Unknown"}</td>
+            <td>${escapeHtml(l.date)}</td>
+            <td>${escapeHtml(l.subject)}</td>
+            <td>${Number(l.durationMinutes)} min</td>
             <td><span class="badge badge-warning">Pending</span></td>
           </tr>`;
         })
@@ -75,7 +74,7 @@ let allLogs = [];
         <div class="flex items-center justify-between" style="padding:10px 0;border-bottom:1px solid var(--c-border);">
           <div class="flex items-center gap-3">
             <div class="avatar" style="width:32px;height:32px;font-size:var(--fs-xs);">${i + 1}</div>
-            <div style="font-size:var(--fs-sm);font-weight:600;">${r.s.name}</div>
+            <div style="font-size:var(--fs-sm);font-weight:600;">${escapeHtml(r.s.name)}</div>
           </div>
           <span class="badge badge-success">${r.streak} day streak</span>
         </div>`
@@ -104,7 +103,7 @@ function wireWhatsAppEvents() {
 
   if (!modal || !openBtn) return;
 
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const todayIso = getISTTodayIso();
   dateInput.value = todayIso;
 
   openBtn.addEventListener("click", () => {
@@ -142,7 +141,7 @@ function wireWhatsAppEvents() {
 
 function updateWhatsAppPreview() {
   const classVal = document.getElementById("wa-class-select")?.value || "";
-  const dateVal = document.getElementById("wa-date-input")?.value || new Date().toISOString().slice(0, 10);
+  const dateVal = document.getElementById("wa-date-input")?.value || getISTTodayIso();
   const template = document.getElementById("wa-message-template")?.value || "";
 
   // 1. Filter target students by class

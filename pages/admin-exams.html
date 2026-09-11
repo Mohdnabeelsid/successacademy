@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exams & Assessments — SUCCESS Learning Log</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <!-- Chart.js for responsive analytics graphs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <div class="page-loader" id="page-loader">
+    <div class="spinner spinner-dark"></div>
+  </div>
+
+  <div class="app-shell">
+    <div id="sidebar-root"></div>
+
+    <main class="main" id="main-content" tabindex="-1">
+      <header class="topbar">
+        <div class="flex items-center gap-3">
+          <button class="btn-icon menu-toggle" id="menu-toggle">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+          <div>
+            <h1>Exams & Assessments</h1>
+            <div class="topbar-sub">Manage Terminals (Onam, Christmas, Final), Unit Tests, Marks & Sync</div>
+          </div>
+        </div>
+        <div class="topbar-actions flex gap-2">
+          <button class="btn btn-secondary btn-sm" id="view-grade-engine-btn" style="border:1px solid var(--c-border);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            Grading Engine Scale
+          </button>
+          <button class="btn btn-ghost btn-sm" id="export-exams-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export All to Excel
+          </button>
+          <button class="btn btn-primary btn-sm" id="schedule-exam-btn">+ Schedule New Exam</button>
+        </div>
+      </header>
+
+      <div class="page-body">
+        <!-- Stat Grid -->
+        <div class="stat-grid">
+          <div class="card card-stat">
+            <div class="stat-label">Total Exams Scheduled</div>
+            <div class="stat-value" id="stat-total-exams">0</div>
+          </div>
+          <div class="card card-stat">
+            <div class="stat-label">Regular Terminal Exams</div>
+            <div class="stat-value" id="stat-terminal-exams">0</div>
+          </div>
+          <div class="card card-stat">
+            <div class="stat-label">Unit & Class Tests</div>
+            <div class="stat-value" id="stat-unit-tests">0</div>
+          </div>
+          <div class="card card-stat">
+            <div class="stat-label">Total Student Marks Graded</div>
+            <div class="stat-value" id="stat-graded-marks">0</div>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+          <div class="search-input">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="search-input" placeholder="Search by exam title, subject, or type…">
+          </div>
+          <select id="filter-class">
+            <option value="">All Classes</option>
+            <option value="10">Class 10</option>
+            <option value="9">Class 9</option>
+            <option value="8">Class 8</option>
+            <option value="7">Class 7</option>
+            <option value="6">Class 6</option>
+            <option value="5">Class 5</option>
+            <option value="11 Science">Class 11 Science</option>
+            <option value="11 Commerce">Class 11 Commerce</option>
+            <option value="12 Science">Class 12 Science</option>
+            <option value="12 Commerce">Class 12 Commerce</option>
+          </select>
+          <select id="filter-type">
+            <option value="">All Exam Types</option>
+            <option value="Onam Exam">Onam Exam (1st Term)</option>
+            <option value="Christmas Exam">Christmas Exam (2nd Term)</option>
+            <option value="Final Exam">Final / Annual Exam</option>
+            <option value="Unit Test">Unit Test</option>
+            <option value="Model Exam">Model Exam</option>
+            <option value="Class Test">Class Test</option>
+            <option value="Special Assessment">Special Assessment</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" id="reset-filters-btn">Reset</button>
+        </div>
+
+        <!-- Exams Table -->
+        <div class="card" style="padding:0;">
+          <div class="table-wrap" style="border:none;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Exam Title & Type</th>
+                  <th>Class & Branch</th>
+                  <th>Subject</th>
+                  <th>Date & Time (IST)</th>
+                  <th>Max / Pass</th>
+                  <th>Grading & Sync</th>
+                  <th style="text-align:right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="exams-body">
+                <tr><td colspan="7"><div class="empty-state">Loading exams...</div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 1. Schedule / Edit Exam Modal -->
+  <div class="modal-overlay" id="exam-modal">
+    <div class="modal" style="max-width:720px; width:100%; max-height:90vh; overflow-y:auto;">
+      <div class="modal-header">
+        <div>
+          <h3 id="exam-modal-title">Schedule New Exam</h3>
+          <div class="topbar-sub">Configure classes, subjects, maximum marks & passing marks</div>
+        </div>
+        <button class="modal-close" id="close-exam-modal">✕</button>
+      </div>
+      <form id="exam-form">
+        <input type="hidden" id="exam-id">
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="exam-title">Exam Title *</label>
+            <input type="text" id="exam-title" placeholder="e.g. Onam Exam 2026 or Unit Test 1" required>
+          </div>
+
+          <div class="field">
+            <label for="exam-type">Exam Category / Type *</label>
+            <select id="exam-type" required>
+              <option value="Onam Exam">Onam Exam (1st Term)</option>
+              <option value="Christmas Exam">Christmas Exam (2nd Term)</option>
+              <option value="Final Exam">Final / Annual Exam</option>
+              <option value="Unit Test">Unit Test</option>
+              <option value="Model Exam">Model Exam</option>
+              <option value="Class Test">Class Test</option>
+              <option value="Special Assessment">Special Assessment</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="exam-date">Exam Date (IST) *</label>
+            <input type="date" id="exam-date" required>
+          </div>
+
+          <div class="field">
+            <label for="exam-start-time">Start Time (Optional)</label>
+            <input type="time" id="exam-start-time">
+          </div>
+        </div>
+
+        <!-- Class Selection Section (Multi-select / Single select) -->
+        <div id="class-selection-section" class="field" style="margin-bottom:var(--sp-4);">
+          <div class="flex items-center justify-between" style="margin-bottom:8px;">
+            <label style="margin:0;">Select Target Classes (Single or Multiple) *</label>
+            <div class="flex gap-1" style="font-size:var(--fs-xs);">
+              <button type="button" class="btn btn-ghost btn-sm" id="btn-select-all-classes" style="padding:2px 8px; font-size:11px;">All</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="btn-select-high-classes" style="padding:2px 8px; font-size:11px;">8-10</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="btn-select-up-classes" style="padding:2px 8px; font-size:11px;">5-7</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="btn-select-plus-classes" style="padding:2px 8px; font-size:11px;">+1 / +2</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="btn-clear-classes" style="padding:2px 8px; font-size:11px;">Clear</button>
+            </div>
+          </div>
+          <div id="class-checkbox-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:8px; background:var(--surface-1); padding:12px; border-radius:var(--r-md); border:1.5px solid var(--c-border);">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Single Edit Class & Subject Section (Visible only when editing an existing single exam) -->
+        <div id="single-edit-section" style="display:none;">
+          <div class="grid-2">
+            <div class="field">
+              <label for="single-exam-class">Class *</label>
+              <select id="single-exam-class">
+                <option value="10">Class 10</option>
+                <option value="9">Class 9</option>
+                <option value="8">Class 8</option>
+                <option value="7">Class 7</option>
+                <option value="6">Class 6</option>
+                <option value="5">Class 5</option>
+                <option value="11 Science">Class 11 Science</option>
+                <option value="11 Commerce">Class 11 Commerce</option>
+                <option value="12 Science">Class 12 Science</option>
+                <option value="12 Commerce">Class 12 Commerce</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="single-exam-subject">Subject *</label>
+              <select id="single-exam-subject">
+                <option value="All Subjects">All Subjects</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="single-exam-max-marks">Max Marks *</label>
+              <input type="number" id="single-exam-max-marks" min="1" max="1000" value="100">
+            </div>
+            <div class="field">
+              <label for="single-exam-passing-marks">Passing Marks *</label>
+              <input type="number" id="single-exam-passing-marks" min="1" max="1000" value="35">
+            </div>
+          </div>
+        </div>
+
+        <!-- Subject Configuration per Selected Class Container -->
+        <div id="subject-config-section" class="field" style="margin-bottom:var(--sp-4);">
+          <label style="margin-bottom:6px;">Subject-Wise Maximum & Passing Marks Configuration</label>
+          <div style="font-size:var(--fs-xs); color:var(--c-slate-500); margin-bottom:12px;">
+            Subjects are loaded based on selected class(es). You can customize maximum marks and passing marks for each subject.
+          </div>
+          <div id="subject-config-container" style="display:flex; flex-direction:column; gap:14px;">
+            <!-- Populated dynamically when classes are checked -->
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center" style="margin-top:var(--sp-5); padding-top:var(--sp-4); border-top:1px solid var(--c-border);">
+          <button type="button" class="btn btn-ghost" id="cancel-exam-modal">Cancel</button>
+          <div class="flex gap-2">
+            <button type="button" class="btn btn-secondary" id="preview-exam-grade-scale-btn">
+              📊 View Grading Scale
+            </button>
+            <button type="submit" class="btn btn-primary" id="save-exam-btn">Schedule Exam(s)</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. Class Marks Entry & Sync Modal -->
+  <div class="modal-overlay" id="marks-modal">
+    <div class="modal" style="max-width:860px; width:100%; max-height:90vh; display:flex; flex-direction:column;">
+      <div class="modal-header" style="flex-shrink:0;">
+        <div>
+          <h3 id="marks-modal-title">Record & Synchronize Marks</h3>
+          <div class="topbar-sub" id="marks-modal-sub">—</div>
+        </div>
+        <button class="modal-close" id="close-marks-modal">✕</button>
+      </div>
+
+      <div style="padding:10px 14px; background:var(--surface-1); border-radius:var(--r-md); margin-bottom:var(--sp-3); display:flex; justify-content:space-between; align-items:center; border:1px solid var(--c-border); flex-shrink:0;">
+        <div style="font-size:var(--fs-xs); color:var(--c-slate-600);">
+          💡 <strong>Synchronized System:</strong> Students can enter their marks from their portal, and admins can review, grade, or override marks anytime.
+        </div>
+        <div id="marks-quick-stats" style="font-size:var(--fs-xs); font-weight:700; color:var(--c-primary);">
+          Graded: 0 / 0
+        </div>
+      </div>
+
+      <div class="table-wrap marks-table" style="flex:1; overflow-y:auto; margin-bottom:var(--sp-4); border:1px solid var(--c-border);">
+        <table>
+          <thead style="position:sticky; top:0; background:var(--surface-1); z-index:2;">
+            <tr>
+              <th style="width:28%;">Student</th>
+              <th style="width:18%;">Subject</th>
+              <th style="width:16%;">Marks Obtained</th>
+              <th style="width:12%;">Max</th>
+              <th style="width:10%;">Absent</th>
+              <th style="width:16%;">Grade / Status</th>
+            </tr>
+          </thead>
+          <tbody id="marks-table-body">
+            <tr><td colspan="6"><div class="empty-state">Loading students...</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex justify-between items-center" style="padding-top:var(--sp-3); border-top:1px solid var(--c-border); flex-shrink:0;">
+        <button type="button" class="btn btn-ghost" id="cancel-marks-modal">Close</button>
+        <button type="button" class="btn btn-primary" id="save-all-marks-btn">Save & Synchronize All Marks</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Class Exam Analytics & Chart Modal -->
+  <div class="modal-overlay" id="analytics-modal">
+    <div class="modal" style="max-width:760px; width:100%; max-height:90vh; overflow-y:auto;">
+      <div class="modal-header">
+        <div>
+          <h3 id="analytics-title">Class Exam Analytics</h3>
+          <div class="topbar-sub" id="analytics-sub">—</div>
+        </div>
+        <button class="modal-close" id="close-analytics-modal">✕</button>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="stat-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom:var(--sp-4);">
+        <div class="card card-stat">
+          <div class="stat-label">Class Average</div>
+          <div class="stat-value" id="ana-avg">—</div>
+        </div>
+        <div class="card card-stat">
+          <div class="stat-label">Highest Score</div>
+          <div class="stat-value" id="ana-highest" style="color:var(--c-success);">—</div>
+        </div>
+        <div class="card card-stat">
+          <div class="stat-label">Lowest Score</div>
+          <div class="stat-value" id="ana-lowest" style="color:var(--c-danger);">—</div>
+        </div>
+        <div class="card card-stat">
+          <div class="stat-label">Pass Percentage</div>
+          <div class="stat-value" id="ana-pass-rate">—</div>
+        </div>
+      </div>
+
+      <!-- Chart Section -->
+      <div class="card" style="margin-bottom:var(--sp-4);">
+        <h4 style="margin-bottom:var(--sp-3); font-weight:700;">Grade Distribution</h4>
+        <div style="height:220px; position:relative;">
+          <canvas id="grade-distribution-chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Ranked Student Sheet -->
+      <div class="card" style="padding:0; margin-bottom:var(--sp-4);">
+        <div style="padding:12px 16px; border-bottom:1px solid var(--c-border); font-weight:700; font-size:var(--fs-sm);">
+          Student Score & Rank Leaderboard
+        </div>
+        <div class="table-wrap" style="max-height:240px; overflow-y:auto; border:none;">
+          <table>
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Student</th>
+                <th>Admission No</th>
+                <th>Subject</th>
+                <th>Marks</th>
+                <th>Percentage</th>
+                <th>Grade</th>
+              </tr>
+            </thead>
+            <tbody id="analytics-rank-body">
+              <tr><td colspan="7"><div class="empty-state">No graded data yet.</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center" style="margin-top:var(--sp-4); padding-top:var(--sp-3); border-top:1px solid var(--c-border);">
+        <button type="button" class="btn btn-ghost" id="close-analytics-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Dynamic Grading Engine Scale Modal -->
+  <div class="modal-overlay" id="grade-scale-modal">
+    <div class="modal" style="max-width:820px; width:100%; max-height:92vh; overflow-y:auto;">
+      <div class="modal-header" style="border-bottom:1px solid var(--c-border); padding-bottom:var(--sp-4);">
+        <div>
+          <div style="display:inline-flex; align-items:center; gap:6px; background:#0FA15D15; color:#0FA15D; border:1px solid #0FA15D33; padding:2px 10px; border-radius:12px; font-size:11px; font-weight:700; text-transform:uppercase; margin-bottom:6px;">
+            Engine v2.0 • Dynamic Percentage Scale
+          </div>
+          <h3 id="grade-scale-modal-title" style="font-family:'Playfair Display',serif; font-size:1.5rem; color:var(--c-text); margin:0;">
+            Dynamic Exam Grading Scale
+          </h3>
+          <div class="topbar-sub" id="grade-scale-modal-sub" style="font-size:var(--fs-xs); color:var(--c-slate-500); margin-top:2px;">
+            Automatic integer boundary and percentage mapping tailored to subject total marks.
+          </div>
+        </div>
+        <button class="modal-close" id="close-grade-scale-modal">✕</button>
+      </div>
+
+      <!-- Controls & Quick Presets -->
+      <div style="background:var(--surface-1); border:1px solid var(--c-border); border-radius:var(--r-md); padding:16px; margin:var(--sp-4) 0; display:flex; flex-direction:column; gap:12px;">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div class="flex items-center gap-3 flex-wrap">
+            <label for="grade-scale-total-input" style="font-weight:700; font-size:var(--fs-sm); margin:0;">
+              Total / Maximum Marks:
+            </label>
+            <input type="number" id="grade-scale-total-input" value="80" min="1" max="1000" style="width:90px; padding:6px 10px; font-weight:700; font-size:14px; text-align:center; border:1.5px solid var(--c-border); border-radius:var(--r-sm);">
+            <span id="grade-scale-subject-badge" class="badge badge-primary" style="font-size:12px;">Mathematics</span>
+          </div>
+
+          <!-- Quick Preset Pills -->
+          <div class="flex items-center gap-1 flex-wrap" style="font-size:var(--fs-xs);">
+            <span style="color:var(--c-slate-500); margin-right:4px;">Presets:</span>
+            <button type="button" class="btn btn-ghost btn-sm preset-btn" data-marks="80" style="padding:3px 8px; font-size:11px; border:1px solid var(--c-border);">80 Marks</button>
+            <button type="button" class="btn btn-ghost btn-sm preset-btn" data-marks="100" style="padding:3px 8px; font-size:11px; border:1px solid var(--c-border);">100 Marks</button>
+            <button type="button" class="btn btn-ghost btn-sm preset-btn" data-marks="50" style="padding:3px 8px; font-size:11px; border:1px solid var(--c-border);">50 Marks</button>
+            <button type="button" class="btn btn-ghost btn-sm preset-btn" data-marks="40" style="padding:3px 8px; font-size:11px; border:1px solid var(--c-border);">40 Marks</button>
+            <button type="button" class="btn btn-ghost btn-sm preset-btn" data-marks="25" style="padding:3px 8px; font-size:11px; border:1px solid var(--c-border);">25 Marks</button>
+            <button type="button" class="btn btn-ghost btn-sm preset-btn" data-marks="20" style="padding:3px 8px; font-size:11px; border:1px solid var(--c-border);">20 Marks</button>
+          </div>
+        </div>
+
+        <!-- Live Mark Tester -->
+        <div style="display:flex; align-items:center; gap:12px; padding-top:10px; border-top:1px dashed var(--c-border); flex-wrap:wrap;">
+          <div class="flex items-center gap-2">
+            <span style="font-size:var(--fs-xs); font-weight:600; color:var(--c-slate-600);">Test Calculation:</span>
+            <input type="number" id="test-obtained-mark-input" placeholder="Obtained" value="68" step="any" style="width:90px; padding:5px 8px; font-size:13px; border:1px solid var(--c-border); border-radius:var(--r-sm);">
+          </div>
+          <div id="test-mark-result-pill" style="font-size:var(--fs-xs); display:flex; align-items:center; gap:8px;">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Grade Scale Table -->
+      <div class="card" style="padding:0; margin-bottom:var(--sp-4); border:1px solid var(--c-border); box-shadow:var(--shadow-sm);">
+        <div class="table-wrap" style="border:none;">
+          <table style="width:100%; text-align:left;">
+            <thead>
+              <tr style="background:var(--surface-1);">
+                <th style="width:14%;">Grade</th>
+                <th style="width:20%; text-align:right;">Mark Range</th>
+                <th style="width:24%; text-align:right;">Percentage Range</th>
+                <th style="width:14%; text-align:center;">Grade Point</th>
+                <th style="width:18%;">Performance</th>
+                <th style="width:10%; text-align:center;">Status</th>
+              </tr>
+            </thead>
+            <tbody id="grade-scale-table-body">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Formula & Policy Footnote -->
+      <div style="background:#071A1708; border-left:3px solid #0FA15D; padding:10px 14px; border-radius:4px; font-size:11px; color:var(--c-slate-600); line-height:1.5;">
+        <strong>Academic Policy:</strong> Grade bands automatically span ~10% step intervals downwards from maximum marks without gaps or overlapping ranges. Calculated via <code>(Obtained / Total) × 100</code> with integer mark threshold mapping.
+      </div>
+
+      <div class="flex justify-between items-center" style="margin-top:var(--sp-4); padding-top:var(--sp-3); border-top:1px solid var(--c-border);">
+        <button type="button" class="btn btn-ghost" id="close-grade-scale-btn">Close</button>
+        <span style="font-size:12px; color:var(--c-slate-500); font-style:italic;">SUCCESS Academy Grading Engine</span>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/pages/admin-exams.js"></script>
+</body>
+</html>

@@ -14,10 +14,20 @@ import {
 } from "../services/student-service.js";
 import { getStudentLogs, LOG_STATUS, addStudyLog } from "../services/studylog-service.js";
 import { getSubjectsForClass } from "../services/subject-service.js";
+import { getISTWeekRange, getISTMonthRange, getISTTodayIso, formatLogDate } from "../utils/date-time.js";
+import { showConfirmModal } from "../components/confirm-modal.js";
+import { renderPagination } from "../components/pagination.js";
+import { getExamMarksForStudent, listExams, getExam } from "../services/exam-service.js";
+import { calculateGrade } from "../services/grading-service.js";
+import { getExamTypeBadge, escapeHtml } from "../utils/exam-ui.js";
 
 let admin;
 let allStudents = [];
 let currentStudent = null;
+let currentPage = 1;
+const pageSize = 15;
+let currentStudentMarks = [];
+let currentStudentExamsMap = {};
 
 (async function init() {
   admin = await requireAuth("admin", "admin-login.html");
@@ -34,17 +44,25 @@ async function refreshList() {
     branch: document.getElementById("filter-branch")?.value || "",
     class: document.getElementById("filter-class")?.value || ""
   };
+  currentPage = 1;
   allStudents = await listStudents(filters);
   renderTable(allStudents);
 }
 
 function renderTable(students) {
   const body = document.getElementById("students-body");
+  const paginationEl = document.getElementById("students-pagination");
   if (!students.length) {
     body.innerHTML = `<tr><td colspan="7"><div class="empty-state"><h4>No students found</h4>Add a student or adjust your filters.</div></td></tr>`;
+    if (paginationEl) paginationEl.innerHTML = "";
     return;
   }
-  body.innerHTML = students
+
+  const totalPages = Math.ceil(students.length / pageSize) || 1;
+  if (currentPage > totalPages) currentPage = totalPages;
+  const pagedStudents = students.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  body.innerHTML = pagedStudents
     .map(
       (s) => `
     <tr>
@@ -76,6 +94,17 @@ function renderTable(students) {
     </tr>`
     )
     .join("");
+
+  renderPagination({
+    container: "students-pagination",
+    totalItems: students.length,
+    pageSize: pageSize,
+    currentPage: currentPage,
+    onPageChange: (newPage) => {
+      currentPage = newPage;
+      renderTable(students);
+    }
+  });
 }
 
 function wireEvents() {
@@ -153,7 +182,13 @@ function wireEvents() {
     }
 
     if (resetId) {
-      if (!confirm("Generate a new password for this student?")) return;
+      const confirmed = await showConfirmModal({
+        title: "Reset Student Password",
+        message: "Generate a new password for this student? The student will need to use the new credentials.",
+        confirmText: "Generate New Password",
+        confirmVariant: "warning"
+      });
+      if (!confirmed) return;
       try {
         const newPw = await resetStudentPassword(resetId);
         const s = await getStudent(resetId);
@@ -176,7 +211,13 @@ function wireEvents() {
     }
 
     if (deleteId) {
-      if (!confirm("Delete this student record? This cannot be undone.")) return;
+      const confirmed = await showConfirmModal({
+        title: "Delete Student Record",
+        message: "Are you sure you want to delete this student record? All associated data will be removed and this action cannot be undone.",
+        confirmText: "Delete Student",
+        confirmVariant: "danger"
+      });
+      if (!confirmed) return;
       try {
         await deleteStudent(deleteId);
         toast.success("Student deleted.");
@@ -211,12 +252,17 @@ function wireEvents() {
   const tabWeekly = document.getElementById("tab-pm-weekly");
   const tabMonthly = document.getElementById("tab-pm-monthly");
   const tabSubjects = document.getElementById("tab-pm-subjects");
+  const tabExams = document.getElementById("tab-pm-exams");
   const tabBulkAdd = document.getElementById("tab-pm-bulk-add");
 
   if (tabWeekly) tabWeekly.addEventListener("click", () => switchProfileTab("weekly"));
   if (tabMonthly) tabMonthly.addEventListener("click", () => switchProfileTab("monthly"));
   if (tabSubjects) tabSubjects.addEventListener("click", () => switchProfileTab("subjects"));
+  if (tabExams) tabExams.addEventListener("click", () => switchProfileTab("exams"));
   if (tabBulkAdd) tabBulkAdd.addEventListener("click", () => switchProfileTab("bulk-add"));
+
+  document.getElementById("pm-jump-exams-btn")?.addEventListener("click", () => switchProfileTab("exams"));
+  document.getElementById("pm-header-exam-badge")?.addEventListener("click", () => switchProfileTab("exams"));
 
   // Bulk add row button listener
   const bulkAddRowBtn = document.getElementById("pm-bulk-add-row-btn");
@@ -241,6 +287,8 @@ function wireEvents() {
       for (const row of rows) {
         const date = row.querySelector(".bulk-date").value;
         const subject = row.querySelector(".bulk-subject").value;
+        const startTime = row.querySelector(".bulk-start-time")?.value || "";
+        const endTime = row.querySelector(".bulk-end-time")?.value || "";
         const duration = row.querySelector(".bulk-duration").value;
         const chapter = row.querySelector(".bulk-chapter").value.trim();
         const notes = row.querySelector(".bulk-notes").value.trim();
@@ -250,6 +298,8 @@ function wireEvents() {
             date,
             subject,
             durationMinutes: Number(duration),
+            startTime,
+            endTime,
             chapter,
             notes,
             status: LOG_STATUS.APPROVED
@@ -414,6 +464,8 @@ async function openStudentProfileModal(studentId) {
   document.getElementById("pm-name").textContent = "Loading...";
   document.getElementById("pm-meta").textContent = "Please wait while we load student profile data.";
   document.getElementById("pm-avatar").textContent = "?";
+  const tabExamBadge = document.getElementById("pm-tab-exam-badge");
+  if (tabExamBadge) tabExamBadge.textContent = "...";
   
   try {
     // Get student info
@@ -432,11 +484,40 @@ async function openStudentProfileModal(studentId) {
       .toUpperCase();
     document.getElementById("pm-avatar").textContent = initials;
     document.getElementById("pm-name").textContent = student.name || "—";
-    document.getElementById("pm-meta").textContent =
-      `Admission No: ${student.admissionNumber || "—"} · Class ${student.class || "—"} · ${student.branch || "—"} Branch`;
     
-    // Get study logs
-    currentStudentLogs = await getStudentLogs(studentId, 500);
+    // Fetch study logs, exam marks, and exams for student in parallel
+    const [logs, marks, exams] = await Promise.all([
+      getStudentLogs(studentId, 500),
+      getExamMarksForStudent(studentId),
+      listExams({ class: student.class })
+    ]);
+    currentStudentLogs = logs || [];
+    currentStudentMarks = marks || [];
+
+    const examMap = Object.fromEntries((exams || []).map((e) => [e.id, e]));
+    const missingExamIds = (marks || []).filter((m) => !examMap[m.examId]).map((m) => m.examId);
+    if (missingExamIds.length > 0) {
+      const extraExams = await Promise.all(missingExamIds.map((id) => getExam(id)));
+      extraExams.filter(Boolean).forEach((e) => { examMap[e.id] = e; });
+    }
+    currentStudentExamsMap = examMap;
+
+    if (tabExamBadge) tabExamBadge.textContent = currentStudentMarks.length;
+
+    const metaEl = document.getElementById("pm-meta");
+    if (metaEl) {
+      metaEl.innerHTML = `
+        <span>Admission No: <strong>${escapeHtml(student.admissionNumber || "—")}</strong></span>
+        <span>·</span>
+        <span>Class <strong>${escapeHtml(student.class || "—")}</strong></span>
+        <span>·</span>
+        <span>${escapeHtml(student.branch || "—")} Branch</span>
+        <button type="button" class="badge badge-primary" id="pm-header-exam-badge" style="cursor:pointer; border:none; padding:3px 10px; font-size:11px; font-weight:700; border-radius:12px;" title="Click to view exam marks">
+          📝 ${currentStudentMarks.length} Exam Mark${currentStudentMarks.length === 1 ? "" : "s"}
+        </button>
+      `;
+      document.getElementById("pm-header-exam-badge")?.addEventListener("click", () => switchProfileTab("exams"));
+    }
     
     // Reset bulk add form
     const tbody = document.getElementById("pm-bulk-add-tbody");
@@ -456,7 +537,7 @@ async function openStudentProfileModal(studentId) {
 function switchProfileTab(tab) {
   // Set active tab buttons
   document.querySelectorAll("#profile-modal .tab-btn").forEach((btn) => btn.classList.remove("active"));
-  document.getElementById(`tab-pm-${tab}`).classList.add("active");
+  document.getElementById(`tab-pm-${tab}`)?.classList.add("active");
 
   // Hide all tab contents
   document.querySelectorAll("#profile-modal .tab-content").forEach((el) => {
@@ -474,10 +555,13 @@ function switchProfileTab(tab) {
   // Render tab specific data
   if (tab === "weekly") {
     renderWeeklyLogs();
+    renderWeeklyExamPreview();
   } else if (tab === "monthly") {
     renderMonthlyLogs();
   } else if (tab === "subjects") {
     renderSubjectAnalytics();
+  } else if (tab === "exams") {
+    renderExamMarks();
   } else if (tab === "bulk-add") {
     const tbody = document.getElementById("pm-bulk-add-tbody");
     if (tbody && tbody.children.length === 0) {
@@ -487,27 +571,11 @@ function switchProfileTab(tab) {
 }
 
 function getWeeklyRange() {
-  const now = new Date();
-  const start = new Date(now);
-  start.setDate(now.getDate() - now.getDay()); // Sunday
-  const end = new Date(start);
-  end.setDate(start.getDate() + 6); // Saturday
-  
-  return {
-    startIso: start.toISOString().slice(0, 10),
-    endIso: end.toISOString().slice(0, 10)
-  };
+  return getISTWeekRange();
 }
 
 function getMonthlyRange() {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth(), 1);
-  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0); // Last day of month
-  
-  return {
-    startIso: start.toISOString().slice(0, 10),
-    endIso: end.toISOString().slice(0, 10)
-  };
+  return getISTMonthRange();
 }
 
 function renderWeeklyLogs() {
@@ -641,7 +709,7 @@ function createBulkAddRow(dateVal = "", subjectVal = "", startTimeVal = "", endT
   const tbody = document.getElementById("pm-bulk-add-tbody");
   if (!tbody) return;
 
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const todayIso = getISTTodayIso();
   const dateStr = dateVal || todayIso;
 
   const subjects = currentStudent ? getSubjectsForClass(currentStudent.class) : [];
@@ -734,3 +802,195 @@ function initializeBulkAddForm() {
     createBulkAddRow();
   }
 }
+
+function renderWeeklyExamPreview() {
+  const container = document.getElementById("pm-weekly-exam-preview");
+  if (!container) return;
+
+  if (!currentStudentMarks || !currentStudentMarks.length) {
+    container.innerHTML = `<div class="empty-state" style="padding:14px; font-size:var(--fs-xs);">No exam marks recorded yet for this student.</div>`;
+    return;
+  }
+
+  // Sort by exam date descending
+  const sorted = [...currentStudentMarks].sort((a, b) => {
+    const examA = currentStudentExamsMap[a.examId];
+    const examB = currentStudentExamsMap[b.examId];
+    const dateA = examA?.examDate || a.createdAt || "";
+    const dateB = examB?.examDate || b.createdAt || "";
+    return dateB.localeCompare(dateA);
+  });
+
+  // Take top 4 most recent exams
+  const recent = sorted.slice(0, 4);
+
+  container.innerHTML = `
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px;">
+      ${recent.map((m) => {
+        const exam = currentStudentExamsMap[m.examId];
+        const examTitle = exam ? exam.title : "Exam";
+        const subject = m.subject || (exam ? exam.subject : "General");
+        const max = Number(m.maxMarks) || (exam ? Number(exam.maxMarks) : 100);
+        const passing = exam ? Number(exam.passingMarks) : 35;
+        const examDate = exam?.examDate ? formatLogDate(exam.examDate) : "";
+
+        if (m.isAbsent) {
+          return `
+            <div style="background:var(--surface-1); border:1px solid var(--c-border); border-radius:var(--r-md); padding:10px 12px;">
+              <div class="flex items-center justify-between" style="margin-bottom:4px;">
+                <span style="font-weight:700; font-size:var(--fs-xs); color:var(--c-dark);">${escapeHtml(subject)}</span>
+                <span class="badge badge-warning" style="font-size:10px;">Absent</span>
+              </div>
+              <div style="font-size:11px; color:var(--c-slate-500);">${escapeHtml(examTitle)}</div>
+              <div style="font-size:10px; color:var(--c-slate-400); margin-top:2px;">${examDate}</div>
+            </div>
+          `;
+        }
+
+        const score = Number(m.marksObtained);
+        const res = calculateGrade(score, max, { passingMarks: passing });
+
+        return `
+          <div style="background:var(--surface-1); border:1px solid var(--c-border); border-radius:var(--r-md); padding:10px 12px;">
+            <div class="flex items-center justify-between" style="margin-bottom:4px;">
+              <span style="font-weight:700; font-size:var(--fs-xs); color:var(--c-dark);">${escapeHtml(subject)}</span>
+              <span class="badge" style="background:${res.colorHex}18; color:${res.colorHex}; border:1px solid ${res.colorHex}44; font-weight:800; font-size:11px; padding:1px 6px;">
+                ${res.grade}
+              </span>
+            </div>
+            <div class="flex items-baseline justify-between">
+              <span style="font-weight:800; font-size:14px; color:var(--c-dark);">
+                ${score} <span style="font-weight:500; font-size:11px; color:var(--c-slate-500);">/ ${max}</span>
+              </span>
+              <span style="font-size:11px; font-weight:700; color:${res.passed ? 'var(--c-success)' : 'var(--c-danger)'};">
+                ${res.percentageFormatted} (${res.passed ? 'Pass' : 'Fail'})
+              </span>
+            </div>
+            <div style="font-size:10px; color:var(--c-slate-500); margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+              ${escapeHtml(examTitle)} · ${examDate}
+            </div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function renderExamMarks() {
+  const tbody = document.getElementById("pm-exams-table-body");
+  if (!tbody) return;
+
+  const countEl = document.getElementById("pm-exam-count");
+  const avgEl = document.getElementById("pm-exam-avg");
+  const passEl = document.getElementById("pm-exam-pass");
+  const highestEl = document.getElementById("pm-exam-highest");
+
+  if (!currentStudentMarks || !currentStudentMarks.length) {
+    if (countEl) countEl.textContent = "0";
+    if (avgEl) avgEl.textContent = "—";
+    if (passEl) passEl.textContent = "0 / 0";
+    if (highestEl) highestEl.textContent = "—";
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><h4>No exam marks recorded</h4>No examination results found for this student.</div></td></tr>`;
+    return;
+  }
+
+  // Sort marks by exam date descending
+  const sortedMarks = [...currentStudentMarks].sort((a, b) => {
+    const examA = currentStudentExamsMap[a.examId];
+    const examB = currentStudentExamsMap[b.examId];
+    const dateA = examA?.examDate || a.createdAt || "";
+    const dateB = examB?.examDate || b.createdAt || "";
+    return dateB.localeCompare(dateA);
+  });
+
+  // Calculate statistics
+  const validMarks = sortedMarks.filter(
+    (m) => !m.isAbsent && m.marksObtained !== null && m.marksObtained !== undefined
+  );
+  let passedCount = 0;
+  let totalPct = 0;
+  let highestPct = -1;
+  let highestDisplay = "—";
+
+  validMarks.forEach((m) => {
+    const exam = currentStudentExamsMap[m.examId];
+    const max = Number(m.maxMarks) || (exam ? Number(exam.maxMarks) : 100);
+    const passing = exam ? Number(exam.passingMarks) : 35;
+    const score = Number(m.marksObtained);
+    const pct = (score / max) * 100;
+    totalPct += pct;
+
+    const res = calculateGrade(score, max, { passingMarks: passing });
+    if (res.passed) passedCount++;
+
+    if (pct > highestPct) {
+      highestPct = pct;
+      highestDisplay = `${score}/${max} (${res.percentageFormatted})`;
+    }
+  });
+
+  const avgPct = validMarks.length > 0 ? (totalPct / validMarks.length).toFixed(1) : "—";
+
+  if (countEl) countEl.textContent = String(validMarks.length);
+  if (avgEl) avgEl.textContent = avgPct !== "—" ? `${avgPct}%` : "—";
+  if (passEl) passEl.textContent = `${passedCount} / ${validMarks.length}`;
+  if (highestEl) highestEl.textContent = highestDisplay;
+
+  tbody.innerHTML = sortedMarks
+    .map((m) => {
+      const exam = currentStudentExamsMap[m.examId];
+      const examTitle = exam ? exam.title : "Exam Record";
+      const examType = exam ? exam.examType : "Assessment";
+      const examDate = exam?.examDate ? formatLogDate(exam.examDate) : (m.createdAt ? formatLogDate(m.createdAt) : "—");
+      const subject = m.subject || (exam ? exam.subject : "General");
+      const maxMarks = m.maxMarks || (exam ? exam.maxMarks : 100);
+      const passingMarks = exam ? Number(exam.passingMarks) : 35;
+
+      if (m.isAbsent) {
+        return `
+        <tr>
+          <td>
+            <div style="font-weight:700; color:var(--c-dark);">${escapeHtml(examTitle)}</div>
+            <div style="margin-top:2px;">${getExamTypeBadge(examType)}</div>
+          </td>
+          <td><strong>${escapeHtml(subject)}</strong></td>
+          <td>${examDate}</td>
+          <td><span class="badge badge-warning" style="background:#FEF2F2; color:#DC2626; border:1px solid #FCA5A5;">Absent</span></td>
+          <td><span class="badge badge-ghost">—</span></td>
+          <td><span style="color:var(--c-danger); font-weight:700; font-size:11px;">ABSENT</span></td>
+          <td><span class="badge badge-ghost" style="text-transform:capitalize; font-size:11px;">${escapeHtml(m.enteredBy || "—")}</span></td>
+        </tr>`;
+      }
+
+      const score = Number(m.marksObtained);
+      const res = calculateGrade(score, Number(maxMarks), { passingMarks });
+
+      const statusBadge = res.passed
+        ? '<span class="badge badge-success" style="font-size:11px; font-weight:700;">Pass ✓</span>'
+        : '<span class="badge badge-danger" style="font-size:11px; font-weight:700;">Needs Focus</span>';
+
+      return `
+      <tr>
+        <td>
+          <div style="font-weight:700; color:var(--c-dark);">${escapeHtml(examTitle)}</div>
+          <div style="margin-top:2px;">${getExamTypeBadge(examType)}</div>
+        </td>
+        <td>
+          <span style="display:inline-flex; align-items:center; gap:4px; font-weight:600; font-size:var(--fs-xs); color:var(--c-slate-700); background:var(--surface-1); padding:2px 8px; border-radius:var(--r-sm); border:1px solid var(--c-border);">
+            ${escapeHtml(subject)}
+          </span>
+        </td>
+        <td>${examDate}</td>
+        <td><strong>${score}</strong> / ${maxMarks} <span style="color:var(--c-slate-500); font-size:11px; margin-left:2px;">(${res.percentageFormatted})</span></td>
+        <td>
+          <span class="badge" style="background:${res.colorHex}18; color:${res.colorHex}; border:1px solid ${res.colorHex}44; font-weight:800; font-size:12px;">
+            ${res.grade}
+          </span>
+        </td>
+        <td>${statusBadge}</td>
+        <td><span class="badge badge-ghost" style="text-transform:capitalize; font-size:11px;">${escapeHtml(m.enteredBy || "admin")}</span></td>
+      </tr>`;
+    })
+    .join("");
+}
+

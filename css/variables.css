@@ -1,98 +1,147 @@
 /* ==========================================================================
-   SUCCESS LEARNING LOG — Design Tokens
-   Brand: Success Academy — "From Classrooms to Careers."
+   SUCCESS ACADEMY — Official Master Visual Design System Tokens
+   Brand: SUCCESS ACADEMY — "From Classrooms to Careers."
+   Formula: White / Deep Forest foundation + Emerald Green (#0FA15D) + Teal (#1F7A78)
+   Typography: Playfair Display (Headings) + Plus Jakarta Sans (Body & UI)
    ========================================================================== */
 
 :root {
-  /* Brand Colors */
-  --c-primary: #0FA15D;
-  --c-primary-dark: #0a7a6e;
-  --c-secondary: #1F7A78;
-  --c-teal: #0e9fa1;
-  --c-emerald: #10A873;
-  --c-blue: #2E4C8C;
-  --c-dark: #071A17;
-  --c-dark-forest-teal: #0E3B36;
-  --c-white: #FFFFFF;
-  --c-beige: #D8C7AA;
+  /* 1. Official Brand Color Palette */
+  --c-primary: #0FA15D;              /* Emerald Green: highlights, primary CTA, action */
+  --c-primary-dark: #0a7a6e;         /* Deep primary hover */
+  --c-primary-light: #10A873;        /* Bright emerald accent */
+  --c-secondary: #1F7A78;            /* Teal: secondary accents, depth & layering */
+  --c-blue: #2E4C8C;                 /* Academic Blue: knowledge, credibility, badges */
+  --c-dark: #071A17;                 /* Deep Forest: premium dark backgrounds, sidebars */
+  --c-dark-forest: #071A17;
+  --c-dark-forest-teal: #0E3B36;     /* Dark Forest Teal: panels, subtle depth */
+  --c-beige: #D8C7AA;                /* Warm Beige: heritage & editorial accents */
+  --c-white: #FFFFFF;                /* White: foundation & negative space */
 
-  /* Neutrals */
-  --c-ink: #0B1F1B;
-  --c-slate-900: #101917;
+  /* 2. Neutrals (Slate / Forest tints) */
+  --c-ink: #071A17;
+  --c-slate-900: #0B1F1B;
+  --c-slate-800: #132A25;
   --c-slate-700: #33433F;
+  --c-slate-600: #4B5E58;
   --c-slate-500: #64756F;
+  --c-slate-400: #889C95;
   --c-slate-300: #A9B8B2;
+  --c-slate-200: #D0DDD7;
   --c-slate-100: #E7EEEA;
   --c-slate-50: #F6F8F6;
   --c-border: #E2E9E5;
+  --c-border-subtle: #EDF3EF;
 
-  /* Status */
+  /* 3. Status Colors */
   --c-success: #0FA15D;
   --c-warning: #C88A2E;
   --c-danger: #C13F3F;
   --c-info: #2E4C8C;
 
-  /* Surfaces */
+  /* 4. Surfaces */
   --surface-0: #FFFFFF;
   --surface-1: #F6F8F6;
   --surface-2: #EFF4F1;
   --surface-dark: #071A17;
-  --surface-dark-2: #0C2620;
+  --surface-dark-2: #0E3B36;
+  --surface-card: #FFFFFF;
 
-  /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #0FA15D 0%, #0e9fa1 100%);
-  --gradient-dark: linear-gradient(160deg, #071A17 0%, #0C2620 60%, #0a3a30 100%);
-  --gradient-mesh: radial-gradient(circle at 20% 20%, rgba(15,161,93,0.18), transparent 45%),
-                    radial-gradient(circle at 80% 0%, rgba(46,76,140,0.16), transparent 40%),
-                    radial-gradient(circle at 50% 100%, rgba(14,159,161,0.14), transparent 45%);
+  /* 5. Gradients */
+  --gradient-primary: linear-gradient(135deg, #0FA15D 0%, #1F7A78 100%);
+  --gradient-primary-hover: linear-gradient(135deg, #0C854C 0%, #165E5C 100%);
+  --gradient-academic: linear-gradient(135deg, #2E4C8C 0%, #1F7A78 100%);
+  --gradient-dark: linear-gradient(170deg, #071A17 0%, #0E3B36 60%, #061814 100%);
+  --gradient-mesh: radial-gradient(circle at 15% 15%, rgba(15, 161, 93, 0.18), transparent 45%),
+                    radial-gradient(circle at 85% 10%, rgba(46, 76, 140, 0.16), transparent 40%),
+                    radial-gradient(circle at 50% 90%, rgba(31, 122, 120, 0.16), transparent 45%);
 
-  /* Typography */
+  /* 6. Typography */
   --font-display: 'Playfair Display', 'Georgia', serif;
   --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 
-  /* Type Scale */
+  /* 7. Type Scale */
+  --fs-2xs: 0.6875rem;
   --fs-xs: 0.75rem;
   --fs-sm: 0.875rem;
-  --fs-base: 1rem;
-  --fs-md: 1.125rem;
-  --fs-lg: 1.375rem;
-  --fs-xl: 1.75rem;
-  --fs-2xl: 2.25rem;
-  --fs-3xl: 3rem;
-  --fs-4xl: 3.75rem;
+  --fs-base: 0.9375rem;
+  --fs-md: 1.0625rem;
+  --fs-lg: 1.25rem;
+  --fs-xl: 1.5rem;
+  --fs-2xl: 1.875rem;
+  --fs-3xl: 2.25rem;
+  --fs-4xl: 3rem;
 
-  /* Spacing */
+  /* 8. Spacing */
   --sp-1: 4px;
   --sp-2: 8px;
   --sp-3: 12px;
   --sp-4: 16px;
-  --sp-5: 24px;
-  --sp-6: 32px;
-  --sp-7: 48px;
-  --sp-8: 64px;
-  --sp-9: 96px;
+  --sp-5: 20px;
+  --sp-6: 28px;
+  --sp-7: 40px;
+  --sp-8: 56px;
+  --sp-9: 80px;
 
-  /* Radius */
-  --r-sm: 8px;
+  /* 9. Radius */
+  --r-xs: 6px;
+  --r-sm: 10px;
   --r-md: 14px;
-  --r-lg: 22px;
-  --r-xl: 32px;
-  --r-full: 999px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+  --r-full: 9999px;
 
-  /* Shadow */
+  /* 10. Shadows */
+  --shadow-xs: 0 1px 3px rgba(7, 26, 23, 0.04);
   --shadow-sm: 0 2px 8px rgba(7, 26, 23, 0.06);
   --shadow-md: 0 8px 24px rgba(7, 26, 23, 0.08);
-  --shadow-lg: 0 20px 48px rgba(7, 26, 23, 0.14);
-  --shadow-glow: 0 0 0 1px rgba(15,161,93,0.16), 0 12px 32px rgba(15,161,93,0.16);
+  --shadow-lg: 0 20px 48px rgba(7, 26, 23, 0.12);
+  --shadow-glow: 0 4px 18px rgba(15, 161, 93, 0.25);
+  --shadow-glow-hover: 0 8px 26px rgba(15, 161, 93, 0.35);
 
-  /* Motion */
+  /* 11. Motion */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --dur-fast: 160ms;
-  --dur-med: 320ms;
-  --dur-slow: 600ms;
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast: 150ms;
+  --dur-med: 280ms;
+  --dur-slow: 450ms;
 
-  /* Layout */
-  --sidebar-w: 264px;
-  --topbar-h: 72px;
+  /* 12. Layout Dimensions */
+  --sidebar-w: 260px;
+  --topbar-h: 70px;
   --container-max: 1200px;
+}
+
+/* ==========================================================================
+   DARK THEME TOKENS — Deep Forest Dark Mode
+   ========================================================================== */
+[data-theme="dark"] {
+  /* Neutrals */
+  --c-ink: #F0F6F3;
+  --c-slate-900: #F0F6F3;
+  --c-slate-800: #E0ECE5;
+  --c-slate-700: #C4D6CD;
+  --c-slate-600: #9DB4AA;
+  --c-slate-500: #7C948A;
+  --c-slate-400: #5C746B;
+  --c-slate-300: #3E544C;
+  --c-slate-200: #233B34;
+  --c-slate-100: #162E27;
+  --c-slate-50: #0D221C;
+  --c-border: #183830;
+  --c-border-subtle: #112822;
+
+  /* Surfaces */
+  --surface-0: #0A1C18;
+  --surface-1: #05120F;
+  --surface-2: #0E241F;
+  --surface-dark: #030C0A;
+  --surface-dark-2: #071A17;
+  --surface-card: #0D221C;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.7);
 }

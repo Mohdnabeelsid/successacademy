@@ -16,7 +16,7 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
@@ -27,6 +27,7 @@
 </head>
 
 <body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
 
   <!-- ═══════════════════════════════════════
        NAVIGATION
@@ -36,7 +37,7 @@
 
       <!-- Logo -->
       <a href="#hero" class="nav-logo" aria-label="SUCCESS ACADEMY home">
-        <div class="nav-logo-mark" aria-hidden="true">SA</div>
+        <img src="assets/logo.png" alt="SUCCESS ACADEMY Logo" class="nav-logo-img" />
         <span class="nav-logo-text">SUCCESS ACADEMY</span>
       </a>
 
@@ -104,7 +105,7 @@
   <div class="mobile-menu" id="mobile-menu" aria-modal="true" role="dialog" aria-label="Navigation menu">
     <div class="mobile-menu-header">
       <a href="#hero" class="nav-logo" aria-label="SUCCESS ACADEMY">
-        <div class="nav-logo-mark" aria-hidden="true">SA</div>
+        <img src="assets/logo.png" alt="SUCCESS ACADEMY Logo" class="nav-logo-img" />
         <span style="font-family: var(--font-display); font-weight: 700; font-size: 1.0625rem; color: #fff;">SUCCESS ACADEMY</span>
       </a>
       <button class="mobile-menu-close" id="mobile-close" aria-label="Close menu">
@@ -124,7 +125,7 @@
     </div>
   </div>
 
-  <main>
+  <main id="main-content" tabindex="-1">
 
     <!-- ═══════════════════════════════════════
          SECTION 1 — HERO
@@ -931,7 +932,7 @@
         <!-- Brand -->
         <div class="footer-brand">
           <div class="footer-brand-name">
-            <div class="footer-brand-mark" aria-hidden="true">SA</div>
+            <img src="assets/logo.png" alt="SUCCESS ACADEMY Logo" class="footer-logo-img" />
             SUCCESS ACADEMY
           </div>
           <p class="footer-tagline">
@@ -966,7 +967,7 @@
       </div>
 
       <div class="footer-bottom">
-        <span>© 2025 SUCCESS ACADEMY. All rights reserved.</span>
+        <span>© <span id="current-year">2025</span> SUCCESS ACADEMY. All rights reserved.</span>
         <span>Designed with purpose · Built for transformation.</span>
       </div>
     </div>

@@ -5,20 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Study Log Management — SUCCESS Learning Log</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../css/variables.css">
 <link rel="stylesheet" href="../css/base.css">
 <link rel="stylesheet" href="../css/components.css">
 <link rel="stylesheet" href="../css/dashboard.css">
 </head>
 <body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
 
 <div class="page-loader" id="page-loader"><div class="spinner spinner-dark"></div></div>
 
 <div class="app-shell">
   <div id="sidebar-root"></div>
 
-  <main class="main">
+  <main class="main" id="main-content" tabindex="-1">
     <header class="topbar">
       <div class="flex items-center gap-3">
         <button class="btn-icon menu-toggle" id="menu-toggle">
@@ -44,9 +46,14 @@
         <div class="table-wrap" style="border:none;">
           <table>
             <thead><tr><th>Student</th><th>Date</th><th>Time</th><th>Subject</th><th>Chapter / Notes</th><th>Duration</th><th>Type</th><th style="text-align:right;">Actions</th></tr></thead>
-            <tbody id="logs-body"><tr><td colspan="8"><div class="empty-state">Loading…</div></td></tr></tbody>
+            <tbody id="logs-body">
+              <tr class="skeleton-row" aria-hidden="true"><td><div class="skeleton skeleton-text" style="width:70%;"></div></td><td><div class="skeleton skeleton-text" style="width:75%;"></div></td><td><div class="skeleton skeleton-text" style="width:80%;"></div></td><td><div class="skeleton skeleton-text" style="width:85%;"></div></td><td><div class="skeleton skeleton-text" style="width:70%;"></div></td><td><div class="skeleton skeleton-text" style="width:55%;"></div></td><td><div class="skeleton skeleton-pill" style="width:75px;"></div></td><td style="text-align:right;"><div class="skeleton skeleton-text" style="width:50px; margin-left:auto;"></div></td></tr>
+              <tr class="skeleton-row" aria-hidden="true"><td><div class="skeleton skeleton-text" style="width:65%;"></div></td><td><div class="skeleton skeleton-text" style="width:70%;"></div></td><td><div class="skeleton skeleton-text" style="width:75%;"></div></td><td><div class="skeleton skeleton-text" style="width:80%;"></div></td><td><div class="skeleton skeleton-text" style="width:65%;"></div></td><td><div class="skeleton skeleton-text" style="width:50%;"></div></td><td><div class="skeleton skeleton-pill" style="width:75px;"></div></td><td style="text-align:right;"><div class="skeleton skeleton-text" style="width:50px; margin-left:auto;"></div></td></tr>
+              <tr class="skeleton-row" aria-hidden="true"><td><div class="skeleton skeleton-text" style="width:80%;"></div></td><td><div class="skeleton skeleton-text" style="width:85%;"></div></td><td><div class="skeleton skeleton-text" style="width:90%;"></div></td><td><div class="skeleton skeleton-text" style="width:75%;"></div></td><td><div class="skeleton skeleton-text" style="width:60%;"></div></td><td><div class="skeleton skeleton-text" style="width:55%;"></div></td><td><div class="skeleton skeleton-pill" style="width:75px;"></div></td><td style="text-align:right;"><div class="skeleton skeleton-text" style="width:50px; margin-left:auto;"></div></td></tr>
+            </tbody>
           </table>
         </div>
+        <div id="logs-pagination"></div>
       </div>
     </div>
   </main>

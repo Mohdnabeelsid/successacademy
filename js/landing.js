@@ -282,4 +282,20 @@
 
   counters.forEach(c => counterObserver.observe(c));
 
+  /* ─────────────────────────────────────────
+     DYNAMIC FOOTER YEAR
+  ───────────────────────────────────────── */
+  const yearEl = document.getElementById('current-year');
+  if (yearEl) {
+    yearEl.textContent = new Date().getFullYear();
+  }
+
+  /* ─────────────────────────────────────────
+     THEME INITIALIZATION
+  ───────────────────────────────────────── */
+  const savedTheme = localStorage.getItem('sa-theme');
+  if (savedTheme === 'dark' || (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+
 })();
