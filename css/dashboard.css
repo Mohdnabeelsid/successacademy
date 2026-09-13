@@ -240,6 +240,12 @@
   gap: var(--sp-4);
   margin-bottom: var(--sp-6);
 }
+.stat-grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+.stat-grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
 .grid-2 {
   display: grid;
   grid-template-columns: 2fr 1fr;

@@ -342,12 +342,13 @@ CREATE POLICY "Admins manage academic_years" ON public.academic_years FOR ALL US
 -- ==========================================================================
 -- INSTRUCTIONS TO BOOTSTRAP FIRST ADMIN:
 -- 1. In Supabase Dashboard → Authentication → Users → Add User:
---    Email: admin@successacademy.com
---    Password: <your_password>
+--    Email: admin@yourinstitution.com
+--    Password: <your_secure_password>
 --    (Copy the generated User UID)
 --
 -- 2. Run the following SQL replacing '<ADMIN_USER_UID>' with the copied UID:
 -- INSERT INTO public.users (id, email, name, role, branch)
--- VALUES ('<ADMIN_USER_UID>', 'admin@successacademy.com', 'Mohammed Nabeel', 'admin', 'MAN')
+-- VALUES ('<ADMIN_USER_UID>', 'admin@yourinstitution.com', 'System Administrator', 'admin', 'MAIN')
 -- ON CONFLICT (id) DO NOTHING;
 -- ==========================================================================
+

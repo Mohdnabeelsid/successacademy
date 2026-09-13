@@ -55,24 +55,21 @@
 
       <div class="page-body">
         <!-- Stat Grid -->
-        <div class="stat-grid">
+        <div class="stat-grid stat-grid-3">
           <div class="card card-stat">
-            <div class="stat-label">Average Percentage</div>
+            <div class="stat-label">Average Performance</div>
             <div class="stat-value" id="stat-avg-pct">—</div>
+            <div id="stat-avg-grade-sub" style="font-size:12px; font-weight:600; color:var(--c-primary); margin-top:4px;">—</div>
           </div>
           <div class="card card-stat">
-            <div class="stat-label">Overall Academic Grade</div>
-            <div class="stat-value" id="stat-overall-grade" style="color:var(--c-primary);">—</div>
-          </div>
-          <div class="card card-stat">
-            <div class="stat-label">Total Tests Taken</div>
+            <div class="stat-label">Tests Taken</div>
             <div class="stat-value" id="stat-tests-taken">0</div>
-            <div style="font-size:11px; color:var(--c-slate-500); margin-top:2px;">Graded exam papers</div>
+            <div id="stat-tests-passed-sub" style="font-size:12px; font-weight:600; color:var(--c-slate-500); margin-top:4px;">0 passed</div>
           </div>
           <div class="card card-stat">
-            <div class="stat-label">Passed Assessments</div>
-            <div class="stat-value" id="stat-tests-passed" style="color:var(--c-success);">0</div>
-            <div style="font-size:11px; color:var(--c-slate-500); margin-top:2px;">Passed of tests taken</div>
+            <div class="stat-label">Best Subject</div>
+            <div class="stat-value" id="stat-best-subject" style="font-size:var(--fs-xl); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="—">—</div>
+            <div id="stat-best-subject-sub" style="font-size:12px; font-weight:600; color:var(--c-success); margin-top:4px;">No tests recorded</div>
           </div>
         </div>
 

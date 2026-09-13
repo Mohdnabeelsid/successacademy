@@ -15,6 +15,7 @@ import {
   updateExam,
   deleteExam,
   getExamMarksForExam,
+  getAllExamMarks,
   bulkSaveExamMarks,
   calcGrade,
   calcClassExamStats,
@@ -63,29 +64,96 @@ let analyticsChartInstance = null;
   }
 })();
 
-// Fix #1: populate the stat-graded-marks card which was always stuck at 0
 async function updateDashboardStats() {
-  document.getElementById("stat-total-exams").textContent = allExams.length;
+  const totalPerfEl = document.getElementById("stat-total-perf");
+  const totalPerfSubEl = document.getElementById("stat-total-perf-sub");
+  const passRateEl = document.getElementById("stat-pass-rate");
+  const passRateSubEl = document.getElementById("stat-pass-rate-sub");
+  const topSubjectEl = document.getElementById("stat-top-subject");
+  const topSubjectSubEl = document.getElementById("stat-top-subject-sub");
 
-  const terminalExams = allExams.filter((e) =>
-    ["Onam Exam", "Christmas Exam", "Final Exam"].includes(e.examType)
-  );
-  document.getElementById("stat-terminal-exams").textContent = terminalExams.length;
-
-  const unitTests = allExams.filter((e) =>
-    ["Unit Test", "Class Test", "Model Exam", "Special Assessment"].includes(e.examType)
-  );
-  document.getElementById("stat-unit-tests").textContent = unitTests.length;
-
-  // Fetch total graded marks count across all exams in parallel
   try {
-    const allMarksArrays = await Promise.all(allExams.map((e) => getExamMarksForExam(e.id)));
-    const gradedTotal = allMarksArrays.reduce((sum, marks) => {
-      return sum + marks.filter((m) => !m.isAbsent && m.marksObtained !== null && m.marksObtained !== undefined).length;
-    }, 0);
-    document.getElementById("stat-graded-marks").textContent = gradedTotal;
-  } catch {
-    document.getElementById("stat-graded-marks").textContent = "—";
+    const allMarks = await getAllExamMarks();
+    const validMarks = allMarks.filter(
+      (m) => !m.isAbsent && m.marksObtained !== null && m.marksObtained !== undefined
+    );
+
+    if (validMarks.length === 0) {
+      if (totalPerfEl) totalPerfEl.textContent = "—";
+      if (totalPerfSubEl) totalPerfSubEl.textContent = "—";
+      if (passRateEl) passRateEl.textContent = "—";
+      if (passRateSubEl) passRateSubEl.textContent = "0 passed of 0 graded";
+      if (topSubjectEl) {
+        topSubjectEl.textContent = "—";
+        topSubjectEl.title = "—";
+      }
+      if (topSubjectSubEl) topSubjectSubEl.textContent = "No marks graded";
+      return;
+    }
+
+    const examMap = Object.fromEntries(allExams.map((e) => [e.id, e]));
+
+    let totalPct = 0;
+    let passedCount = 0;
+    const subjectMap = {};
+
+    validMarks.forEach((m) => {
+      const exam = examMap[m.examId];
+      const max = Number(m.maxMarks) || (exam ? Number(exam.maxMarks) : 100);
+      const pass = exam ? Number(exam.passingMarks) : 35;
+      const score = Number(m.marksObtained);
+      const subject = (m.subject || (exam ? exam.subject : "General") || "General").trim();
+
+      const pct = (score / max) * 100;
+      totalPct += pct;
+
+      if (score >= pass) passedCount++;
+
+      if (!subjectMap[subject]) {
+        subjectMap[subject] = { totalPct: 0, count: 0 };
+      }
+      subjectMap[subject].totalPct += pct;
+      subjectMap[subject].count += 1;
+    });
+
+    // 1. Total Performance
+    const avgPct = (totalPct / validMarks.length).toFixed(1);
+    const overallGrade = calcGrade(avgPct);
+
+    if (totalPerfEl) totalPerfEl.textContent = `${avgPct}%`;
+    if (totalPerfSubEl) totalPerfSubEl.textContent = `${overallGrade.grade} · ${overallGrade.label}`;
+
+    // 2. Overall Pass Rate
+    const passPct = ((passedCount / validMarks.length) * 100).toFixed(1);
+    if (passRateEl) passRateEl.textContent = `${passPct}%`;
+    if (passRateSubEl) passRateSubEl.textContent = `${passedCount} passed of ${validMarks.length} graded`;
+
+    // 3. Top Subject
+    let bestSubjName = "—";
+    let bestSubjAvg = -1;
+    let bestSubjCount = 0;
+
+    for (const [subj, data] of Object.entries(subjectMap)) {
+      const avg = data.totalPct / data.count;
+      if (avg > bestSubjAvg) {
+        bestSubjAvg = avg;
+        bestSubjName = subj;
+        bestSubjCount = data.count;
+      }
+    }
+
+    if (topSubjectEl) {
+      topSubjectEl.textContent = bestSubjName;
+      topSubjectEl.title = bestSubjName;
+    }
+    if (topSubjectSubEl) {
+      topSubjectSubEl.textContent = `${bestSubjAvg.toFixed(1)}% avg (${bestSubjCount} mark${bestSubjCount === 1 ? "" : "s"})`;
+    }
+  } catch (err) {
+    console.error("Error updating admin exam stats:", err);
+    if (totalPerfEl) totalPerfEl.textContent = "—";
+    if (passRateEl) passRateEl.textContent = "—";
+    if (topSubjectEl) topSubjectEl.textContent = "—";
   }
 }
 
@@ -649,6 +717,7 @@ function wireEvents() {
       await bulkSaveExamMarks(currentExamForMarks.id, marksList);
       toast.success(`Successfully synchronized marks for ${marksList.length} student(s)!`);
       closeMarksModal();
+      await updateDashboardStats();
     } catch (err) {
       console.error("Save marks error:", err);
       toast.error("Failed to save marks: " + (err.message || "Unknown error"));

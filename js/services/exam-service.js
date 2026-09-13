@@ -199,6 +199,21 @@ export async function getExamMarksForStudent(studentId) {
 }
 
 /**
+ * Retrieve all exam marks across all exams (single query).
+ */
+export async function getAllExamMarks() {
+  const { data, error } = await supabase
+    .from(TABLES.EXAM_MARKS)
+    .select("*");
+
+  if (error) {
+    console.error("Error getting all exam marks:", error);
+    return [];
+  }
+  return (data || []).map(toCamelCase);
+}
+
+/**
  * Upsert / Save a single student mark for an exam and subject.
  */
 export async function upsertExamMark(examId, studentId, markData) {

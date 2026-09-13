@@ -59,22 +59,21 @@
 
       <div class="page-body">
         <!-- Stat Grid -->
-        <div class="stat-grid">
+        <div class="stat-grid stat-grid-3">
           <div class="card card-stat">
-            <div class="stat-label">Total Exams Scheduled</div>
-            <div class="stat-value" id="stat-total-exams">0</div>
+            <div class="stat-label">Total Performance</div>
+            <div class="stat-value" id="stat-total-perf">—</div>
+            <div id="stat-total-perf-sub" style="font-size:12px; font-weight:600; color:var(--c-primary); margin-top:4px;">—</div>
           </div>
           <div class="card card-stat">
-            <div class="stat-label">Regular Terminal Exams</div>
-            <div class="stat-value" id="stat-terminal-exams">0</div>
+            <div class="stat-label">Overall Pass Rate</div>
+            <div class="stat-value" id="stat-pass-rate">—</div>
+            <div id="stat-pass-rate-sub" style="font-size:12px; font-weight:600; color:var(--c-slate-500); margin-top:4px;">0 passed of 0 graded</div>
           </div>
           <div class="card card-stat">
-            <div class="stat-label">Unit & Class Tests</div>
-            <div class="stat-value" id="stat-unit-tests">0</div>
-          </div>
-          <div class="card card-stat">
-            <div class="stat-label">Total Student Marks Graded</div>
-            <div class="stat-value" id="stat-graded-marks">0</div>
+            <div class="stat-label">Top Subject</div>
+            <div class="stat-value" id="stat-top-subject" style="font-size:var(--fs-xl); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="—">—</div>
+            <div id="stat-top-subject-sub" style="font-size:12px; font-weight:600; color:var(--c-success); margin-top:4px;">No marks graded</div>
           </div>
         </div>
 

@@ -80,12 +80,24 @@ function updateStudentStats() {
     (m) => !m.isAbsent && m.marksObtained !== null && m.marksObtained !== undefined
   );
 
-  document.getElementById("stat-tests-taken").textContent = gradedMarks.length;
+  const testsTakenEl = document.getElementById("stat-tests-taken");
+  if (testsTakenEl) testsTakenEl.textContent = gradedMarks.length;
+
+  const avgPctEl = document.getElementById("stat-avg-pct");
+  const gradeSubEl = document.getElementById("stat-avg-grade-sub");
+  const passedSubEl = document.getElementById("stat-tests-passed-sub");
+  const bestSubjectEl = document.getElementById("stat-best-subject");
+  const bestSubjectSubEl = document.getElementById("stat-best-subject-sub");
 
   if (gradedMarks.length === 0) {
-    document.getElementById("stat-avg-pct").textContent = "—";
-    document.getElementById("stat-overall-grade").textContent = "—";
-    document.getElementById("stat-tests-passed").textContent = "0";
+    if (avgPctEl) avgPctEl.textContent = "—";
+    if (gradeSubEl) gradeSubEl.textContent = "—";
+    if (passedSubEl) passedSubEl.textContent = "0 passed";
+    if (bestSubjectEl) {
+      bestSubjectEl.textContent = "—";
+      bestSubjectEl.title = "—";
+    }
+    if (bestSubjectSubEl) bestSubjectSubEl.textContent = "No tests recorded";
     return;
   }
 
@@ -93,25 +105,55 @@ function updateStudentStats() {
 
   let totalPct = 0;
   let passedCount = 0;
+  const subjectMap = {};
 
   gradedMarks.forEach((m) => {
     const exam = examMap[m.examId];
     const max = Number(m.maxMarks) || (exam ? Number(exam.maxMarks) : 100);
     const pass = exam ? Number(exam.passingMarks) : 35;
     const score = Number(m.marksObtained);
+    const subject = (m.subject || (exam ? exam.subject : "General") || "General").trim();
 
     const pct = (score / max) * 100;
     totalPct += pct;
 
     if (score >= pass) passedCount++;
+
+    if (!subjectMap[subject]) {
+      subjectMap[subject] = { totalPct: 0, count: 0 };
+    }
+    subjectMap[subject].totalPct += pct;
+    subjectMap[subject].count += 1;
   });
 
   const avgPct = (totalPct / gradedMarks.length).toFixed(1);
   const overallGrade = calcGrade(avgPct);
 
-  document.getElementById("stat-avg-pct").textContent = `${avgPct}%`;
-  document.getElementById("stat-overall-grade").textContent = `${overallGrade.grade} (${overallGrade.label})`;
-  document.getElementById("stat-tests-passed").textContent = `${passedCount} / ${gradedMarks.length}`;
+  if (avgPctEl) avgPctEl.textContent = `${avgPct}%`;
+  if (gradeSubEl) gradeSubEl.textContent = `${overallGrade.grade} · ${overallGrade.label}`;
+  if (passedSubEl) passedSubEl.textContent = `${passedCount} passed of ${gradedMarks.length} taken`;
+
+  // Compute Best Subject
+  let bestSubjName = "—";
+  let bestSubjAvg = -1;
+  let bestSubjCount = 0;
+
+  for (const [subj, data] of Object.entries(subjectMap)) {
+    const avg = data.totalPct / data.count;
+    if (avg > bestSubjAvg) {
+      bestSubjAvg = avg;
+      bestSubjName = subj;
+      bestSubjCount = data.count;
+    }
+  }
+
+  if (bestSubjectEl) {
+    bestSubjectEl.textContent = bestSubjName;
+    bestSubjectEl.title = bestSubjName;
+  }
+  if (bestSubjectSubEl) {
+    bestSubjectSubEl.textContent = `${bestSubjAvg.toFixed(1)}% avg (${bestSubjCount} test${bestSubjCount === 1 ? "" : "s"})`;
+  }
 }
 
 function renderResultsTable() {
