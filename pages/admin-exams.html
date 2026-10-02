@@ -7,9 +7,7 @@
   <title>Exams & Assessments — SUCCESS Learning Log</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
-    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/variables.css">
   <link rel="stylesheet" href="../css/base.css">
   <link rel="stylesheet" href="../css/components.css">
@@ -68,7 +66,7 @@
           <div class="card card-stat">
             <div class="stat-label">Overall Pass Rate</div>
             <div class="stat-value" id="stat-pass-rate">—</div>
-            <div id="stat-pass-rate-sub" style="font-size:12px; font-weight:600; color:var(--c-slate-500); margin-top:4px;">0 passed of 0 graded</div>
+            <div id="stat-pass-rate-sub" style="font-size:12px; font-weight:600; color:var(--c-text-muted); margin-top:4px;">0 passed of 0 graded</div>
           </div>
           <div class="card card-stat">
             <div class="stat-label">Top Subject</div>
@@ -236,7 +234,7 @@
         <!-- Subject Configuration per Selected Class Container -->
         <div id="subject-config-section" class="field" style="margin-bottom:var(--sp-4);">
           <label style="margin-bottom:6px;">Subject-Wise Maximum & Passing Marks Configuration</label>
-          <div style="font-size:var(--fs-xs); color:var(--c-slate-500); margin-bottom:12px;">
+          <div style="font-size:var(--fs-xs); color:var(--c-text-muted); margin-bottom:12px;">
             Subjects are loaded based on selected class(es). You can customize maximum marks and passing marks for each subject.
           </div>
           <div id="subject-config-container" style="display:flex; flex-direction:column; gap:14px;">
@@ -269,7 +267,7 @@
       </div>
 
       <div style="padding:10px 14px; background:var(--surface-1); border-radius:var(--r-md); margin-bottom:var(--sp-3); display:flex; justify-content:space-between; align-items:center; border:1px solid var(--c-border); flex-shrink:0;">
-        <div style="font-size:var(--fs-xs); color:var(--c-slate-600);">
+        <div style="font-size:var(--fs-xs); color:var(--c-text-secondary);">
           💡 <strong>Synchronized System:</strong> Students can enter their marks from their portal, and admins can review, grade, or override marks anytime.
         </div>
         <div id="marks-quick-stats" style="font-size:var(--fs-xs); font-weight:700; color:var(--c-primary);">
@@ -377,13 +375,13 @@
     <div class="modal" style="max-width:820px; width:100%; max-height:92vh; overflow-y:auto;">
       <div class="modal-header" style="border-bottom:1px solid var(--c-border); padding-bottom:var(--sp-4);">
         <div>
-          <div style="display:inline-flex; align-items:center; gap:6px; background:#0FA15D15; color:#0FA15D; border:1px solid #0FA15D33; padding:2px 10px; border-radius:12px; font-size:11px; font-weight:700; text-transform:uppercase; margin-bottom:6px;">
+          <div style="display:inline-flex; align-items:center; gap:6px; background:var(--c-primary-soft); color:var(--c-primary); border:1px solid rgba(15,161,93,0.3); padding:2px 10px; border-radius:12px; font-size:11px; font-weight:700; text-transform:uppercase; margin-bottom:6px;">
             Engine v2.0 • Dynamic Percentage Scale
           </div>
-          <h3 id="grade-scale-modal-title" style="font-family:'Playfair Display',serif; font-size:1.5rem; color:var(--c-text); margin:0;">
+          <h3 id="grade-scale-modal-title" style="font-family:var(--font-family); font-size:1.5rem; color:var(--c-text); margin:0;">
             Dynamic Exam Grading Scale
           </h3>
-          <div class="topbar-sub" id="grade-scale-modal-sub" style="font-size:var(--fs-xs); color:var(--c-slate-500); margin-top:2px;">
+          <div class="topbar-sub" id="grade-scale-modal-sub" style="font-size:var(--fs-xs); color:var(--c-text-muted); margin-top:2px;">
             Automatic integer boundary and percentage mapping tailored to subject total marks.
           </div>
         </div>
@@ -403,7 +401,7 @@
 
           <!-- Quick Preset Pills -->
           <div class="flex items-center gap-1 flex-wrap" style="font-size:var(--fs-xs);">
-            <span style="color:var(--c-slate-500); margin-right:4px;">Presets:</span>
+            <span style="color:var(--c-text-muted); margin-right:4px;">Presets:</span>
             <button type="button" class="btn btn-ghost btn-sm preset-btn" data-marks="80" style="padding:3px 8px; font-size:11px; border:1px solid var(--c-border);">80 Marks</button>
             <button type="button" class="btn btn-ghost btn-sm preset-btn" data-marks="100" style="padding:3px 8px; font-size:11px; border:1px solid var(--c-border);">100 Marks</button>
             <button type="button" class="btn btn-ghost btn-sm preset-btn" data-marks="50" style="padding:3px 8px; font-size:11px; border:1px solid var(--c-border);">50 Marks</button>
@@ -416,7 +414,7 @@
         <!-- Live Mark Tester -->
         <div style="display:flex; align-items:center; gap:12px; padding-top:10px; border-top:1px dashed var(--c-border); flex-wrap:wrap;">
           <div class="flex items-center gap-2">
-            <span style="font-size:var(--fs-xs); font-weight:600; color:var(--c-slate-600);">Test Calculation:</span>
+            <span style="font-size:var(--fs-xs); font-weight:600; color:var(--c-text-secondary);">Test Calculation:</span>
             <input type="number" id="test-obtained-mark-input" placeholder="Obtained" value="68" step="any" style="width:90px; padding:5px 8px; font-size:13px; border:1px solid var(--c-border); border-radius:var(--r-sm);">
           </div>
           <div id="test-mark-result-pill" style="font-size:var(--fs-xs); display:flex; align-items:center; gap:8px;">
@@ -447,13 +445,13 @@
       </div>
 
       <!-- Formula & Policy Footnote -->
-      <div style="background:#071A1708; border-left:3px solid #0FA15D; padding:10px 14px; border-radius:4px; font-size:11px; color:var(--c-slate-600); line-height:1.5;">
+      <div style="background:var(--surface-1); border-left:3px solid var(--c-primary); padding:10px 14px; border-radius:4px; font-size:11px; color:var(--c-text-secondary); line-height:1.5;">
         <strong>Academic Policy:</strong> Grade bands automatically span ~10% step intervals downwards from maximum marks without gaps or overlapping ranges. Calculated via <code>(Obtained / Total) × 100</code> with integer mark threshold mapping.
       </div>
 
       <div class="flex justify-between items-center" style="margin-top:var(--sp-4); padding-top:var(--sp-3); border-top:1px solid var(--c-border);">
         <button type="button" class="btn btn-ghost" id="close-grade-scale-btn">Close</button>
-        <span style="font-size:12px; color:var(--c-slate-500); font-style:italic;">SUCCESS Academy Grading Engine</span>
+        <span style="font-size:12px; color:var(--c-text-muted); font-style:italic;">SUCCESS Academy Grading Engine</span>
       </div>
     </div>
   </div>

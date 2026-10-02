@@ -33,8 +33,13 @@ let currentStudentExamsMap = {};
   admin = await requireAuth("admin", "admin-login.html");
   renderSidebar("admin", "students", { name: admin.name || admin.email, sub: "Branch Admin" });
 
-  await refreshList();
-  document.getElementById("page-loader")?.classList.add("done");
+  try {
+    await refreshList();
+  } catch (err) {
+    console.error("Student management refresh error:", err);
+  } finally {
+    document.getElementById("page-loader")?.classList.add("done");
+  }
   wireEvents();
 })();
 

@@ -67,7 +67,7 @@
   font-family: var(--font-display);
   font-weight: 800;
   color: #FFFFFF;
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+  box-shadow: 0 4px 14px rgba(15, 161, 93, 0.35);
 }
 
 .auth-side .quote {
@@ -133,18 +133,18 @@
   font-family: var(--font-display);
   font-weight: 800;
   font-size: var(--fs-lg);
-  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 6px 18px rgba(15, 161, 93, 0.3);
 }
 
 .auth-card h1 {
   font-size: var(--fs-2xl);
   font-weight: 800;
   margin-bottom: 6px;
-  color: var(--c-slate-900);
+  color: var(--c-text);
 }
 
 .auth-card .sub {
-  color: var(--c-slate-500);
+  color: var(--c-text-muted);
   font-size: var(--fs-sm);
   margin-bottom: var(--sp-6);
 }
@@ -163,20 +163,20 @@
   border-radius: var(--r-full);
   font-size: var(--fs-sm);
   font-weight: 600;
-  color: var(--c-slate-500);
+  color: var(--c-text-muted);
   transition: all var(--dur-fast) ease;
 }
 
 .role-toggle button.active {
   background: var(--c-white);
-  color: var(--c-slate-900);
+  color: var(--c-text);
   box-shadow: var(--shadow-sm);
 }
 
 .auth-error {
   display: none;
-  background: #FEF2F2;
-  border: 1px solid #FECACA;
+  background: var(--c-danger-soft);
+  border: 1px solid #F2C4C0;
   color: var(--c-danger);
   padding: 12px 16px;
   border-radius: var(--r-sm);
@@ -206,7 +206,7 @@
 .auth-footer-note {
   margin-top: var(--sp-7);
   font-size: var(--fs-xs);
-  color: var(--c-slate-400);
+  color: var(--c-text-subtle);
   text-align: center;
 }
 

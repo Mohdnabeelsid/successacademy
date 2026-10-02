@@ -1,147 +1,230 @@
 /* ==========================================================================
-   SUCCESS ACADEMY — Official Master Visual Design System Tokens
+   SUCCESS ACADEMY — GLOBAL DESIGN TOKENS
    Brand: SUCCESS ACADEMY — "From Classrooms to Careers."
-   Formula: White / Deep Forest foundation + Emerald Green (#0FA15D) + Teal (#1F7A78)
-   Typography: Playfair Display (Headings) + Plus Jakarta Sans (Body & UI)
+   Design direction: White-first / Institutional / Premium / Future-ready
+   Typography: Montserrat
    ========================================================================== */
 
 :root {
-  /* 1. Official Brand Color Palette */
-  --c-primary: #0FA15D;              /* Emerald Green: highlights, primary CTA, action */
-  --c-primary-dark: #0a7a6e;         /* Deep primary hover */
-  --c-primary-light: #10A873;        /* Bright emerald accent */
-  --c-secondary: #1F7A78;            /* Teal: secondary accents, depth & layering */
-  --c-blue: #2E4C8C;                 /* Academic Blue: knowledge, credibility, badges */
-  --c-dark: #071A17;                 /* Deep Forest: premium dark backgrounds, sidebars */
-  --c-dark-forest: #071A17;
-  --c-dark-forest-teal: #0E3B36;     /* Dark Forest Teal: panels, subtle depth */
-  --c-beige: #D8C7AA;                /* Warm Beige: heritage & editorial accents */
-  --c-white: #FFFFFF;                /* White: foundation & negative space */
+  /* ------------------------------------------------------------------------
+     01. BRAND COLORS
+     ------------------------------------------------------------------------ */
+  --c-white: #FFFFFF;
+  --c-primary: #0FA15D;
+  /* Emerald — primary actions */
+  --c-primary-hover: #0C8E51;
+  --c-primary-soft: #EAF8F1;
 
-  /* 2. Neutrals (Slate / Forest tints) */
-  --c-ink: #071A17;
-  --c-slate-900: #0B1F1B;
-  --c-slate-800: #132A25;
-  --c-slate-700: #33433F;
-  --c-slate-600: #4B5E58;
-  --c-slate-500: #64756F;
-  --c-slate-400: #889C95;
-  --c-slate-300: #A9B8B2;
-  --c-slate-200: #D0DDD7;
-  --c-slate-100: #E7EEEA;
-  --c-slate-50: #F6F8F6;
-  --c-border: #E2E9E5;
-  --c-border-subtle: #EDF3EF;
+  --c-secondary: #1F7A78;
+  /* Teal — development / secondary */
+  --c-secondary-hover: #196765;
+  --c-secondary-soft: #EAF5F4;
 
-  /* 3. Status Colors */
+  --c-academic: #2E4C8C;
+  /* Academic blue */
+  --c-academic-soft: #EEF2FA;
+
+  --c-forest: #071A17;
+  /* Institutional dark */
+  --c-forest-teal: #0E3B36;
+
+  --c-beige: #D8C7AA;
+
+  /* ------------------------------------------------------------------------
+     02. SEMANTIC COLORS
+     ------------------------------------------------------------------------ */
   --c-success: #0FA15D;
-  --c-warning: #C88A2E;
-  --c-danger: #C13F3F;
-  --c-info: #2E4C8C;
+  --c-success-soft: #EAF8F1;
 
-  /* 4. Surfaces */
+  --c-info: #2E4C8C;
+  --c-info-soft: #EEF2FA;
+
+  --c-warning: #B7791F;
+  --c-warning-soft: #FFF7E8;
+
+  --c-danger: #B42318;
+  --c-danger-soft: #FDEDEC;
+
+  /* ------------------------------------------------------------------------
+     03. TEXT / NEUTRALS
+     ------------------------------------------------------------------------ */
+  --c-text: #071A17;
+  --c-text-secondary: #33433F;
+  --c-text-muted: #66706D;
+  --c-text-subtle: #8A9692;
+
+  --c-neutral-900: #071A17;
+  --c-neutral-800: #132A25;
+  --c-neutral-700: #33433F;
+  --c-neutral-600: #4B5E58;
+  --c-neutral-500: #66706D;
+  --c-neutral-400: #8A9692;
+  --c-neutral-300: #B7C2BE;
+  --c-neutral-200: #D8E0DD;
+  --c-neutral-100: #E9EFEC;
+  --c-neutral-50: #F5F8F6;
+
+  --c-border: #DFE7E3;
+  --c-border-subtle: #ECF1EE;
+
+  /* ------------------------------------------------------------------------
+     04. SURFACES
+     ------------------------------------------------------------------------ */
+  --surface-page: #F8FAF9;
   --surface-0: #FFFFFF;
-  --surface-1: #F6F8F6;
-  --surface-2: #EFF4F1;
-  --surface-dark: #071A17;
-  --surface-dark-2: #0E3B36;
+  --surface-1: #F5F8F6;
+  --surface-2: #EDF3F0;
   --surface-card: #FFFFFF;
 
-  /* 5. Gradients */
-  --gradient-primary: linear-gradient(135deg, #0FA15D 0%, #1F7A78 100%);
-  --gradient-primary-hover: linear-gradient(135deg, #0C854C 0%, #165E5C 100%);
+  --surface-sidebar: #071A17;
+  --surface-sidebar-hover: #0E3B36;
+  --surface-sidebar-active: #0FA15D;
+  --surface-dark: #071A17;
+
+  /* ------------------------------------------------------------------------
+     05. GRADIENTS
+     Use sparingly. The portal should remain mostly flat and institutional.
+     ------------------------------------------------------------------------ */
+  --gradient-brand: linear-gradient(135deg, #0FA15D 0%, #1F7A78 100%);
   --gradient-academic: linear-gradient(135deg, #2E4C8C 0%, #1F7A78 100%);
-  --gradient-dark: linear-gradient(170deg, #071A17 0%, #0E3B36 60%, #061814 100%);
-  --gradient-mesh: radial-gradient(circle at 15% 15%, rgba(15, 161, 93, 0.18), transparent 45%),
-                    radial-gradient(circle at 85% 10%, rgba(46, 76, 140, 0.16), transparent 40%),
-                    radial-gradient(circle at 50% 90%, rgba(31, 122, 120, 0.16), transparent 45%);
+  --gradient-dark: linear-gradient(160deg, #071A17 0%, #0E3B36 100%);
+  --gradient-mesh: radial-gradient(circle at 10% 20%, rgba(15, 161, 93, 0.12) 0%, transparent 40%);
+  --gradient-primary: var(--gradient-brand);
 
-  /* 6. Typography */
-  --font-display: 'Playfair Display', 'Georgia', serif;
-  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  /* ------------------------------------------------------------------------
+     06. TYPOGRAPHY
+     ------------------------------------------------------------------------ */
+  --font-family: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
 
-  /* 7. Type Scale */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
   --fs-2xs: 0.6875rem;
   --fs-xs: 0.75rem;
   --fs-sm: 0.875rem;
   --fs-base: 0.9375rem;
-  --fs-md: 1.0625rem;
-  --fs-lg: 1.25rem;
-  --fs-xl: 1.5rem;
-  --fs-2xl: 1.875rem;
+  --fs-md: 1rem;
+  --fs-lg: 1.125rem;
+  --fs-xl: 1.375rem;
+  --fs-2xl: 1.75rem;
   --fs-3xl: 2.25rem;
   --fs-4xl: 3rem;
 
-  /* 8. Spacing */
+  /* Backward-compatible aliases */
+  --font-display: var(--font-family);
+  --font-body: var(--font-family);
+
+  /* ------------------------------------------------------------------------
+     07. SPACING
+     ------------------------------------------------------------------------ */
   --sp-1: 4px;
   --sp-2: 8px;
   --sp-3: 12px;
   --sp-4: 16px;
   --sp-5: 20px;
-  --sp-6: 28px;
-  --sp-7: 40px;
-  --sp-8: 56px;
-  --sp-9: 80px;
+  --sp-6: 24px;
+  --sp-7: 32px;
+  --sp-8: 40px;
+  --sp-9: 48px;
+  --sp-10: 64px;
+  --sp-11: 80px;
 
-  /* 9. Radius */
+  /* ------------------------------------------------------------------------
+     08. RADIUS
+     ------------------------------------------------------------------------ */
   --r-xs: 6px;
-  --r-sm: 10px;
-  --r-md: 14px;
-  --r-lg: 20px;
-  --r-xl: 28px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 20px;
   --r-full: 9999px;
 
-  /* 10. Shadows */
-  --shadow-xs: 0 1px 3px rgba(7, 26, 23, 0.04);
-  --shadow-sm: 0 2px 8px rgba(7, 26, 23, 0.06);
-  --shadow-md: 0 8px 24px rgba(7, 26, 23, 0.08);
-  --shadow-lg: 0 20px 48px rgba(7, 26, 23, 0.12);
-  --shadow-glow: 0 4px 18px rgba(15, 161, 93, 0.25);
-  --shadow-glow-hover: 0 8px 26px rgba(15, 161, 93, 0.35);
+  /* ------------------------------------------------------------------------
+     09. SHADOWS
+     ------------------------------------------------------------------------ */
+  --shadow-xs: 0 1px 2px rgba(7, 26, 23, 0.04);
+  --shadow-sm: 0 2px 8px rgba(7, 26, 23, 0.05);
+  --shadow-md: 0 8px 24px rgba(7, 26, 23, 0.07);
+  --shadow-lg: 0 18px 45px rgba(7, 26, 23, 0.10);
 
-  /* 11. Motion */
+  --shadow-focus: 0 0 0 3px rgba(15, 161, 93, 0.14);
+
+  /* ------------------------------------------------------------------------
+     10. MOTION
+     ------------------------------------------------------------------------ */
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --dur-fast: 150ms;
-  --dur-med: 280ms;
-  --dur-slow: 450ms;
 
-  /* 12. Layout Dimensions */
-  --sidebar-w: 260px;
-  --topbar-h: 70px;
-  --container-max: 1200px;
+  --dur-fast: 150ms;
+  --dur-med: 240ms;
+  --dur-slow: 400ms;
+
+  /* ------------------------------------------------------------------------
+     11. LAYOUT
+     ------------------------------------------------------------------------ */
+  --sidebar-w: 248px;
+  --topbar-h: 68px;
+  --container-max: 1280px;
+
+  /* ------------------------------------------------------------------------
+     12. COMPATIBILITY & SYSTEM ALIASES
+     Safeguards against legacy color references across existing code.
+     ------------------------------------------------------------------------ */
+  --c-primary-light: #34D399;
+  --c-primary-dark: var(--c-primary-hover);
+  --c-accent: var(--c-primary);
+  --c-teal: var(--c-secondary);
+  --c-blue: var(--c-academic);
+  --c-ink: var(--c-forest);
+  --c-dark: var(--c-forest);
+  --c-dark-forest-teal: var(--c-forest-teal);
+
+  --c-slate-50: var(--c-neutral-50);
+  --c-slate-100: var(--c-neutral-100);
+  --c-slate-200: var(--c-neutral-200);
+  --c-slate-300: var(--c-neutral-300);
+  --c-slate-400: var(--c-neutral-400);
+  --c-slate-500: var(--c-neutral-500);
+  --c-slate-600: var(--c-neutral-600);
+  --c-slate-700: var(--c-neutral-700);
+  --c-slate-800: var(--c-neutral-800);
+  --c-slate-900: var(--c-neutral-900);
 }
 
 /* ==========================================================================
-   DARK THEME TOKENS — Deep Forest Dark Mode
+   DARK THEME
    ========================================================================== */
+
 [data-theme="dark"] {
-  /* Neutrals */
-  --c-ink: #F0F6F3;
-  --c-slate-900: #F0F6F3;
-  --c-slate-800: #E0ECE5;
-  --c-slate-700: #C4D6CD;
-  --c-slate-600: #9DB4AA;
-  --c-slate-500: #7C948A;
-  --c-slate-400: #5C746B;
-  --c-slate-300: #3E544C;
-  --c-slate-200: #233B34;
-  --c-slate-100: #162E27;
-  --c-slate-50: #0D221C;
-  --c-border: #183830;
-  --c-border-subtle: #112822;
+  --c-text: #F2F7F4;
+  --c-text-secondary: #D0DDD7;
+  --c-text-muted: #9AAEA6;
+  --c-text-subtle: #71857D;
 
-  /* Surfaces */
-  --surface-0: #0A1C18;
-  --surface-1: #05120F;
-  --surface-2: #0E241F;
-  --surface-dark: #030C0A;
-  --surface-dark-2: #071A17;
-  --surface-card: #0D221C;
+  --c-neutral-900: #F2F7F4;
+  --c-neutral-800: #DCE9E3;
+  --c-neutral-700: #C1D1CA;
+  --c-neutral-600: #9AAEA6;
+  --c-neutral-500: #82978E;
+  --c-neutral-400: #657A71;
+  --c-neutral-300: #40574F;
+  --c-neutral-200: #29423A;
+  --c-neutral-100: #1B332C;
+  --c-neutral-50: #122820;
 
-  /* Shadows */
-  --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.6);
-  --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.7);
+  --c-border: #234039;
+  --c-border-subtle: #19332C;
+
+  --surface-page: #081915;
+  --surface-0: #0B211B;
+  --surface-1: #0A1C18;
+  --surface-2: #102A23;
+  --surface-card: #0D251F;
+
+  --surface-sidebar: #04100D;
+  --surface-sidebar-hover: #0E3B36;
 }

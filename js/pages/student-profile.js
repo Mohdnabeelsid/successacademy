@@ -17,124 +17,140 @@ import {
 (async function init() {
   const authStudent = await requireAuth("student", "student-login.html");
   
-  // Fetch fresh student profile from database
-  const dbStudent = await getStudent(authStudent.id);
-  const student = dbStudent || authStudent;
+  try {
+    // Fetch fresh student profile from database
+    const dbStudent = await getStudent(authStudent.id);
+    const student = dbStudent || authStudent;
 
-  renderSidebar("student", "profile", { name: student.name, sub: `Class ${student.class || "-"}` });
+    renderSidebar("student", "profile", { name: student.name, sub: `Class ${student.class || "-"}` });
 
-  const initials = (student.name || "S")
-    .split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
-  document.getElementById("profile-avatar").textContent = initials;
-  document.getElementById("profile-name").textContent = student.name || "—";
-  document.getElementById("profile-meta").textContent =
-    `Admission No: ${student.admissionNumber || "—"} · Class ${student.class || "—"} · ${student.branch || "—"} Branch`;
+    const initials = (student.name || "S")
+      .split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+    document.getElementById("profile-avatar").textContent = initials;
+    document.getElementById("profile-name").textContent = student.name || "—";
+    document.getElementById("profile-meta").textContent =
+      `Admission No: ${student.admissionNumber || "—"} · Class ${student.class || "—"} · ${student.branch || "—"} Branch`;
 
-  document.getElementById("enrolled-class-name").textContent = `Class ${student.class || "—"}`;
+    document.getElementById("enrolled-class-name").textContent = `Class ${student.class || "—"}`;
 
-  // Render enrolled subjects checkboxes
-  const classAllSubjects = getSubjectsForClass(student.class);
-  const activeEnrolledSubjects = new Set(getStudentEffectiveSubjects(student));
+    // Render enrolled subjects checkboxes
+    const classAllSubjects = getSubjectsForClass(student.class);
+    const activeEnrolledSubjects = new Set(getStudentEffectiveSubjects(student));
 
-  const subjectsGrid = document.getElementById("subjects-selector-grid");
-  if (subjectsGrid) {
-    subjectsGrid.innerHTML = classAllSubjects
-      .map((subj) => {
-        const isChecked = activeEnrolledSubjects.has(subj) ? "checked" : "";
-        return `
-          <label style="display:flex; align-items:center; gap:8px; background:#fff; padding:8px 12px; border:1px solid var(--c-border); border-radius:var(--r-md); cursor:pointer; font-size:var(--fs-xs); font-weight:600; color:var(--c-dark);">
-            <input type="checkbox" class="student-subj-checkbox" value="${subj}" ${isChecked} style="width:16px; height:16px; cursor:pointer;">
-            <span>${subj}</span>
-          </label>
-        `;
-      })
-      .join("");
-  }
-
-  // Save subjects button wiring
-  const saveSubjectsBtn = document.getElementById("save-subjects-btn");
-  saveSubjectsBtn?.addEventListener("click", async () => {
-    const checkboxes = document.querySelectorAll(".student-subj-checkbox");
-    const selected = Array.from(checkboxes)
-      .filter((cb) => cb.checked)
-      .map((cb) => cb.value);
-
-    if (selected.length === 0) {
-      toast.error("Please select at least one subject.");
-      return;
-    }
-
-    saveSubjectsBtn.disabled = true;
-    saveSubjectsBtn.textContent = "Saving...";
-
-    try {
-      await updateStudent(student.id, { subjects: selected });
-      student.subjects = selected;
-      try {
-        const cached = sessionStorage.getItem("success_user_student");
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          parsed.subjects = selected;
-          sessionStorage.setItem("success_user_student", JSON.stringify(parsed));
-        }
-      } catch (_) {}
-      toast.success("Your enrolled subjects have been updated and synchronized!");
-    } catch (err) {
-      console.error("Save student subjects error:", err);
-      toast.error("Failed to save subjects: " + (err.message || "Unknown error"));
-    } finally {
-      saveSubjectsBtn.disabled = false;
-      saveSubjectsBtn.textContent = "Save My Subjects";
-    }
-  });
-
-  const logs = await getStudentLogs(student.id, 500);
-
-  renderCalendar(document.getElementById("calendar"), loggedDateSet(logs));
-
-  // Subject-wise minutes (approved only)
-  const bySubject = {};
-  logs.filter((l) => l.status === LOG_STATUS.APPROVED).forEach((l) => {
-    bySubject[l.subject] = (bySubject[l.subject] || 0) + Number(l.durationMinutes || 0);
-  });
-  const maxMin = Math.max(1, ...Object.values(bySubject));
-  const barsEl = document.getElementById("subject-bars");
-  const entries = Object.entries(bySubject).sort((a, b) => b[1] - a[1]);
-  barsEl.innerHTML = entries.length
-    ? entries
-        .map(
-          ([subj, min]) => `
-      <div class="bar-row">
-        <div class="lbl">${subj}</div>
-        <div class="progress-track" style="flex:1;">
-          <div class="progress-fill" style="width:${(min / maxMin) * 100}%;"></div>
-        </div>
-        <div class="val">${(min / 60).toFixed(1)}h</div>
-      </div>`
-        )
-        .join("")
-    : `<div class="empty-state">No approved logs yet</div>`;
-
-  // History table
-  const historyBody = document.getElementById("history-body");
-  historyBody.innerHTML = logs.length
-    ? logs
-        .map((l) => {
-          const badge =
-            l.status === LOG_STATUS.APPROVED
-              ? '<span class="badge badge-success">Approved</span>'
-              : l.status === LOG_STATUS.CORRECTION
-              ? '<span class="badge badge-danger">Needs Correction</span>'
-              : '<span class="badge badge-warning">Pending</span>';
-          return `<tr><td>${l.date}</td><td>${l.day || ""}</td><td>${l.subject}</td><td>${l.chapter || "—"}</td><td>${l.durationMinutes} min</td><td>${badge}</td></tr>`;
+    const subjectsGrid = document.getElementById("subjects-selector-grid");
+    if (subjectsGrid) {
+      subjectsGrid.innerHTML = classAllSubjects
+        .map((subj) => {
+          const isChecked = activeEnrolledSubjects.has(subj) ? "checked" : "";
+          return `
+            <label style="display:flex; align-items:center; gap:8px; background:#fff; padding:8px 12px; border:1px solid var(--c-border); border-radius:var(--r-md); cursor:pointer; font-size:var(--fs-xs); font-weight:600; color:var(--c-dark);">
+              <input type="checkbox" class="student-subj-checkbox" value="${subj}" ${isChecked} style="width:16px; height:16px; cursor:pointer;">
+              <span>${subj}</span>
+            </label>
+          `;
         })
-        .join("")
-    : `<tr><td colspan="6"><div class="empty-state">No study logs yet</div></td></tr>`;
+        .join("");
+    }
 
-  // Initialize Admission Frame Studio
-  initAdmissionFrameStudio(student);
+    // Save subjects button wiring
+    const saveSubjectsBtn = document.getElementById("save-subjects-btn");
+    saveSubjectsBtn?.addEventListener("click", async () => {
+      const checkboxes = document.querySelectorAll(".student-subj-checkbox");
+      const selected = Array.from(checkboxes)
+        .filter((cb) => cb.checked)
+        .map((cb) => cb.value);
 
-  document.getElementById("page-loader").classList.add("done");
+      if (selected.length === 0) {
+        toast.warning("Please select at least one subject.");
+        return;
+      }
+
+      saveSubjectsBtn.disabled = true;
+      saveSubjectsBtn.textContent = "Saving...";
+
+      try {
+        await updateStudent(student.id, { subjects: selected });
+        student.subjects = selected;
+        try {
+          const cached = sessionStorage.getItem("success_user_student");
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            parsed.subjects = selected;
+            sessionStorage.setItem("success_user_student", JSON.stringify(parsed));
+          }
+        } catch (_) {}
+        toast.success("Enrolled subjects saved successfully!");
+      } catch (err) {
+        console.error("Failed to save subjects:", err);
+        toast.error("Failed to save subjects. Please try again.");
+      } finally {
+        saveSubjectsBtn.disabled = false;
+        saveSubjectsBtn.textContent = "Save My Subjects";
+      }
+    });
+
+    // Load logs
+    const logs = await getStudentLogs(student.id);
+    const loggedDates = loggedDateSet(logs);
+
+    renderCalendar(document.getElementById("calendar"), {
+      loggedDates,
+      onSelectDate: (dateStr) => {
+        const dayLogs = logs.filter((l) => l.date === dateStr);
+        if (dayLogs.length) {
+          toast.info(`${dateStr}: ${dayLogs.map((l) => `${l.subject} (${l.durationMinutes}m)`).join(", ")}`);
+        } else {
+          toast.info(`${dateStr}: No logs recorded.`);
+        }
+      }
+    });
+
+    // Subject breakdown
+    const subjectMap = {};
+    logs.filter((l) => l.status === LOG_STATUS.APPROVED).forEach((l) => {
+      subjectMap[l.subject] = (subjectMap[l.subject] || 0) + l.durationMinutes;
+    });
+    const maxMin = Math.max(...Object.values(subjectMap), 1);
+    const barsContainer = document.getElementById("subject-bars");
+    barsContainer.innerHTML = Object.keys(subjectMap).length
+      ? Object.entries(subjectMap)
+          .map(([subj, min]) => {
+            const pct = Math.round((min / maxMin) * 100);
+            return `
+              <div class="bar-row">
+                <div class="lbl">${subj}</div>
+                <div class="progress-track" style="flex:1; height:8px; background:var(--surface-2); border-radius:var(--r-full); overflow:hidden;">
+                  <div class="progress-bar" style="width:${pct}%; height:100%; background:var(--c-primary); border-radius:var(--r-full);"></div>
+                </div>
+                <div class="val">${(min / 60).toFixed(1)}h</div>
+              </div>`;
+          })
+          .join("")
+      : `<div class="empty-state">No approved logs yet</div>`;
+
+    // History table
+    const historyBody = document.getElementById("history-body");
+    historyBody.innerHTML = logs.length
+      ? logs
+          .map((l) => {
+            const badge =
+              l.status === LOG_STATUS.APPROVED
+                ? '<span class="badge badge-success">Approved</span>'
+                : l.status === LOG_STATUS.CORRECTION
+                ? '<span class="badge badge-danger">Needs Correction</span>'
+                : '<span class="badge badge-warning">Pending</span>';
+            return `<tr><td>${l.date}</td><td>${l.day || ""}</td><td>${l.subject}</td><td>${l.chapter || "—"}</td><td>${l.durationMinutes} min</td><td>${badge}</td></tr>`;
+          })
+          .join("")
+      : `<tr><td colspan="6"><div class="empty-state">No study logs yet</div></td></tr>`;
+
+    // Initialize Admission Frame Studio
+    initAdmissionFrameStudio(student);
+  } catch (err) {
+    console.error("Student profile initialization error:", err);
+  } finally {
+    document.getElementById("page-loader")?.classList.add("done");
+  }
 })();
 
 // ==========================================================================

@@ -1,8 +1,10 @@
 /* ==========================================================================
-   BASE & RESET STYLES
+   SUCCESS ACADEMY — GLOBAL BASE
    ========================================================================== */
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -14,177 +16,313 @@ html {
 }
 
 body {
-  font-family: var(--font-body);
-  color: var(--c-ink);
-  background: var(--surface-1);
+  min-height: 100vh;
+  font-family: var(--font-family);
+  font-size: var(--fs-base);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.6;
+  color: var(--c-text);
+  background: var(--surface-page);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  line-height: 1.6;
-  font-size: var(--fs-base);
-  font-weight: 400;
 }
 
-/* Accessibility Skip Link */
-.skip-link {
-  position: fixed;
-  top: -100px;
-  left: 16px;
-  background: var(--c-primary);
-  color: var(--c-white) !important;
-  padding: 10px 18px;
-  border-radius: var(--r-sm);
-  z-index: 9999;
-  font-weight: 700;
-  font-size: var(--fs-sm);
-  text-decoration: none;
-  box-shadow: var(--shadow-lg);
-  transition: top var(--dur-fast) ease;
-}
-.skip-link:focus {
-  top: 16px;
-  outline: 2px solid var(--c-white);
-  outline-offset: 2px;
+body,
+button,
+input,
+select,
+textarea {
+  font-family: var(--font-family);
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-display);
-  font-weight: 700;
-  line-height: 1.25;
-  letter-spacing: -0.02em;
-  color: var(--c-slate-900);
+button {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
 }
 
-h1 { font-size: var(--fs-3xl); font-weight: 800; }
-h2 { font-size: var(--fs-2xl); font-weight: 700; }
-h3 { font-size: var(--fs-xl); font-weight: 700; }
-h4 { font-size: var(--fs-lg); font-weight: 600; }
-h5 { font-size: var(--fs-md); font-weight: 600; }
-h6 { font-size: var(--fs-sm); font-weight: 600; }
+button:disabled {
+  cursor: not-allowed;
+}
 
-p {
-  color: var(--c-slate-600);
-  margin-bottom: 0;
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+img {
+  height: auto;
 }
 
 a {
   color: inherit;
   text-decoration: none;
-  transition: color var(--dur-fast) ease;
 }
 
-button {
-  font-family: inherit;
-  cursor: pointer;
-  border: none;
-  background: none;
-  outline: none;
-}
-
-input, select, textarea {
-  font-family: inherit;
-  font-size: inherit;
-  color: inherit;
-}
-
-img, svg {
-  display: block;
-  max-width: 100%;
-}
-
-ul, ol {
+ul,
+ol {
   list-style: none;
 }
 
-::selection {
-  background: rgba(16, 185, 129, 0.25);
-  color: var(--c-primary-dark);
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--c-text);
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
-/* Modern Minimalist Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+h1 {
+  font-size: clamp(1.75rem, 3vw, var(--fs-3xl));
+  font-weight: 800;
 }
+
+h2 {
+  font-size: clamp(1.5rem, 2.5vw, var(--fs-2xl));
+}
+
+h3 {
+  font-size: var(--fs-xl);
+}
+
+h4 {
+  font-size: var(--fs-lg);
+}
+
+h5 {
+  font-size: var(--fs-md);
+}
+
+h6 {
+  font-size: var(--fs-sm);
+}
+
+p {
+  color: var(--c-text-secondary);
+}
+
+::selection {
+  color: var(--c-white);
+  background: var(--c-primary);
+}
+
+/* Scrollbar */
+
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: var(--c-slate-300);
+  background: var(--c-neutral-300);
   border-radius: var(--r-full);
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--c-slate-400);
+  background: var(--c-neutral-400);
 }
 
-/* Layout Utilities */
-.container {
-  max-width: var(--container-max);
-  margin: 0 auto;
-  padding: 0 var(--sp-5);
-}
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0,0,0,0);
-}
-.hidden { display: none !important; }
+/* Focus */
 
-/* Flexbox & Alignment Utilities */
-.flex { display: flex; }
-.inline-flex { display: inline-flex; }
-.flex-col { display: flex; flex-direction: column; }
-.items-center { align-items: center; }
-.items-start { align-items: flex-start; }
-.items-end { align-items: flex-end; }
-.justify-between { justify-content: space-between; }
-.justify-center { justify-content: center; }
-.justify-end { justify-content: flex-end; }
-.flex-wrap { flex-wrap: wrap; }
-.flex-1 { flex: 1; min-width: 0; }
-
-/* Gap Utilities */
-.gap-1 { gap: var(--sp-1); }
-.gap-2 { gap: var(--sp-2); }
-.gap-3 { gap: var(--sp-3); }
-.gap-4 { gap: var(--sp-4); }
-.gap-5 { gap: var(--sp-5); }
-.gap-6 { gap: var(--sp-6); }
-
-.text-center { text-align: center; }
-.text-right { text-align: right; }
-.text-left { text-align: left; }
-.w-full { width: 100%; }
-
-/* Color & Surface Helpers */
-.text-muted { color: var(--c-slate-500); }
-.text-primary { color: var(--c-primary); }
-.text-danger { color: var(--c-danger); }
-.text-warning { color: var(--c-warning); }
-.bg-surface-0 { background: var(--surface-0); }
-.bg-surface-1 { background: var(--surface-1); }
-
-/* Accessible Focus Ring */
-a:focus-visible,
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
+:focus-visible {
   outline: 2px solid var(--c-primary);
   outline-offset: 2px;
-  border-radius: var(--r-xs);
 }
 
-/* Animations */
-.reveal {
-  opacity: 0;
-  transform: translateY(12px);
-  animation: revealUp var(--dur-slow) var(--ease-out) forwards;
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
 }
-@keyframes revealUp {
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+/* Skip link */
+
+.skip-link {
+  position: fixed;
+  top: -100px;
+  left: 16px;
+  z-index: 9999;
+  padding: 10px 18px;
+  border-radius: var(--r-sm);
+  background: var(--c-forest);
+  color: var(--c-white) !important;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  box-shadow: var(--shadow-lg);
+  transition: top var(--dur-fast) var(--ease-standard);
+}
+
+.skip-link:focus {
+  top: 16px;
+}
+
+/* Layout */
+
+.container {
+  width: min(100% - 32px, var(--container-max));
+  margin-inline: auto;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Flex utilities */
+
+.flex {
+  display: flex;
+}
+
+.inline-flex {
+  display: inline-flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.flex-1 {
+  flex: 1 1 0%;
+  min-width: 0;
+}
+
+.items-start {
+  align-items: flex-start;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.items-end {
+  align-items: flex-end;
+}
+
+.justify-start {
+  justify-content: flex-start;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.justify-end {
+  justify-content: flex-end;
+}
+
+/* Gap */
+
+.gap-1 {
+  gap: var(--sp-1);
+}
+
+.gap-2 {
+  gap: var(--sp-2);
+}
+
+.gap-3 {
+  gap: var(--sp-3);
+}
+
+.gap-4 {
+  gap: var(--sp-4);
+}
+
+.gap-5 {
+  gap: var(--sp-5);
+}
+
+.gap-6 {
+  gap: var(--sp-6);
+}
+
+/* Text */
+
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-primary {
+  color: var(--c-primary) !important;
+}
+
+.text-secondary {
+  color: var(--c-secondary) !important;
+}
+
+.text-academic {
+  color: var(--c-academic) !important;
+}
+
+.text-muted {
+  color: var(--c-text-muted) !important;
+}
+
+.text-danger {
+  color: var(--c-danger) !important;
+}
+
+.text-warning {
+  color: var(--c-warning) !important;
+}
+
+.w-full {
+  width: 100%;
+}
+
+/* Motion accessibility */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

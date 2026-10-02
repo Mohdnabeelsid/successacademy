@@ -6,7 +6,7 @@
 <title>My Profile — SUCCESS Learning Log</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../css/variables.css">
 <link rel="stylesheet" href="../css/base.css">
 <link rel="stylesheet" href="../css/components.css">
@@ -15,8 +15,8 @@
   .profile-head { display:flex; align-items:center; gap:var(--sp-5); margin-bottom:var(--sp-5); }
   .profile-head .avatar { width:72px; height:72px; font-size:var(--fs-xl); }
   .bar-row { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
-  .bar-row .lbl { min-width:130px; width:auto; max-width:180px; font-size:var(--fs-xs); color:var(--c-slate-700); flex-shrink:0; }
-  .bar-row .val { width:56px; font-size:var(--fs-xs); color:var(--c-slate-500); text-align:right; flex-shrink:0; }
+  .bar-row .lbl { min-width:130px; width:auto; max-width:180px; font-size:var(--fs-xs); color:var(--c-text-secondary); flex-shrink:0; }
+  .bar-row .val { width:56px; font-size:var(--fs-xs); color:var(--c-text-muted); text-align:right; flex-shrink:0; }
 
   /* Frame Generator Styles */
   .frame-canvas-container {
@@ -63,17 +63,17 @@
     opacity: 0.9;
   }
   .upload-dropzone {
-    border: 2px dashed #0FA15D66;
-    background: rgba(15, 161, 93, 0.04);
+    border: 2px dashed rgba(15, 161, 93, 0.4);
+    background: var(--c-primary-soft);
     border-radius: var(--r-md);
     padding: 20px 16px;
     text-align: center;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all var(--dur-fast) ease;
   }
   .upload-dropzone:hover {
-    border-color: #0FA15D;
-    background: rgba(15, 161, 93, 0.08);
+    border-color: var(--c-primary);
+    background: rgba(15, 161, 93, 0.1);
   }
   .slider-control-row {
     display: flex;
@@ -83,7 +83,7 @@
   }
   .slider-control-row input[type="range"] {
     flex: 1;
-    accent-color: #0FA15D;
+    accent-color: var(--c-primary);
     height: 6px;
     cursor: pointer;
   }
@@ -120,7 +120,7 @@
         <div class="avatar" id="profile-avatar">—</div>
         <div>
           <h2 id="profile-name" style="margin-bottom:4px;">—</h2>
-          <div style="color:var(--c-slate-500);font-size:var(--fs-sm);" id="profile-meta">—</div>
+          <div style="color:var(--c-text-muted);font-size:var(--fs-sm);" id="profile-meta">—</div>
         </div>
       </div>
 
@@ -129,16 +129,16 @@
         <div style="position:absolute; right:-40px; top:-40px; width:200px; height:200px; background:radial-gradient(circle, rgba(15,161,93,0.3) 0%, transparent 70%); pointer-events:none;"></div>
         <div class="flex items-center justify-between flex-wrap gap-4" style="position:relative; z-index:1;">
           <div style="max-width: 580px;">
-            <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(15,161,93,0.22); color:#10B981; border:1px solid rgba(15,161,93,0.4); padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">
+            <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(15,161,93,0.22); color:var(--c-primary-light); border:1px solid rgba(15,161,93,0.4); padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">
               🎓 Student Announcement
             </div>
-            <h3 style="margin:0 0 6px 0; font-family:'Montserrat',sans-serif; font-weight:800; font-size:1.5rem; color:#FFFFFF; letter-spacing:0.5px;">
+            <h3 style="margin:0 0 6px 0; font-family:var(--font-family); font-weight:800; font-size:1.5rem; color:#FFFFFF; letter-spacing:0.5px;">
               My SUCCESS Admission Frame
             </h3>
-            <div style="color:var(--c-slate-300); font-size:var(--fs-sm); line-height:1.6;">
+            <div style="color:rgba(255, 255, 255, 0.85); font-size:var(--fs-sm); line-height:1.6;">
               Celebrate the beginning of your journey with SUCCESS ACADEMY. Create and share your personalized 1080×1080 branded admission announcement frame for WhatsApp, Instagram, and Facebook.
             </div>
-            <div id="frame-saved-status" style="margin-top:10px; font-size:var(--fs-xs); color:#D8C7AA; display:none;">
+            <div id="frame-saved-status" style="margin-top:10px; font-size:var(--fs-xs); color:var(--c-beige); display:none;">
               ✓ You have a generated admission frame ready.
             </div>
           </div>
@@ -155,13 +155,13 @@
       </div>
 
       <!-- My Enrolled Subjects Configuration Card -->
-      <div class="card" style="margin-bottom:var(--sp-5); border: 1.5px solid #C7D2FE; background: #FAFAFE;">
+      <div class="card" style="margin-bottom:var(--sp-5); border: 1px solid var(--c-border); background: var(--surface-0);">
         <div class="flex items-center justify-between flex-wrap gap-2" style="margin-bottom:var(--sp-2);">
           <div>
             <h3 style="margin:0; display:flex; align-items:center; gap:8px;">
               <span>📚</span> My Enrolled Subjects
             </h3>
-            <div style="color:var(--c-slate-600); font-size:var(--fs-xs); margin-top:4px;">
+            <div style="color:var(--c-text-muted); font-size:var(--fs-xs); margin-top:4px;">
               Select the subjects and optional languages (e.g. Arabic, Malayalam) you study in <strong id="enrolled-class-name">Class —</strong>.
             </div>
           </div>
@@ -207,13 +207,13 @@
   <div class="modal" style="max-width:980px; width:100%; max-height:92vh; display:flex; flex-direction:column; overflow:hidden;">
     <div class="modal-header" style="flex-shrink:0; border-bottom:1px solid var(--c-border); padding:16px 20px;">
       <div>
-        <div style="display:inline-flex; align-items:center; gap:6px; background:#0FA15D18; color:#0FA15D; border:1px solid #0FA15D44; padding:2px 10px; border-radius:12px; font-size:11px; font-weight:700; text-transform:uppercase; margin-bottom:4px;">
+        <div style="display:inline-flex; align-items:center; gap:6px; background:var(--c-primary-soft); color:var(--c-primary); border:1px solid rgba(15,161,93,0.3); padding:2px 10px; border-radius:12px; font-size:11px; font-weight:700; text-transform:uppercase; margin-bottom:4px;">
           Admission Announcement Studio
         </div>
-        <h3 style="font-family:'Montserrat',sans-serif; font-weight:800; font-size:1.35rem; color:var(--c-text); margin:0;">
+        <h3 style="font-family:var(--font-family); font-weight:800; font-size:1.35rem; color:var(--c-text); margin:0;">
           Create My Admission Frame
         </h3>
-        <div class="topbar-sub" style="font-size:var(--fs-xs); color:var(--c-slate-500); margin-top:2px;">
+        <div class="topbar-sub" style="font-size:var(--fs-xs); color:var(--c-text-muted); margin-top:2px;">
           Premium 1080 × 1080 social announcement for WhatsApp, Instagram &amp; Facebook.
         </div>
       </div>
@@ -231,7 +231,7 @@
               ✋ Drag photo to reposition
             </div>
           </div>
-          <div style="text-align:center; font-size:11px; color:var(--c-slate-500); margin-top:8px;">
+          <div style="text-align:center; font-size:11px; color:var(--c-text-muted); margin-top:8px;">
             High-resolution 1080 × 1080 PNG Output • Square Social Media Standard
           </div>
         </div>
@@ -245,16 +245,16 @@
               <span style="font-size:11px; font-weight:700; color:var(--c-primary); text-transform:uppercase; letter-spacing:0.5px;">
                 🔒 Verified Student Profile
               </span>
-              <span style="font-size:10px; color:var(--c-slate-400);">Read-only</span>
+              <span style="font-size:10px; color:var(--c-text-subtle);">Read-only</span>
             </div>
-            <div style="font-size:16px; font-weight:800; color:var(--c-dark);" id="frame-student-name">
+            <div style="font-size:16px; font-weight:800; color:var(--c-text);" id="frame-student-name">
               —
             </div>
-            <div style="font-size:12px; font-weight:600; color:var(--c-slate-600); margin-top:2px;" id="frame-student-class-branch">
+            <div style="font-size:12px; font-weight:600; color:var(--c-text-secondary); margin-top:2px;" id="frame-student-class-branch">
               —
             </div>
-            <div style="font-size:11px; color:var(--c-slate-500); margin-top:4px;">
-              Admission Batch: <strong id="frame-student-year" style="color:var(--c-dark);">—</strong>
+            <div style="font-size:11px; color:var(--c-text-muted); margin-top:4px;">
+              Admission Batch: <strong id="frame-student-year" style="color:var(--c-text);">—</strong>
             </div>
           </div>
 
@@ -263,10 +263,10 @@
             <input type="file" id="frame-file-input" accept="image/jpeg,image/png,image/webp,image/jpg" style="display:none;">
             <div class="upload-dropzone" id="upload-dropzone">
               <div style="font-size:28px; margin-bottom:6px;">📸</div>
-              <div style="font-weight:700; font-size:14px; color:var(--c-dark);" id="upload-box-title">
+              <div style="font-weight:700; font-size:14px; color:var(--c-text);" id="upload-box-title">
                 Upload Student Photograph
               </div>
-              <div style="font-size:12px; color:var(--c-slate-500); margin-top:4px;">
+              <div style="font-size:12px; color:var(--c-text-muted); margin-top:4px;">
                 Select a clear portrait (JPG, PNG, or WebP)
               </div>
               <button type="button" class="btn btn-secondary btn-sm" id="select-photo-btn" style="margin-top:10px; pointer-events:none;">
@@ -278,7 +278,7 @@
           <!-- Photo Adjustment Controls -->
           <div id="photo-controls-box" style="display:none; background:var(--surface-0); border:1px solid var(--c-border); border-radius:var(--r-md); padding:14px 16px;">
             <div class="flex items-center justify-between" style="margin-bottom:8px;">
-              <label style="font-weight:700; font-size:13px; margin:0; color:var(--c-dark);">
+              <label style="font-weight:700; font-size:13px; margin:0; color:var(--c-text);">
                 Photo Zoom &amp; Crop
               </label>
               <span id="zoom-level-label" style="font-size:12px; font-weight:700; color:var(--c-primary);">
@@ -311,11 +311,11 @@
           </div>
 
           <!-- Success Panel after Generation -->
-          <div id="frame-success-panel" style="display:none; background:rgba(15,161,93,0.07); border:1.5px solid #0FA15D55; border-radius:var(--r-md); padding:16px;">
-            <div style="font-weight:800; color:#0FA15D; font-size:15px; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+          <div id="frame-success-panel" style="display:none; background:var(--c-primary-soft); border:1px solid #B9E9D0; border-radius:var(--r-md); padding:16px;">
+            <div style="font-weight:800; color:var(--c-primary); font-size:15px; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
               <span>🎉</span> Your SUCCESS Frame is Ready!
             </div>
-            <div style="font-size:12px; color:var(--c-slate-600); margin-bottom:14px; line-height:1.5;">
+            <div style="font-size:12px; color:var(--c-text-secondary); margin-bottom:14px; line-height:1.5;">
               High-resolution 1080×1080 frame generated. Download or share directly with friends and family.
             </div>
             <div class="flex gap-2 flex-wrap">
@@ -326,7 +326,7 @@
                 📤 Share Frame
               </button>
             </div>
-            <button type="button" class="btn btn-ghost btn-xs" id="tweak-frame-btn" style="width:100%; margin-top:10px; color:var(--c-slate-500); font-size:11px;">
+            <button type="button" class="btn btn-ghost btn-xs" id="tweak-frame-btn" style="width:100%; margin-top:10px; color:var(--c-text-muted); font-size:11px;">
               ✏️ Re-adjust Photo
             </button>
           </div>
@@ -336,7 +336,7 @@
     </div>
 
     <div class="modal-footer" style="padding:12px 20px; border-top:1px solid var(--c-border); display:flex; justify-content:space-between; align-items:center; background:var(--surface-1);">
-      <span style="font-size:11px; color:var(--c-slate-500); font-style:italic;">
+      <span style="font-size:11px; color:var(--c-text-subtle); font-style:italic;">
         SUCCESS ACADEMY • From Classrooms to Careers.
       </span>
       <button type="button" class="btn btn-ghost" id="cancel-frame-modal-btn">Close</button>

@@ -6,7 +6,7 @@
 <title>My Study Logs — SUCCESS Learning Log</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../css/variables.css">
 <link rel="stylesheet" href="../css/base.css">
 <link rel="stylesheet" href="../css/components.css">
@@ -121,15 +121,15 @@
         <label>Study Time</label>
         <div style="display:flex;gap:10px;align-items:center;">
           <div style="flex:1;">
-            <label for="log-start-time" style="font-size:0.75rem;color:var(--c-slate-500);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">From</label>
+            <label for="log-start-time" style="font-size:0.75rem;color:var(--c-text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">From</label>
             <input type="time" id="log-start-time" required style="width:100%;margin-top:4px;">
           </div>
           <div style="flex:1;">
-            <label for="log-end-time" style="font-size:0.75rem;color:var(--c-slate-500);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">To</label>
+            <label for="log-end-time" style="font-size:0.75rem;color:var(--c-text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">To</label>
             <input type="time" id="log-end-time" required style="width:100%;margin-top:4px;">
           </div>
         </div>
-        <div id="log-duration-display" style="margin-top:10px;padding:10px 14px;background:var(--c-slate-50);border:1px solid var(--c-border);border-radius:var(--r-sm);font-size:0.875rem;color:var(--c-slate-500);min-height:40px;">
+        <div id="log-duration-display" style="margin-top:10px;padding:10px 14px;background:var(--surface-1);border:1px solid var(--c-border);border-radius:var(--r-sm);font-size:0.875rem;color:var(--c-text-muted);min-height:40px;">
           Duration will appear here after selecting times.
         </div>
         <!-- hidden field carries the calculated minutes for form submission -->

@@ -10,8 +10,13 @@ let currentRows = [];
   const admin = await requireAuth("admin", "admin-login.html");
   renderSidebar("admin", "reports", { name: admin.name || admin.email, sub: "Branch Admin" });
 
-  await refresh();
-  document.getElementById("page-loader").classList.add("done");
+  try {
+    await refresh();
+  } catch (err) {
+    console.error("Reports refresh error:", err);
+  } finally {
+    document.getElementById("page-loader")?.classList.add("done");
+  }
   wireEvents();
 })();
 
