@@ -19,8 +19,9 @@ let allLogs = [];
     document.getElementById("today-label").textContent = formatISTFullDate();
 
     // Branch context
-    const branch = admin.branch || "MAN";
-    const branchName = branch === "ALP" ? "Alappuzha Campus" : "Mannancherry Campus";
+    const isAllBranch = !admin.branch || admin.branch === "ALL" || admin.branch === "";
+    const branch = isAllBranch ? null : admin.branch;
+    const branchName = isAllBranch ? "All Campuses" : (branch === "ALP" ? "Alappuzha Campus" : "Mannancherry Campus");
     const branchEl = document.getElementById("att-summary-branch");
     if (branchEl) branchEl.textContent = branchName;
 

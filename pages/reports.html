@@ -36,32 +36,128 @@
     </header>
 
     <div class="page-body">
-      <div class="filter-bar">
-        <select id="filter-branch">
-          <option value="">All Branches</option>
-          <option value="ALP">Alappuzha</option>
-          <option value="MAN">Mannancherry</option>
-        </select>
-        <select id="filter-class">
-          <option value="">All Classes</option>
-          <option>5</option><option>6</option><option>7</option>
-          <option>8</option><option>9</option><option>10</option><option>11</option><option>12</option>
-        </select>
-        <select id="rank-by">
-          <option value="streak">Rank by Study Streak</option>
-          <option value="hours">Rank by Study Hours</option>
-          <option value="active">Rank by Most Active</option>
-        </select>
+      <div class="tabs" role="tablist">
+        <button class="tab-btn active" id="tab-leaderboard-btn" role="tab" aria-selected="true" data-tab="leaderboard">Study Log Leaderboard</button>
+        <button class="tab-btn" id="tab-attendance-btn" role="tab" aria-selected="false" data-tab="attendance">Attendance Report</button>
       </div>
 
-      <div class="card" style="padding:0;">
-        <div class="table-wrap" style="border:none;">
-          <table>
-            <thead><tr><th>Rank</th><th>Student</th><th>Admission No.</th><th>Class</th><th>Branch</th><th>Streak</th><th>Total Hours</th><th>Logs Approved</th></tr></thead>
-            <tbody id="leaderboard-body"><tr><td colspan="8"><div class="empty-state">Loading…</div></td></tr></tbody>
-          </table>
+      <!-- TAB 1: STUDY LOG LEADERBOARD -->
+      <section id="pane-leaderboard" role="tabpanel" aria-labelledby="tab-leaderboard-btn">
+        <div class="filter-bar">
+          <select id="filter-branch">
+            <option value="">All Branches</option>
+            <option value="ALP">Alappuzha</option>
+            <option value="MAN">Mannancherry</option>
+          </select>
+          <select id="filter-class">
+            <option value="">All Classes</option>
+            <option>5</option><option>6</option><option>7</option>
+            <option>8</option><option>9</option><option>10</option><option>11</option><option>12</option>
+          </select>
+          <select id="rank-by">
+            <option value="streak">Rank by Study Streak</option>
+            <option value="hours">Rank by Study Hours</option>
+            <option value="active">Rank by Most Active</option>
+          </select>
         </div>
-      </div>
+
+        <div class="card" style="padding:0;">
+          <div class="table-wrap" style="border:none;">
+            <table>
+              <thead><tr><th>Rank</th><th>Student</th><th>Admission No.</th><th>Class</th><th>Branch</th><th>Streak</th><th>Total Hours</th><th>Logs Approved</th></tr></thead>
+              <tbody id="leaderboard-body"><tr><td colspan="8"><div class="empty-state">Loading…</div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: ATTENDANCE REPORT -->
+      <section id="pane-attendance" role="tabpanel" aria-labelledby="tab-attendance-btn" style="display:none;">
+        <div class="filter-bar" style="align-items:flex-end;">
+          <div>
+            <label for="att-filter-branch" style="display:block; font-size:var(--fs-2xs); font-weight:700; color:var(--c-text-muted); margin-bottom:4px; text-transform:uppercase;">Branch</label>
+            <select id="att-filter-branch">
+              <option value="">All Branches</option>
+              <option value="ALP">Alappuzha</option>
+              <option value="MAN">Mannancherry</option>
+            </select>
+          </div>
+          <div>
+            <label for="att-filter-class" style="display:block; font-size:var(--fs-2xs); font-weight:700; color:var(--c-text-muted); margin-bottom:4px; text-transform:uppercase;">Class</label>
+            <select id="att-filter-class">
+              <option value="">All Classes</option>
+              <option>5</option><option>6</option><option>7</option>
+              <option>8</option><option>9</option><option>10</option><option>11</option><option>12</option>
+            </select>
+          </div>
+          <div>
+            <label for="att-start-date" style="display:block; font-size:var(--fs-2xs); font-weight:700; color:var(--c-text-muted); margin-bottom:4px; text-transform:uppercase;">From Date</label>
+            <input type="date" id="att-start-date" class="form-control" style="padding:7px 10px; font-size:var(--fs-sm); border:1px solid var(--c-border); border-radius:var(--r-md); background:var(--c-bg-card, #fff);">
+          </div>
+          <div>
+            <label for="att-end-date" style="display:block; font-size:var(--fs-2xs); font-weight:700; color:var(--c-text-muted); margin-bottom:4px; text-transform:uppercase;">To Date</label>
+            <input type="date" id="att-end-date" class="form-control" style="padding:7px 10px; font-size:var(--fs-sm); border:1px solid var(--c-border); border-radius:var(--r-md); background:var(--c-bg-card, #fff);">
+          </div>
+          <div>
+            <label for="att-threshold" style="display:block; font-size:var(--fs-2xs); font-weight:700; color:var(--c-text-muted); margin-bottom:4px; text-transform:uppercase;">Threshold (%)</label>
+            <input type="number" id="att-threshold" value="75" min="0" max="100" style="width:75px; padding:7px 10px; font-size:var(--fs-sm); border:1px solid var(--c-border); border-radius:var(--r-md); background:var(--c-bg-card, #fff);">
+          </div>
+          <div style="padding-bottom:8px;">
+            <label class="flex items-center gap-1" style="font-size:var(--fs-xs); font-weight:600; cursor:pointer; user-select:none;">
+              <input type="checkbox" id="att-only-low"> Only &lt; threshold
+            </label>
+          </div>
+          <div class="flex items-center gap-2" style="margin-left:auto; padding-bottom:4px;">
+            <button class="btn btn-ghost btn-sm" id="export-att-csv-btn">Export CSV</button>
+            <button class="btn btn-primary btn-sm" id="export-att-excel-btn">Export Excel</button>
+          </div>
+        </div>
+
+        <div class="stats-row" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:var(--sp-4); margin-bottom:var(--sp-4);">
+          <div class="stat-card">
+            <span class="stat-label">Students</span>
+            <span class="stat-value" id="att-stat-students">0</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Sessions Held</span>
+            <span class="stat-value" id="att-stat-sessions">0</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Average Attendance</span>
+            <span class="stat-value" id="att-stat-avg">0%</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Below Threshold</span>
+            <span class="stat-value" id="att-stat-low" style="color:var(--c-danger, #ef4444);">0</span>
+          </div>
+        </div>
+
+        <div class="card" style="padding:0;">
+          <div class="table-wrap" style="border:none;">
+            <table id="attendance-report-table">
+              <thead>
+                <tr>
+                  <th>Admission No.</th>
+                  <th>Student Name</th>
+                  <th>Class</th>
+                  <th>Branch</th>
+                  <th style="text-align:right;">Sessions</th>
+                  <th style="text-align:right;">Present</th>
+                  <th style="text-align:right;">Late</th>
+                  <th style="text-align:right;">Absent</th>
+                  <th style="text-align:right;">Unmarked</th>
+                  <th style="text-align:right;">Attended</th>
+                  <th style="text-align:right;">Rate</th>
+                  <th style="text-align:center;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="attendance-report-body">
+                <tr><td colspan="12"><div class="empty-state">Loading…</div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
     </div>
   </main>
 </div>

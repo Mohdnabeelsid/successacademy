@@ -4,8 +4,13 @@
 // login enable/disable, and bulk Excel import.
 // ==========================================================================
 
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-import { SUPABASE_URL, SUPABASE_ANON_KEY, TABLES } from "../config/supabase-config.js";
+import {
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY,
+  TABLES,
+  supabase,
+  createClient
+} from "../config/supabase-config.js";
 import { admissionNumberToEmail } from "./auth-service.js";
 import {
   createRow,
@@ -13,9 +18,21 @@ import {
   deleteRowById,
   getAllRows,
   getRowsWhere,
-  getRowById
+  getRowById,
+  toCamelCase,
+  toSnakeCase
 } from "./supabase-service.js";
 import { getISTNowIsoTimestamp } from "../utils/date-time.js";
+
+/**
+ * Normalizes class string representation (e.g., "Class 10" -> "10")
+ * @param {string|number} cls
+ * @returns {string}
+ */
+export function normalizeClass(cls) {
+  if (!cls) return "";
+  return String(cls).trim().replace(/^class\s*/i, "").trim();
+}
 
 function randomPassword(len = 8) {
   const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
@@ -66,7 +83,7 @@ async function createAuthUserSecondary(email, password) {
 export async function createStudentWithCredentials(studentData) {
   const admissionNumber = String(studentData.admissionNumber || "").trim();
   const name = String(studentData.name || "").trim();
-  const studentClass = String(studentData.class || "").trim();
+  const studentClass = normalizeClass(studentData.class);
 
   if (!admissionNumber) throw new Error("Admission number is required.");
   if (!name) throw new Error("Student name is required.");
@@ -115,15 +132,36 @@ export async function createStudentWithCredentials(studentData) {
  *                                              Everywhere else this must stay false/omitted.
  */
 export async function listStudents(filters = {}) {
-  let students = await getAllRows(TABLES.STUDENTS, { orderByField: "name", direction: "asc" });
+  let query = supabase
+    .from(TABLES.STUDENTS)
+    .select("*")
+    .order("name", { ascending: true });
 
-  // Hide disabled students everywhere unless the caller explicitly opts in
+  if (filters.branch && filters.branch !== "ALL") {
+    query = query.eq("branch", String(filters.branch).trim().toUpperCase());
+  }
+
+  if (filters.class) {
+    const rawCls = normalizeClass(filters.class);
+    query = query.in("class", [rawCls, `Class ${rawCls}`]);
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    console.error("Error listing students:", error);
+    return [];
+  }
+
+  let students = (data || []).map(toCamelCase);
+
   if (!filters.includeDisabled) {
     students = students.filter((s) => !s.loginDisabled);
   }
 
-  if (filters.branch) students = students.filter((s) => s.branch === filters.branch);
-  if (filters.class) students = students.filter((s) => s.class === filters.class);
+  if (filters.class) {
+    const targetCls = normalizeClass(filters.class);
+    students = students.filter((s) => normalizeClass(s.class) === targetCls);
+  }
   if (filters.search) {
     const q = filters.search.toLowerCase();
     students = students.filter(
@@ -142,7 +180,11 @@ export async function getStudent(id) {
 }
 
 export async function updateStudent(id, data) {
-  return updateRowById(TABLES.STUDENTS, id, data);
+  const updates = { ...data };
+  if (updates.class !== undefined) {
+    updates.class = normalizeClass(updates.class);
+  }
+  return updateRowById(TABLES.STUDENTS, id, updates);
 }
 
 export async function deleteStudent(id) {
@@ -159,10 +201,8 @@ export async function resetStudentPassword(studentId) {
   if (!student) throw new Error("Student not found.");
   const newPassword = randomPassword();
 
-  const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  
-  // Call RPC to update both auth.users and public.students
-  const { error: rpcErr } = await client.rpc("reset_student_password", {
+  // Call RPC using authenticated admin client
+  const { error: rpcErr } = await supabase.rpc("reset_student_password", {
     p_admission: student.admissionNumber,
     p_new_password: newPassword
   });
@@ -194,7 +234,7 @@ export async function bulkImportStudents(rows, defaultBranch = "MAN", onProgress
     const row = rows[i];
     const name = getRowVal(row, ["name", "Name", "Student Name", "NAME", "StudentName"]);
     const admissionNumber = getRowVal(row, ["admissionNumber", "Admission Number", "ADMISSION NUMBER", "Admission No", "AdmissionNo", "admission_number"]);
-    const studentClass = getRowVal(row, ["class", "Class", "CLASS", "Grade"]);
+    const studentClass = normalizeClass(getRowVal(row, ["class", "Class", "CLASS", "Grade"]));
     const branch = getRowVal(row, ["branch", "Branch", "BRANCH"]) || defaultBranch || "MAN";
     const phone = getRowVal(row, ["phone", "Phone", "PHONE", "Phone Number", "Mobile"]);
     const parentName = getRowVal(row, ["parentName", "Parent Name", "PARENT NAME", "ParentName", "Guardian Name"]);

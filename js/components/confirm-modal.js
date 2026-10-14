@@ -54,16 +54,21 @@ export function showConfirmModal({
             </svg>
           </div>
           <div>
-            <h3 id="confirm-dialog-title" class="confirm-modal-title">${title}</h3>
-            <p class="confirm-modal-message">${message}</p>
+            <h3 id="confirm-dialog-title" class="confirm-modal-title"></h3>
+            <p id="confirm-dialog-message" class="confirm-modal-message"></p>
           </div>
         </div>
         <div class="confirm-modal-actions">
-          <button type="button" class="btn btn-ghost btn-sm" id="confirm-cancel-btn">${cancelText}</button>
-          <button type="button" class="btn btn-${confirmVariant === 'danger' ? 'danger' : 'primary'} btn-sm" id="confirm-ok-btn">${confirmText}</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="confirm-cancel-btn"></button>
+          <button type="button" class="btn btn-${confirmVariant === 'danger' ? 'danger' : 'primary'} btn-sm" id="confirm-ok-btn"></button>
         </div>
       </div>
     `;
+
+    overlay.querySelector("#confirm-dialog-title").textContent = title;
+    overlay.querySelector("#confirm-dialog-message").textContent = message;
+    overlay.querySelector("#confirm-cancel-btn").textContent = cancelText;
+    overlay.querySelector("#confirm-ok-btn").textContent = confirmText;
 
     region.appendChild(overlay);
 

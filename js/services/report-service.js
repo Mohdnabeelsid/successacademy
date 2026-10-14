@@ -4,10 +4,25 @@
 
 import { calcStreak, calcTotalHours, LOG_STATUS } from "./studylog-service.js";
 
+/**
+ * Sanitizes a CSV cell value against Formula Injection (CSV Injection).
+ * If the value starts with '=', '+', '-', or '@', prefixes it with a single quote (').
+ * Also escapes double-quotes.
+ * @param {*} val
+ * @returns {string} Safe quoted CSV cell
+ */
+export function sanitizeCsvValue(val) {
+  let str = String(val ?? "");
+  if (/^[=+\-@]/.test(str)) {
+    str = "'" + str;
+  }
+  return `"${str.replace(/"/g, '""')}"`;
+}
+
 export function toCSV(rows, columns) {
-  const header = columns.map((c) => `"${c.label}"`).join(",");
+  const header = columns.map((c) => `"${String(c.label ?? "").replace(/"/g, '""')}"`).join(",");
   const body = rows
-    .map((r) => columns.map((c) => `"${String(r[c.key] ?? "").replace(/"/g, '""')}"`).join(","))
+    .map((r) => columns.map((c) => sanitizeCsvValue(r[c.key])).join(","))
     .join("\n");
   return `${header}\n${body}`;
 }
@@ -60,12 +75,13 @@ export function buildLeaderboard(students, logsByStudentId, rankBy = "streak") {
 
 /**
  * Builds attendance report rows for CSV/Excel export and reporting.
- * Computes total sessions, present, late, absent, attended, and attendance percentage.
+ * Computes total sessions held, present, late, absent, unmarked, attended, and attendance percentage.
  * @param {Array<Object>} students
  * @param {Object} attendanceByStudentId - Map of studentId -> Array of attendance records
+ * @param {number|Object} [totalSessionsOrMap=0] - Total sessions held (number or map by class/student)
  * @returns {Array<Object>}
  */
-export function buildAttendanceReportRows(students, attendanceByStudentId) {
+export function buildAttendanceReportRows(students, attendanceByStudentId, totalSessionsOrMap = 0) {
   return students.map((s) => {
     const records = attendanceByStudentId[s.id] || [];
     let present = 0;
@@ -76,22 +92,73 @@ export function buildAttendanceReportRows(students, attendanceByStudentId) {
       else if (r.status === "Late") late++;
       else if (r.status === "Absent") absent++;
     });
-    const total = records.length;
+
+    let totalSessions = 0;
+    if (typeof totalSessionsOrMap === "number") {
+      totalSessions = totalSessionsOrMap > 0 ? totalSessionsOrMap : records.length;
+    } else if (typeof totalSessionsOrMap === "object" && totalSessionsOrMap !== null) {
+      const clsKey = s.class ? String(s.class).replace(/^class\s*/i, "").trim() : "";
+      totalSessions = totalSessionsOrMap[clsKey] ?? totalSessionsOrMap[s.id] ?? records.length;
+    } else {
+      totalSessions = records.length;
+    }
+
+    const marked = present + late + absent;
+    const unmarked = Math.max(0, totalSessions - marked);
     const attended = present + late;
-    const percentage = total > 0 ? Math.round(((present + late) / total) * 1000) / 10 : 0;
+    const percentage = totalSessions > 0 ? Math.round(((present + late) / totalSessions) * 1000) / 10 : 0;
+
     return {
       studentId: s.id,
       admissionNumber: s.admissionNumber,
       name: s.name,
       class: s.class,
       branch: s.branch,
-      totalSessions: total,
+      phone: s.phone || "",
+      parentName: s.parentName || "",
+      totalSessions,
       present,
       late,
       absent,
+      unmarked,
       attended,
       attendancePercentage: percentage
     };
   });
+}
+
+/**
+ * Sanitizes an Indian phone number for wa.me links.
+ * Strips non-digits; if 10 digits, prepends '91'.
+ * Returns cleaned number or empty string if invalid.
+ * @param {string|number} phone
+ * @returns {string}
+ */
+export function sanitizeWhatsAppPhone(phone) {
+  if (!phone) return "";
+  const cleaned = String(phone).replace(/\D/g, "");
+  if (cleaned.length === 10) {
+    return `91${cleaned}`;
+  }
+  if (cleaned.length === 12 && cleaned.startsWith("91")) {
+    return cleaned;
+  }
+  return cleaned;
+}
+
+/**
+ * Generates a WhatsApp wa.me URL for parent attendance notification.
+ * @param {Object} studentRow - Row produced by buildAttendanceReportRows
+ * @returns {string|null} wa.me URL or null if phone is unavailable
+ */
+export function generateWhatsAppAttendanceLink(studentRow) {
+  if (!studentRow) return null;
+  const phone = sanitizeWhatsAppPhone(studentRow.phone);
+  if (!phone) return null;
+
+  const parentGreeting = studentRow.parentName ? `Dear ${studentRow.parentName},` : `Dear Parent,`;
+  const text = `${parentGreeting} Attendance notice from Success Academy: ${studentRow.name} (Class ${studentRow.class}) has an attendance rate of ${studentRow.attendancePercentage}% (${studentRow.attended}/${studentRow.totalSessions} sessions attended, ${studentRow.absent} absent). Regular attendance is required for academic progress.`;
+
+  return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
 }
 

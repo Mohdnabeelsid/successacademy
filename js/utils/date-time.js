@@ -316,3 +316,20 @@ export function getAcademicYear(date) {
   return month >= 6 ? `${year}-${year + 1}` : `${year - 1}-${year}`;
 }
 
+/**
+ * Calculates start and end ISO dates for the academic year in IST.
+ * Academic session runs June 1 of start year to March 31 of next year.
+ * @param {Date|string} [date]
+ * @returns {{ startIso: string, endIso: string }}
+ */
+export function getAcademicYearRange(date) {
+  const acad = getAcademicYear(date);
+  const parts = acad.split("-");
+  const startYear = parts[0];
+  const endYear = parts[1];
+  return {
+    startIso: `${startYear}-06-01`,
+    endIso: `${endYear}-03-31`
+  };
+}
+

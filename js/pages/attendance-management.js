@@ -31,8 +31,10 @@ let currentClass = "10";
 let currentDate = getISTTodayIso();
 let activeSessionId = null;
 let activeSession = null;
+let rosterSessionId = null;
 let currentRoster = []; // Array of student objects with status, remarks, dirty
 let isDirty = false;
+let selectSessionRequestId = 0;
 
 (async function init() {
   try {
@@ -77,6 +79,21 @@ let isDirty = false;
   }
 })();
 
+async function confirmDiscardIfDirty() {
+  if (!isDirty) return true;
+  const discard = await showConfirmModal({
+    title: "Unsaved Attendance Changes",
+    message: "You have unsaved attendance marks. Proceeding will discard your unsaved marks. Continue?",
+    confirmText: "Discard & Continue",
+    confirmVariant: "warning"
+  });
+  if (discard) {
+    isDirty = false;
+    return true;
+  }
+  return false;
+}
+
 function wireEventListeners() {
   const branchSelect = document.getElementById("filter-branch");
   const classSelect = document.getElementById("filter-class");
@@ -86,40 +103,63 @@ function wireEventListeners() {
 
   if (!branchSelect.disabled) {
     branchSelect.addEventListener("change", async () => {
-      currentBranch = branchSelect.value;
-      await checkUnsavedAndLoad();
+      if (await confirmDiscardIfDirty()) {
+        currentBranch = branchSelect.value;
+        await loadSessionsForFilters();
+      } else {
+        branchSelect.value = currentBranch;
+      }
     });
   }
 
   classSelect.addEventListener("change", async () => {
-    currentClass = classSelect.value;
-    await checkUnsavedAndLoad();
+    if (await confirmDiscardIfDirty()) {
+      currentClass = classSelect.value;
+      await loadSessionsForFilters();
+    } else {
+      classSelect.value = currentClass;
+    }
   });
 
   dateInput.addEventListener("change", async () => {
-    currentDate = dateInput.value;
-    await checkUnsavedAndLoad();
+    if (await confirmDiscardIfDirty()) {
+      currentDate = dateInput.value;
+      await loadSessionsForFilters();
+    } else {
+      dateInput.value = currentDate;
+    }
   });
 
   todayBtn.addEventListener("click", async () => {
-    currentDate = getISTTodayIso();
-    dateInput.value = currentDate;
-    await checkUnsavedAndLoad();
+    if (await confirmDiscardIfDirty()) {
+      currentDate = getISTTodayIso();
+      dateInput.value = currentDate;
+      await loadSessionsForFilters();
+    }
   });
 
   loadSessionsBtn.addEventListener("click", async () => {
-    currentClass = classSelect.value;
-    currentDate = dateInput.value;
-    await checkUnsavedAndLoad();
+    if (await confirmDiscardIfDirty()) {
+      currentClass = classSelect.value;
+      currentDate = dateInput.value;
+      await loadSessionsForFilters();
+    } else {
+      classSelect.value = currentClass;
+      dateInput.value = currentDate;
+    }
   });
 
   // Modal triggers
-  document.getElementById("btn-create-session-modal").addEventListener("click", () => {
-    openSessionModal("create");
+  document.getElementById("btn-create-session-modal").addEventListener("click", async () => {
+    if (await confirmDiscardIfDirty()) {
+      openSessionModal("create");
+    }
   });
 
-  document.getElementById("btn-add-session-inline").addEventListener("click", () => {
-    openSessionModal("create");
+  document.getElementById("btn-add-session-inline").addEventListener("click", async () => {
+    if (await confirmDiscardIfDirty()) {
+      openSessionModal("create");
+    }
   });
 
   document.getElementById("close-session-modal").addEventListener("click", closeSessionModal);
@@ -128,8 +168,12 @@ function wireEventListeners() {
   document.getElementById("session-form").addEventListener("submit", handleSessionFormSubmit);
 
   // Edit / Delete active session
-  document.getElementById("btn-edit-session-details").addEventListener("click", () => {
-    if (activeSession) openSessionModal("edit", activeSession);
+  document.getElementById("btn-edit-session-details").addEventListener("click", async () => {
+    if (activeSession) {
+      if (await confirmDiscardIfDirty()) {
+        openSessionModal("edit", activeSession);
+      }
+    }
   });
 
   document.getElementById("btn-delete-session").addEventListener("click", handleDeleteActiveSession);
@@ -151,20 +195,6 @@ function wireEventListeners() {
       e.returnValue = "";
     }
   });
-}
-
-async function checkUnsavedAndLoad() {
-  if (isDirty) {
-    const discard = await showConfirmModal({
-      title: "Unsaved Attendance Changes",
-      message: "You have unsaved attendance marks. Switching sessions will discard unsaved marks. Continue?",
-      confirmText: "Discard & Switch",
-      confirmVariant: "warning"
-    });
-    if (!discard) return;
-  }
-  isDirty = false;
-  await loadSessionsForFilters();
 }
 
 /**
@@ -258,6 +288,7 @@ async function loadSessionsForFilters() {
  * @param {string} sessionId
  */
 async function selectSession(sessionId) {
+  const currentReqId = ++selectSessionRequestId;
   activeSessionId = sessionId;
 
   // Highlight active chip
@@ -274,7 +305,14 @@ async function selectSession(sessionId) {
 
   try {
     const data = await getSessionAttendance(sessionId);
+
+    // Discard stale response if another session was selected while loading
+    if (currentReqId !== selectSessionRequestId || sessionId !== activeSessionId) {
+      return;
+    }
+
     activeSession = data.session;
+    rosterSessionId = sessionId;
     currentRoster = (data.roster || []).map((r) => ({
       ...r,
       dirty: false
@@ -292,29 +330,29 @@ async function selectSession(sessionId) {
     const branchName = activeSession.branch === "ALP" ? "Alappuzha Campus" : "Mannancherry Campus";
     document.getElementById("active-session-meta").textContent = `Class ${activeSession.class} • ${branchName} • ${formatISTFullDate(activeSession.date)}`;
 
-    // Update Summary Cards
-    const s = data.summary;
-    updateSummaryCards(s.totalStudents, s.present, s.late, s.absent, s.attendanceRate);
-
-    // Render roster table
+    // Render roster table and calculate single shared summary
     renderRosterTable(currentRoster);
+    recalculateLiveSummary();
     isDirty = false;
     setSaveButtonState(true, false);
   } catch (err) {
     console.error("Error selecting session:", err);
-    toast.error("Failed to load session attendance.");
-    renderEmptyRosterState("Failed to load student roster.");
+    const detail = err?.message || String(err);
+    toast.error(`Failed to load session attendance: ${detail}`);
+    renderEmptyRosterState(`Failed to load student roster: ${detail}`);
   }
 }
 
 /**
  * Updates the summary statistics displayed on the top cards.
  */
-function updateSummaryCards(total, present, late, absent, rate) {
+function updateSummaryCards(total, present, late, absent, unmarked, rate) {
   document.getElementById("stat-total").textContent = total;
   document.getElementById("stat-present").textContent = present;
   document.getElementById("stat-late").textContent = late;
   document.getElementById("stat-absent").textContent = absent;
+  const unmarkedEl = document.getElementById("stat-unmarked");
+  if (unmarkedEl) unmarkedEl.textContent = unmarked;
   document.getElementById("stat-rate").textContent = `${rate}%`;
 }
 
@@ -325,16 +363,18 @@ function recalculateLiveSummary() {
   let present = 0;
   let late = 0;
   let absent = 0;
+  let unmarked = 0;
 
   currentRoster.forEach((r) => {
     if (r.status === ATTENDANCE_STATUS.PRESENT) present++;
     else if (r.status === ATTENDANCE_STATUS.LATE) late++;
     else if (r.status === ATTENDANCE_STATUS.ABSENT) absent++;
+    else unmarked++;
   });
 
   const total = currentRoster.length;
-  const rate = calcAttendancePercentage(present, late, total);
-  updateSummaryCards(total, present, late, absent, rate);
+  const rate = total > 0 ? calcAttendancePercentage(present, late, total) : 0;
+  updateSummaryCards(total, present, late, absent, unmarked, rate);
 }
 
 /**
@@ -421,8 +461,9 @@ function renderRosterTable(roster) {
       const studentId = e.target.getAttribute("data-student-id");
       const val = e.target.value;
       const target = currentRoster.find((r) => r.studentId === studentId);
-      if (target) {
+      if (target && target.remarks !== val) {
         target.remarks = val;
+        target.dirty = true;
         markDirtyState();
       }
     });
@@ -526,18 +567,25 @@ async function handleSaveAttendance() {
     return;
   }
 
-  const recordsToSave = currentRoster
-    .filter((r) => r.status !== null)
-    .map((r) => ({
-      studentId: r.studentId,
-      status: r.status,
-      remarks: r.remarks || ""
-    }));
-
-  if (recordsToSave.length === 0) {
-    toast.warning("Please mark attendance for at least one student before saving.");
+  // Safety guard: ensure the in-memory roster belongs to the currently active session
+  if (rosterSessionId !== activeSessionId) {
+    toast.error("The roster on screen does not match the active session. Please re-select the session.");
     return;
   }
+
+  // Send ONLY rows whose status or remarks changed
+  const dirtyRecords = currentRoster.filter((r) => r.dirty && r.status !== null);
+
+  if (dirtyRecords.length === 0) {
+    toast.info("No unsaved attendance changes to save.");
+    return;
+  }
+
+  const recordsToSave = dirtyRecords.map((r) => ({
+    studentId: r.studentId,
+    status: r.status,
+    remarks: r.remarks || ""
+  }));
 
   const saveBtn = document.getElementById("btn-save-attendance");
   saveBtn.disabled = true;
@@ -546,7 +594,7 @@ async function handleSaveAttendance() {
   try {
     await markAttendance(activeSessionId, recordsToSave, currentAdmin.id);
     isDirty = false;
-    currentRoster.forEach((r) => (r.dirty = false));
+    dirtyRecords.forEach((r) => (r.dirty = false));
     setSaveButtonState(true, false);
     toast.success("Attendance saved successfully!");
   } catch (err) {
@@ -654,6 +702,23 @@ async function handleSessionFormSubmit(e) {
     return;
   }
 
+  if (endTime && endTime <= startTime) {
+    toast.error("End time must be after start time.");
+    return;
+  }
+
+  // Confirm discarding unsaved attendance marks before reloading
+  if (isDirty) {
+    const proceed = await showConfirmModal({
+      title: "Unsaved Attendance Changes",
+      message: "Saving session details will reload the session roster and discard your unsaved attendance marks. Continue?",
+      confirmText: "Discard & Save Session",
+      confirmVariant: "warning"
+    });
+    if (!proceed) return;
+    isDirty = false;
+  }
+
   const submitBtn = document.getElementById("btn-submit-session-modal");
   submitBtn.disabled = true;
   submitBtn.textContent = "Saving…";
@@ -699,7 +764,16 @@ async function handleSessionFormSubmit(e) {
     await loadSessionsForFilters();
   } catch (err) {
     console.error("Error saving session:", err);
-    toast.error(`Failed to save session: ${err.message}`);
+    if (
+      err.message &&
+      (err.message.includes("uq_attendance_sessions") ||
+        err.message.includes("unique") ||
+        err.message.includes("already exists"))
+    ) {
+      toast.error("A session for this branch, class, date, and start time already exists.");
+    } else {
+      toast.error(`Failed to save session: ${err.message}`);
+    }
   } finally {
     submitBtn.disabled = false;
     submitBtn.textContent = "Save & Load Roster";

@@ -148,7 +148,7 @@ BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = public;
 
 DROP TRIGGER IF EXISTS trg_users_updated_at ON public.users;
 CREATE TRIGGER trg_users_updated_at BEFORE UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION set_updated_at();
@@ -164,10 +164,16 @@ CREATE OR REPLACE FUNCTION public.reset_student_password(
 RETURNS boolean
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, auth, pg_temp
 AS $$
 DECLARE
   v_email text;
 BEGIN
+  -- Strict admin check: Only authenticated admins can reset passwords
+  IF NOT is_admin() THEN
+    RAISE EXCEPTION 'Access denied. Only administrators can reset student passwords.';
+  END IF;
+
   v_email := lower(p_admission) || '@students.successacademy.app';
   
   -- 1. Update Supabase Auth encrypted_password
@@ -186,11 +192,15 @@ BEGIN
 END;
 $$;
 
+REVOKE EXECUTE ON FUNCTION public.reset_student_password(text, text) FROM public, anon;
+GRANT EXECUTE ON FUNCTION public.reset_student_password(text, text) TO authenticated;
+
 -- 12. Password Sync Trigger: Automatically syncs password edits in public.students to auth.users
 CREATE OR REPLACE FUNCTION public.trg_sync_student_password_to_auth()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, auth, pg_temp
 AS $$
 BEGIN
   IF (TG_OP = 'UPDATE') AND (NEW.password IS DISTINCT FROM OLD.password) AND (NEW.email IS NOT NULL) THEN
@@ -231,7 +241,49 @@ BEGIN
     WHERE id = auth.uid() AND role = 'admin'
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Helper function to check if current user is an all-branch admin
+CREATE OR REPLACE FUNCTION public.is_all_branch_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.users
+    WHERE id = auth.uid() AND role = 'admin' AND (branch IS NULL OR branch = 'ALL' OR branch = '')
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Backwards compatibility alias
+CREATE OR REPLACE FUNCTION public.is_super_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN is_all_branch_admin();
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Prevent branch admin from elevating their role or changing branch to ALL
+CREATE OR REPLACE FUNCTION public.trg_protect_user_roles()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF (NEW.role IS DISTINCT FROM OLD.role) OR (NEW.branch IS DISTINCT FROM OLD.branch) THEN
+    IF NOT is_all_branch_admin() THEN
+      RAISE EXCEPTION 'Only all-branch administrators can modify user role or branch.';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_protect_user_roles ON public.users;
+CREATE TRIGGER trg_protect_user_roles
+  BEFORE UPDATE ON public.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.trg_protect_user_roles();
 
 -- RLS Policies for Users
 DROP POLICY IF EXISTS "Admins full access to users" ON public.users;
@@ -239,6 +291,41 @@ CREATE POLICY "Admins full access to users" ON public.users FOR ALL USING (is_ad
 
 DROP POLICY IF EXISTS "Users read own profile" ON public.users;
 CREATE POLICY "Users read own profile" ON public.users FOR SELECT USING (auth.uid() = id);
+
+-- Restrict student profile updates: non-admins can only change phone and parent_name
+CREATE OR REPLACE FUNCTION public.trg_protect_student_fields()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF NOT is_admin() THEN
+    IF (NEW.id IS DISTINCT FROM OLD.id) OR
+       (NEW.uid IS DISTINCT FROM OLD.uid) OR
+       (NEW.admission_number IS DISTINCT FROM OLD.admission_number) OR
+       (NEW.name IS DISTINCT FROM OLD.name) OR
+       (NEW.class IS DISTINCT FROM OLD.class) OR
+       (NEW.branch IS DISTINCT FROM OLD.branch) OR
+       (NEW.password IS DISTINCT FROM OLD.password) OR
+       (NEW.email IS DISTINCT FROM OLD.email) OR
+       (NEW.login_disabled IS DISTINCT FROM OLD.login_disabled) OR
+       (NEW.pending_password_reset IS DISTINCT FROM OLD.pending_password_reset) OR
+       (NEW.pending_password_reset_at IS DISTINCT FROM OLD.pending_password_reset_at) OR
+       (NEW.subjects IS DISTINCT FROM OLD.subjects) OR
+       (NEW.created_at IS DISTINCT FROM OLD.created_at) THEN
+      RAISE EXCEPTION 'Non-admins can only update phone and parent_name.';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_protect_student_fields ON public.students;
+CREATE TRIGGER trg_protect_student_fields
+  BEFORE UPDATE ON public.students
+  FOR EACH ROW
+  EXECUTE FUNCTION public.trg_protect_student_fields();
 
 -- RLS Policies for Students
 DROP POLICY IF EXISTS "Admins full access to students" ON public.students;
@@ -248,7 +335,16 @@ DROP POLICY IF EXISTS "Students read own record" ON public.students;
 CREATE POLICY "Students read own record" ON public.students FOR SELECT USING (auth.uid() = uid);
 
 DROP POLICY IF EXISTS "Students update own contact details" ON public.students;
-CREATE POLICY "Students update own contact details" ON public.students FOR UPDATE USING (auth.uid() = uid);
+CREATE POLICY "Students update own contact details" ON public.students
+  FOR UPDATE
+  USING (auth.uid() = uid)
+  WITH CHECK (
+    auth.uid() = uid AND
+    class = (SELECT s.class FROM public.students s WHERE s.uid = auth.uid()) AND
+    branch = (SELECT s.branch FROM public.students s WHERE s.uid = auth.uid()) AND
+    admission_number = (SELECT s.admission_number FROM public.students s WHERE s.uid = auth.uid()) AND
+    login_disabled = (SELECT s.login_disabled FROM public.students s WHERE s.uid = auth.uid())
+  );
 
 -- RLS Policies for Study Logs
 DROP POLICY IF EXISTS "Admins full access to study_logs" ON public.study_logs;
@@ -383,6 +479,59 @@ CREATE INDEX IF NOT EXISTS idx_attendance_records_session_id ON public.attendanc
 CREATE INDEX IF NOT EXISTS idx_attendance_records_student_id ON public.attendance_records(student_id);
 CREATE INDEX IF NOT EXISTS idx_attendance_records_status ON public.attendance_records(status);
 
+-- Ensure unique constraint on (branch, class, date, start_time)
+ALTER TABLE public.attendance_sessions
+  DROP CONSTRAINT IF EXISTS uq_attendance_sessions_branch_class_date_time;
+ALTER TABLE public.attendance_sessions
+  ADD CONSTRAINT uq_attendance_sessions_branch_class_date_time
+  UNIQUE (branch, class, date, start_time);
+
+-- Validation Trigger: Ensure end_time is after start_time when provided
+CREATE OR REPLACE FUNCTION public.trg_validate_attendance_session_times()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF NEW.end_time IS NOT NULL AND NEW.end_time <> '' THEN
+    IF NEW.end_time <= NEW.start_time THEN
+      RAISE EXCEPTION 'End time must be after start time.';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_validate_attendance_session_times ON public.attendance_sessions;
+CREATE TRIGGER trg_validate_attendance_session_times
+  BEFORE INSERT OR UPDATE ON public.attendance_sessions
+  FOR EACH ROW
+  EXECUTE FUNCTION public.trg_validate_attendance_session_times();
+
+-- Immutability Trigger: Block changing class or branch when session already has records
+CREATE OR REPLACE FUNCTION public.trg_protect_attendance_session_immutability()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF (NEW.class IS DISTINCT FROM OLD.class) OR (NEW.branch IS DISTINCT FROM OLD.branch) THEN
+    IF EXISTS (SELECT 1 FROM public.attendance_records WHERE session_id = OLD.id) THEN
+      RAISE EXCEPTION 'Cannot modify class or branch of an attendance session that already has attendance records.';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_protect_attendance_session_immutability ON public.attendance_sessions;
+CREATE TRIGGER trg_protect_attendance_session_immutability
+  BEFORE UPDATE ON public.attendance_sessions
+  FOR EACH ROW
+  EXECUTE FUNCTION public.trg_protect_attendance_session_immutability();
+
 -- Updated At Triggers for Attendance
 DROP TRIGGER IF EXISTS trg_attendance_sessions_updated_at ON public.attendance_sessions;
 CREATE TRIGGER trg_attendance_sessions_updated_at
@@ -411,7 +560,7 @@ BEGIN
       AND (branch = target_branch OR branch IS NULL OR branch = 'ALL' OR branch = '')
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- RLS Policies for attendance_sessions
 DROP POLICY IF EXISTS "Admins manage attendance sessions for permitted branch" ON public.attendance_sessions;
@@ -433,7 +582,12 @@ CREATE POLICY "Students read attendance sessions for their class & branch"
       SELECT 1 FROM public.students s
       WHERE s.uid = auth.uid()
         AND s.branch = public.attendance_sessions.branch
-        AND s.class = public.attendance_sessions.class
+        AND (
+          s.class = public.attendance_sessions.class
+          OR s.class = ('Class ' || public.attendance_sessions.class)
+          OR public.attendance_sessions.class = ('Class ' || s.class)
+          OR regexp_replace(s.class, '^Class\s*', '', 'i') = regexp_replace(public.attendance_sessions.class, '^Class\s*', '', 'i')
+        )
     )
   );
 
@@ -459,7 +613,10 @@ BEGIN
   WHERE id = p_session_id;
   RETURN v_branch;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+GRANT EXECUTE ON FUNCTION public.get_session_branch(UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.is_admin_for_branch(TEXT) TO authenticated;
 
 -- RLS Policies for attendance_records
 DROP POLICY IF EXISTS "Admins manage attendance records for permitted branch" ON public.attendance_records;
@@ -481,6 +638,107 @@ CREATE POLICY "Students read own attendance records"
     )
   );
 
+-- 10. Server-side RPC for admin attendance summary aggregation
+CREATE OR REPLACE FUNCTION public.get_attendance_summary(
+  p_branch text DEFAULT NULL,
+  p_class text DEFAULT NULL,
+  p_start_date date DEFAULT NULL,
+  p_end_date date DEFAULT NULL
+)
+RETURNS TABLE (
+  sessions_count bigint,
+  total_records bigint,
+  present_count bigint,
+  late_count bigint,
+  absent_count bigint,
+  unmarked_count bigint,
+  attended_count bigint,
+  attendance_rate numeric
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_branch text;
+  v_class text;
+  v_user_branch text;
+  v_sessions_count bigint;
+  v_total_records bigint;
+  v_present bigint;
+  v_late bigint;
+  v_absent bigint;
+  v_attended bigint;
+  v_rate numeric;
+BEGIN
+  -- Strict admin authorization check
+  IF NOT is_admin() THEN
+    RAISE EXCEPTION 'Access denied. Only administrators can query attendance summaries.';
+  END IF;
+
+  -- Enforce branch isolation for branch admins
+  IF NOT is_all_branch_admin() THEN
+    SELECT u.branch INTO v_user_branch FROM public.users u WHERE u.id = auth.uid();
+    v_branch := v_user_branch;
+  ELSE
+    IF p_branch IS NULL OR p_branch = '' OR p_branch = 'ALL' THEN
+      v_branch := NULL;
+    ELSE
+      v_branch := p_branch;
+    END IF;
+  END IF;
+
+  v_class := NULLIF(trim(regexp_replace(COALESCE(p_class, ''), '^class\s*', '', 'i')), '');
+
+  -- Count total sessions in scope
+  SELECT COUNT(*)
+  INTO v_sessions_count
+  FROM public.attendance_sessions s
+  WHERE (v_branch IS NULL OR s.branch = v_branch)
+    AND (v_class IS NULL OR regexp_replace(s.class, '^class\s*', '', 'i') = v_class)
+    AND (p_start_date IS NULL OR s.date >= p_start_date)
+    AND (p_end_date IS NULL OR s.date <= p_end_date);
+
+  -- Aggregate attendance records in scope
+  SELECT
+    COALESCE(COUNT(*), 0),
+    COALESCE(COUNT(*) FILTER (WHERE r.status = 'Present'), 0),
+    COALESCE(COUNT(*) FILTER (WHERE r.status = 'Late'), 0),
+    COALESCE(COUNT(*) FILTER (WHERE r.status = 'Absent'), 0)
+  INTO
+    v_total_records,
+    v_present,
+    v_late,
+    v_absent
+  FROM public.attendance_records r
+  JOIN public.attendance_sessions s ON s.id = r.session_id
+  WHERE (v_branch IS NULL OR s.branch = v_branch)
+    AND (v_class IS NULL OR regexp_replace(s.class, '^class\s*', '', 'i') = v_class)
+    AND (p_start_date IS NULL OR s.date >= p_start_date)
+    AND (p_end_date IS NULL OR s.date <= p_end_date);
+
+  v_attended := v_present + v_late;
+  IF (v_present + v_late + v_absent) > 0 THEN
+    v_rate := ROUND(((v_present + v_late)::numeric / (v_present + v_late + v_absent)) * 100, 1);
+  ELSE
+    v_rate := 0;
+  END IF;
+
+  RETURN QUERY SELECT
+    v_sessions_count,
+    v_total_records,
+    v_present,
+    v_late,
+    v_absent,
+    0::bigint,
+    v_attended,
+    v_rate;
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.get_attendance_summary(text, text, date, date) FROM public, anon;
+GRANT EXECUTE ON FUNCTION public.get_attendance_summary(text, text, date, date) TO authenticated;
+
 -- ==========================================================================
 -- INSTRUCTIONS TO BOOTSTRAP FIRST ADMIN:
 -- 1. In Supabase Dashboard → Authentication → Users → Add User:
@@ -490,7 +748,7 @@ CREATE POLICY "Students read own attendance records"
 --
 -- 2. Run the following SQL replacing '<ADMIN_USER_UID>' with the copied UID:
 -- INSERT INTO public.users (id, email, name, role, branch)
--- VALUES ('<ADMIN_USER_UID>', 'admin@yourinstitution.com', 'System Administrator', 'admin', 'MAIN')
+-- VALUES ('<ADMIN_USER_UID>', 'admin@yourinstitution.com', 'System Administrator', 'admin', 'ALL')
 -- ON CONFLICT (id) DO NOTHING;
 -- ==========================================================================
 
