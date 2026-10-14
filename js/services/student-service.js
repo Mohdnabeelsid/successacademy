@@ -101,8 +101,27 @@ export async function createStudentWithCredentials(studentData) {
   return { id, uid, admissionNumber, password };
 }
 
+/**
+ * Returns students from the database.
+ * By default, students whose login is disabled are excluded from all lists
+ * across the portal (rosters, dashboards, reports, exam marks, attendance).
+ *
+ * @param {Object}  filters
+ * @param {string}  [filters.branch]          - Filter by branch code
+ * @param {string}  [filters.class]           - Filter by class
+ * @param {string}  [filters.search]          - Filter by name / admission number / phone
+ * @param {boolean} [filters.includeDisabled] - Set true ONLY on Student Management
+ *                                              page so admins can manage disabled accounts.
+ *                                              Everywhere else this must stay false/omitted.
+ */
 export async function listStudents(filters = {}) {
   let students = await getAllRows(TABLES.STUDENTS, { orderByField: "name", direction: "asc" });
+
+  // Hide disabled students everywhere unless the caller explicitly opts in
+  if (!filters.includeDisabled) {
+    students = students.filter((s) => !s.loginDisabled);
+  }
+
   if (filters.branch) students = students.filter((s) => s.branch === filters.branch);
   if (filters.class) students = students.filter((s) => s.class === filters.class);
   if (filters.search) {
@@ -116,6 +135,7 @@ export async function listStudents(filters = {}) {
   }
   return students;
 }
+
 
 export async function getStudent(id) {
   return getRowById(TABLES.STUDENTS, id);

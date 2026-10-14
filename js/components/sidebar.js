@@ -9,6 +9,7 @@ import { getTheme, toggleTheme } from "../utils/theme.js";
 const ADMIN_LINKS = [
   { href: "admin-dashboard.html", label: "Dashboard", icon: "grid", key: "dashboard" },
   { href: "student-management.html", label: "Students", icon: "users", key: "students" },
+  { href: "attendance-management.html", label: "Attendance", icon: "calendar-check", key: "attendance" },
   { href: "study-log-management.html", label: "Study Logs", icon: "check-square", key: "logs" },
   { href: "admin-exams.html", label: "Exams & Marks", icon: "award", key: "exams" },
   { href: "reports.html", label: "Reports", icon: "bar-chart", key: "reports" },
@@ -17,6 +18,7 @@ const ADMIN_LINKS = [
 
 const STUDENT_LINKS = [
   { href: "student-dashboard.html", label: "Dashboard", icon: "grid", key: "dashboard" },
+  { href: "student-attendance.html", label: "Attendance", icon: "calendar-check", key: "attendance" },
   { href: "student-study-logs.html", label: "Study Logs", icon: "check-square", key: "logs" },
   { href: "student-exams.html", label: "My Exams", icon: "award", key: "exams" },
   { href: "student-profile.html", label: "My Profile", icon: "user", key: "profile" },
@@ -25,6 +27,7 @@ const STUDENT_LINKS = [
 
 const ICONS = {
   grid: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
+  "calendar-check": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>',
   users: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
   "check-square": '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
   award: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>',

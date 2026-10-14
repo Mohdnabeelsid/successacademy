@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attendance Management — SUCCESS Learning Log</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <style>
+    /* Attendance specific styles */
+    .session-chips-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sp-2);
+      align-items: center;
+      margin-top: var(--sp-2);
+    }
+
+    .session-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px;
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-full);
+      background: var(--surface-0);
+      font-size: var(--fs-xs);
+      font-weight: 600;
+      color: var(--c-text);
+      cursor: pointer;
+      transition: all var(--dur-fast) var(--ease-standard);
+      user-select: none;
+    }
+
+    .session-chip:hover {
+      border-color: var(--c-primary);
+      background: var(--c-primary-soft);
+      color: var(--c-primary);
+    }
+
+    .session-chip.active {
+      border-color: var(--c-primary);
+      background: var(--c-primary);
+      color: var(--c-white);
+      box-shadow: 0 2px 8px rgba(15, 161, 93, 0.25);
+    }
+
+    .status-toggle-group {
+      display: inline-flex;
+      background: var(--surface-1);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-sm);
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .status-btn {
+      border: none;
+      background: transparent;
+      padding: 6px 12px;
+      font-size: var(--fs-xs);
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--c-text-muted);
+      transition: all var(--dur-fast) ease;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .status-btn:hover {
+      color: var(--c-text);
+      background: rgba(0, 0, 0, 0.04);
+    }
+
+    [data-theme="dark"] .status-btn:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .status-btn.selected-present {
+      background: #0FA15D !important;
+      color: #FFFFFF !important;
+      box-shadow: 0 1px 4px rgba(15, 161, 93, 0.3);
+    }
+
+    .status-btn.selected-late {
+      background: #B7791F !important;
+      color: #FFFFFF !important;
+      box-shadow: 0 1px 4px rgba(183, 121, 31, 0.3);
+    }
+
+    .status-btn.selected-absent {
+      background: #B42318 !important;
+      color: #FFFFFF !important;
+      box-shadow: 0 1px 4px rgba(180, 35, 24, 0.3);
+    }
+
+    .row-present {
+      background-color: rgba(15, 161, 93, 0.02);
+    }
+
+    .row-late {
+      background-color: rgba(183, 121, 31, 0.03);
+    }
+
+    .row-absent {
+      background-color: rgba(180, 35, 24, 0.04);
+    }
+
+    .attendance-rate-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: var(--r-full);
+      font-size: var(--fs-xs);
+      font-weight: 700;
+    }
+
+    .unsaved-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #EAB308;
+      display: inline-block;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+  </style>
+</head>
+
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <div class="page-loader" id="page-loader">
+    <div class="spinner spinner-dark"></div>
+  </div>
+
+  <div class="app-shell">
+    <div id="sidebar-root"></div>
+
+    <main class="main" id="main-content" tabindex="-1">
+      <header class="topbar">
+        <div class="flex items-center gap-3">
+          <button class="btn-icon menu-toggle" id="menu-toggle" aria-label="Open menu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+          <div>
+            <h1>Attendance Management</h1>
+            <div class="topbar-sub" id="admin-branch-badge">Branch: Mannancherry</div>
+          </div>
+        </div>
+        <div class="topbar-actions flex items-center gap-2">
+          <button class="btn btn-ghost btn-sm" id="btn-create-session-modal">
+            ➕ New Session
+          </button>
+          <button class="btn btn-primary btn-sm" id="btn-save-attendance" disabled>
+            💾 Save Attendance
+          </button>
+        </div>
+      </header>
+
+      <div class="page-body">
+        <!-- Control / Filter Bar -->
+        <div class="card" style="margin-bottom: var(--sp-4);">
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--sp-3); align-items:flex-end;">
+            <div class="field" style="margin:0;">
+              <label for="filter-branch">Branch</label>
+              <select id="filter-branch">
+                <option value="MAN">Mannancherry (MAN)</option>
+                <option value="ALP">Alappuzha (ALP)</option>
+              </select>
+            </div>
+
+            <div class="field" style="margin:0;">
+              <label for="filter-class">Class</label>
+              <select id="filter-class">
+                <option value="5">Class 5</option>
+                <option value="6">Class 6</option>
+                <option value="7">Class 7</option>
+                <option value="8">Class 8</option>
+                <option value="9">Class 9</option>
+                <option value="10" selected>Class 10</option>
+                <option value="11 Science">Class 11 Science</option>
+                <option value="11 Commerce">Class 11 Commerce</option>
+                <option value="12 Science">Class 12 Science</option>
+                <option value="12 Commerce">Class 12 Commerce</option>
+              </select>
+            </div>
+
+            <div class="field" style="margin:0;">
+              <label for="filter-date">Date (IST)</label>
+              <input type="date" id="filter-date" />
+            </div>
+
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-ghost btn-sm" id="btn-today-date" style="flex:1;">
+                Today
+              </button>
+              <button class="btn btn-primary btn-sm" id="btn-load-sessions" style="flex:1;">
+                Load Sessions
+              </button>
+            </div>
+          </div>
+
+          <!-- Session selection bar on the selected date -->
+          <div style="margin-top: var(--sp-4); padding-top: var(--sp-3); border-top: 1px solid var(--c-border);">
+            <div class="flex items-center justify-between" style="flex-wrap:wrap; gap:8px;">
+              <div style="font-size:var(--fs-xs); font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--c-text-muted);">
+                Sessions on this date (<span id="session-count-label">0</span>)
+              </div>
+              <button class="btn btn-ghost btn-sm" id="btn-add-session-inline" style="padding:4px 10px; font-size:var(--fs-xs);">
+                + Add Another Session on this Date
+              </button>
+            </div>
+            <div class="session-chips-container" id="session-chips-container">
+              <span style="font-size:var(--fs-xs); color:var(--c-text-muted); font-style:italic;">
+                No sessions found for this date & class. Click "+ New Session" to create one.
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Session Banner / Edit Details -->
+        <div class="card" id="active-session-card" style="display:none; margin-bottom: var(--sp-4); background: var(--surface-1); border-left: 4px solid var(--c-primary);">
+          <div class="flex items-center justify-between" style="flex-wrap:wrap; gap:12px;">
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 id="active-session-title" style="margin:0; font-size:var(--fs-lg);">Mathematics</h3>
+                <span style="font-size:var(--fs-xs); color:var(--c-text-muted); font-weight:600;" id="active-session-time">09:00 AM</span>
+              </div>
+              <div style="font-size:var(--fs-xs); color:var(--c-text-muted); margin-top:4px;" id="active-session-meta">
+                Class 10 • Mannancherry • 2 Oct 2026
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button class="btn btn-ghost btn-sm" id="btn-edit-session-details">
+                ✏️ Edit Session
+              </button>
+              <button class="btn btn-ghost btn-sm" id="btn-delete-session" style="color:var(--c-danger); border-color:rgba(180,35,24,0.2);">
+                🗑️ Delete
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Attendance Summary Stat Grid -->
+        <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); margin-bottom: var(--sp-4);">
+          <div class="card card-stat">
+            <div class="stat-label">Total Students</div>
+            <div class="stat-value" id="stat-total">0</div>
+          </div>
+          <div class="card card-stat">
+            <div class="stat-label" style="color:var(--c-success);">Present</div>
+            <div class="stat-value" id="stat-present" style="color:var(--c-success);">0</div>
+          </div>
+          <div class="card card-stat">
+            <div class="stat-label" style="color:var(--c-warning);">Late</div>
+            <div class="stat-value" id="stat-late" style="color:var(--c-warning);">0</div>
+          </div>
+          <div class="card card-stat">
+            <div class="stat-label" style="color:var(--c-danger);">Absent</div>
+            <div class="stat-value" id="stat-absent" style="color:var(--c-danger);">0</div>
+          </div>
+          <div class="card card-stat">
+            <div class="stat-label">Attendance Rate</div>
+            <div class="stat-value" id="stat-rate" style="color:var(--c-primary);">0%</div>
+          </div>
+        </div>
+
+        <!-- Roster Actions & Table Card -->
+        <div class="card">
+          <div class="flex items-center justify-between" style="flex-wrap:wrap; gap:12px; margin-bottom: var(--sp-4);">
+            <div class="flex items-center gap-2" style="flex:1; min-width:240px; max-width:400px;">
+              <input type="text" id="roster-search" placeholder="🔍 Search student name or admission no..." style="min-height:36px; font-size:var(--fs-xs);" />
+            </div>
+
+            <div class="flex items-center gap-2" style="flex-wrap:wrap;">
+              <button class="btn btn-ghost btn-sm" id="btn-mark-all-present" title="Mark all displayed students as Present">
+                ✅ Mark All Present
+              </button>
+              <button class="btn btn-ghost btn-sm" id="btn-mark-all-absent" title="Mark all displayed students as Absent">
+                ❌ Mark All Absent
+              </button>
+              <div id="save-status-indicator" style="font-size:var(--fs-xs); font-weight:600; color:var(--c-text-muted); display:inline-flex; align-items:center; gap:6px;">
+                <span>All saved</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:40px;">#</th>
+                  <th style="width:130px;">Admission No.</th>
+                  <th>Student Name</th>
+                  <th style="width:230px;">Attendance Status</th>
+                  <th style="min-width:200px;">Remarks (Optional)</th>
+                </tr>
+              </thead>
+              <tbody id="attendance-roster-body">
+                <tr>
+                  <td colspan="5">
+                    <div class="empty-state" style="padding:var(--sp-6);">
+                      <h4>Select or create a session</h4>
+                      <p style="color:var(--c-text-muted); font-size:var(--fs-xs); margin-top:4px;">
+                        Choose a class and date above to load existing sessions, or click "+ New Session" to take attendance.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Create / Edit Session Modal -->
+  <div class="modal-overlay" id="session-modal">
+    <div class="modal" style="max-width:540px; width:92%;">
+      <div class="modal-header">
+        <h3 id="session-modal-title">Create Attendance Session</h3>
+        <button class="btn-icon" id="close-session-modal" aria-label="Close modal">✕</button>
+      </div>
+
+      <form id="session-form">
+        <input type="hidden" id="modal-session-id" value="" />
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-3);">
+          <div class="field">
+            <label for="modal-branch">Branch</label>
+            <select id="modal-branch" required>
+              <option value="MAN">Mannancherry (MAN)</option>
+              <option value="ALP">Alappuzha (ALP)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="modal-class">Class</label>
+            <select id="modal-class" required>
+              <option value="5">Class 5</option>
+              <option value="6">Class 6</option>
+              <option value="7">Class 7</option>
+              <option value="8">Class 8</option>
+              <option value="9">Class 9</option>
+              <option value="10" selected>Class 10</option>
+              <option value="11 Science">Class 11 Science</option>
+              <option value="11 Commerce">Class 11 Commerce</option>
+              <option value="12 Science">Class 12 Science</option>
+              <option value="12 Commerce">Class 12 Commerce</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-3);">
+          <div class="field">
+            <label for="modal-date">Date</label>
+            <input type="date" id="modal-date" required />
+          </div>
+
+          <div class="field">
+            <label for="modal-title">Subject / Session Title</label>
+            <input type="text" id="modal-title" placeholder="e.g. Mathematics, Science, Mentoring" />
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-3);">
+          <div class="field">
+            <label for="modal-start-time">Starting Time *</label>
+            <input type="time" id="modal-start-time" required />
+          </div>
+
+          <div class="field">
+            <label for="modal-end-time">Ending Time (Optional)</label>
+            <input type="time" id="modal-end-time" />
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between" style="margin-top:var(--sp-5); border-top:1px solid var(--c-border); padding-top:var(--sp-4);">
+          <button type="button" class="btn btn-ghost" id="btn-cancel-session-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-session-modal">Save & Load Roster</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="../js/pages/attendance-management.js"></script>
+</body>
+
+</html>

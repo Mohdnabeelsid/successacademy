@@ -24,6 +24,8 @@ export const TABLES = {
   STUDY_LOGS: "study_logs",
   EXAMS: "exams",
   EXAM_MARKS: "exam_marks",
+  ATTENDANCE_SESSIONS: "attendance_sessions",
+  ATTENDANCE_RECORDS: "attendance_records",
   USERS: "users",
   BRANCHES: "branches",
   CLASSES: "classes",

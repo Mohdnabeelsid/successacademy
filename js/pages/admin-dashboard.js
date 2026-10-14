@@ -6,6 +6,7 @@ import { getAllLogs, LOG_STATUS, calcStreak } from "../services/studylog-service
 import { formatISTFullDate, getISTWeekRange, getISTTodayIso } from "../utils/date-time.js";
 // Fix #9: import escapeHtml to prevent XSS when rendering student names/subjects into innerHTML
 import { escapeHtml } from "../utils/exam-ui.js";
+import { getTodayAttendanceSummary } from "../services/attendance-service.js";
 
 let allStudents = [];
 let allLogs = [];
@@ -17,9 +18,28 @@ let allLogs = [];
 
     document.getElementById("today-label").textContent = formatISTFullDate();
 
-    const [studentsData, logsData] = await Promise.all([listStudents(), getAllLogs()]);
+    // Branch context
+    const branch = admin.branch || "MAN";
+    const branchName = branch === "ALP" ? "Alappuzha Campus" : "Mannancherry Campus";
+    const branchEl = document.getElementById("att-summary-branch");
+    if (branchEl) branchEl.textContent = branchName;
+
+    const [studentsData, logsData, attSummary] = await Promise.all([
+      listStudents(),
+      getAllLogs(),
+      getTodayAttendanceSummary(branch).catch((e) => {
+        console.warn("Failed to load attendance summary:", e);
+        return { sessionsCount: 0, presentCount: 0, lateCount: 0, absentCount: 0, attendanceRate: 0 };
+      })
+    ]);
     allStudents = studentsData;
     allLogs = logsData;
+
+    // Populate attendance summary
+    document.getElementById("stat-att-today-sessions").textContent = attSummary.sessionsCount;
+    document.getElementById("stat-att-today-present").textContent = attSummary.presentCount;
+    document.getElementById("stat-att-today-absent").textContent = attSummary.absentCount;
+    document.getElementById("stat-att-overall-rate").textContent = `${attSummary.attendanceRate}%`;
 
     document.getElementById("stat-students").textContent = allStudents.length;
 

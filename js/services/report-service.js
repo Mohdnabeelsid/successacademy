@@ -57,3 +57,41 @@ export function buildLeaderboard(students, logsByStudentId, rankBy = "streak") {
   rows.sort((a, b) => b[key] - a[key]);
   return rows.map((r, i) => ({ rank: i + 1, ...r }));
 }
+
+/**
+ * Builds attendance report rows for CSV/Excel export and reporting.
+ * Computes total sessions, present, late, absent, attended, and attendance percentage.
+ * @param {Array<Object>} students
+ * @param {Object} attendanceByStudentId - Map of studentId -> Array of attendance records
+ * @returns {Array<Object>}
+ */
+export function buildAttendanceReportRows(students, attendanceByStudentId) {
+  return students.map((s) => {
+    const records = attendanceByStudentId[s.id] || [];
+    let present = 0;
+    let late = 0;
+    let absent = 0;
+    records.forEach((r) => {
+      if (r.status === "Present") present++;
+      else if (r.status === "Late") late++;
+      else if (r.status === "Absent") absent++;
+    });
+    const total = records.length;
+    const attended = present + late;
+    const percentage = total > 0 ? Math.round(((present + late) / total) * 1000) / 10 : 0;
+    return {
+      studentId: s.id,
+      admissionNumber: s.admissionNumber,
+      name: s.name,
+      class: s.class,
+      branch: s.branch,
+      totalSessions: total,
+      present,
+      late,
+      absent,
+      attended,
+      attendancePercentage: percentage
+    };
+  });
+}
+

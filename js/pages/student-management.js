@@ -47,12 +47,14 @@ async function refreshList() {
   const filters = {
     search: document.getElementById("search-input")?.value.trim() || "",
     branch: document.getElementById("filter-branch")?.value || "",
-    class: document.getElementById("filter-class")?.value || ""
+    class: document.getElementById("filter-class")?.value || "",
+    includeDisabled: true  // Student Management must show disabled students so admins can re-enable them
   };
   currentPage = 1;
   allStudents = await listStudents(filters);
   renderTable(allStudents);
 }
+
 
 function renderTable(students) {
   const body = document.getElementById("students-body");

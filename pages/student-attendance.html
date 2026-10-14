@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Attendance — SUCCESS Learning Log</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <div class="page-loader" id="page-loader">
+    <div class="spinner spinner-dark"></div>
+  </div>
+
+  <div class="app-shell">
+    <div id="sidebar-root"></div>
+
+    <main class="main" id="main-content" tabindex="-1">
+      <header class="topbar">
+        <div class="flex items-center gap-3">
+          <button class="btn-icon menu-toggle" id="menu-toggle" aria-label="Open menu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+          <div>
+            <h1>My Attendance</h1>
+            <div class="topbar-sub" id="student-meta-label">—</div>
+          </div>
+        </div>
+        <div class="topbar-actions flex items-center gap-2">
+          <a href="student-dashboard.html" class="btn btn-ghost btn-sm">
+            🏠 Dashboard
+          </a>
+          <a href="student-study-logs.html" class="btn btn-ghost btn-sm">
+            📋 My Study Logs
+          </a>
+          <a href="student-exams.html" class="btn btn-ghost btn-sm">
+            🏆 My Exams
+          </a>
+        </div>
+      </header>
+
+      <div class="page-body">
+        <!-- Stat Grid -->
+        <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: var(--sp-5);">
+          <div class="card card-stat">
+            <div class="stat-label">Attendance Rate</div>
+            <div class="stat-value" id="stat-student-pct" style="color:var(--c-primary);">—</div>
+            <div id="stat-student-pct-sub" style="font-size:var(--fs-xs); font-weight:600; margin-top:4px;">
+              Attended / Total
+            </div>
+          </div>
+
+          <div class="card card-stat">
+            <div class="stat-label">Total Sessions</div>
+            <div class="stat-value" id="stat-student-total">0</div>
+            <div style="font-size:var(--fs-xs); color:var(--c-text-muted); margin-top:4px;">Recorded</div>
+          </div>
+
+          <div class="card card-stat">
+            <div class="stat-label" style="color:var(--c-success);">Present</div>
+            <div class="stat-value" id="stat-student-present" style="color:var(--c-success);">0</div>
+            <div style="font-size:var(--fs-xs); color:var(--c-text-muted); margin-top:4px;">On-time</div>
+          </div>
+
+          <div class="card card-stat">
+            <div class="stat-label" style="color:var(--c-warning);">Late</div>
+            <div class="stat-value" id="stat-student-late" style="color:var(--c-warning);">0</div>
+            <div style="font-size:var(--fs-xs); color:var(--c-text-muted); margin-top:4px;">Counted as attended</div>
+          </div>
+
+          <div class="card card-stat">
+            <div class="stat-label" style="color:var(--c-danger);">Absent</div>
+            <div class="stat-value" id="stat-student-absent" style="color:var(--c-danger);">0</div>
+            <div style="font-size:var(--fs-xs); color:var(--c-text-muted); margin-top:4px;">Missed</div>
+          </div>
+        </div>
+
+        <!-- Attendance History Table Card -->
+        <div class="card">
+          <div class="flex items-center justify-between" style="flex-wrap:wrap; gap:12px; margin-bottom:var(--sp-4);">
+            <div>
+              <h3 style="margin:0; font-size:var(--fs-base); font-weight:700;">Session Attendance History</h3>
+              <p style="margin:2px 0 0; font-size:var(--fs-xs); color:var(--c-text-muted);">
+                Complete record of class sessions, timings, and attendance status
+              </p>
+            </div>
+
+            <!-- Filters -->
+            <div class="flex items-center gap-2" style="flex-wrap:wrap;">
+              <select id="filter-status-select" style="min-height:36px; padding:6px 10px; font-size:var(--fs-xs); border:1px solid var(--c-border); border-radius:var(--r-sm); background:var(--surface-0); color:var(--c-text);">
+                <option value="">All Statuses</option>
+                <option value="Present">Present Only</option>
+                <option value="Late">Late Only</option>
+                <option value="Absent">Absent Only</option>
+              </select>
+
+              <select id="filter-time-range" style="min-height:36px; padding:6px 10px; font-size:var(--fs-xs); border:1px solid var(--c-border); border-radius:var(--r-sm); background:var(--surface-0); color:var(--c-text);">
+                <option value="all">All Sessions</option>
+                <option value="30days">Last 30 Days</option>
+                <option value="thisMonth">This Month</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:40px;">#</th>
+                  <th>Date</th>
+                  <th>Starting Time</th>
+                  <th>Session Title / Subject</th>
+                  <th>Status</th>
+                  <th>Remarks</th>
+                </tr>
+              </thead>
+              <tbody id="student-attendance-body">
+                <tr>
+                  <td colspan="6">
+                    <div class="empty-state">Loading attendance records…</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="../js/pages/student-attendance.js"></script>
+</body>
+
+</html>

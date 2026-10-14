@@ -340,6 +340,148 @@ DROP POLICY IF EXISTS "Admins manage academic_years" ON public.academic_years;
 CREATE POLICY "Admins manage academic_years" ON public.academic_years FOR ALL USING (is_admin());
 
 -- ==========================================================================
+-- 9. Attendance Management System: Sessions & Records
+-- ==========================================================================
+
+-- Attendance Sessions Table
+CREATE TABLE IF NOT EXISTS public.attendance_sessions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  branch TEXT NOT NULL,
+  class TEXT NOT NULL,
+  date DATE NOT NULL,
+  start_time TEXT NOT NULL,
+  end_time TEXT DEFAULT '',
+  title TEXT DEFAULT '',
+  academic_year TEXT DEFAULT '2026-2027',
+  created_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Ensure session_type column is removed if previously created
+ALTER TABLE public.attendance_sessions DROP COLUMN IF EXISTS session_type;
+
+-- Attendance Records Table
+CREATE TABLE IF NOT EXISTS public.attendance_records (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  session_id UUID NOT NULL REFERENCES public.attendance_sessions(id) ON DELETE CASCADE,
+  student_id UUID NOT NULL REFERENCES public.students(id) ON DELETE CASCADE,
+  status TEXT NOT NULL CHECK (status IN ('Present', 'Late', 'Absent')),
+  remarks TEXT DEFAULT '',
+  marked_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  marked_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(session_id, student_id)
+);
+
+-- Indexes for Attendance
+CREATE INDEX IF NOT EXISTS idx_attendance_sessions_branch ON public.attendance_sessions(branch);
+CREATE INDEX IF NOT EXISTS idx_attendance_sessions_class ON public.attendance_sessions(class);
+CREATE INDEX IF NOT EXISTS idx_attendance_sessions_date ON public.attendance_sessions(date);
+CREATE INDEX IF NOT EXISTS idx_attendance_sessions_composite ON public.attendance_sessions(branch, class, date);
+CREATE INDEX IF NOT EXISTS idx_attendance_records_session_id ON public.attendance_records(session_id);
+CREATE INDEX IF NOT EXISTS idx_attendance_records_student_id ON public.attendance_records(student_id);
+CREATE INDEX IF NOT EXISTS idx_attendance_records_status ON public.attendance_records(status);
+
+-- Updated At Triggers for Attendance
+DROP TRIGGER IF EXISTS trg_attendance_sessions_updated_at ON public.attendance_sessions;
+CREATE TRIGGER trg_attendance_sessions_updated_at
+  BEFORE UPDATE ON public.attendance_sessions
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+DROP TRIGGER IF EXISTS trg_attendance_records_updated_at ON public.attendance_records;
+CREATE TRIGGER trg_attendance_records_updated_at
+  BEFORE UPDATE ON public.attendance_records
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- Enable RLS
+ALTER TABLE public.attendance_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.attendance_records ENABLE ROW LEVEL SECURITY;
+
+-- Helper function to check branch admin access
+-- If admin has a specific branch ('MAN', 'ALP', etc.), they can access only that branch.
+-- If admin branch is NULL or 'ALL', they can access all branches.
+CREATE OR REPLACE FUNCTION is_admin_for_branch(target_branch TEXT)
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.users
+    WHERE id = auth.uid()
+      AND role = 'admin'
+      AND (branch = target_branch OR branch IS NULL OR branch = 'ALL' OR branch = '')
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- RLS Policies for attendance_sessions
+DROP POLICY IF EXISTS "Admins manage attendance sessions for permitted branch" ON public.attendance_sessions;
+CREATE POLICY "Admins manage attendance sessions for permitted branch"
+  ON public.attendance_sessions
+  FOR ALL
+  USING (is_admin_for_branch(branch))
+  WITH CHECK (is_admin_for_branch(branch));
+
+-- Students can read sessions for their own class & branch.
+-- NOTE: We do NOT join back to attendance_records here, to avoid
+-- the RLS recursion cycle (sessions <-> records cross-reference).
+DROP POLICY IF EXISTS "Students read attendance sessions for their class & branch" ON public.attendance_sessions;
+CREATE POLICY "Students read attendance sessions for their class & branch"
+  ON public.attendance_sessions
+  FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.students s
+      WHERE s.uid = auth.uid()
+        AND s.branch = public.attendance_sessions.branch
+        AND s.class = public.attendance_sessions.class
+    )
+  );
+
+-- ==========================================================================
+-- FIX: Infinite RLS recursion — attendance_records admin policy
+-- Root cause: querying attendance_sessions (RLS-enabled) from inside the
+-- attendance_records policy caused Postgres to detect a policy cycle:
+--   attendance_records policy → attendance_sessions RLS →
+--   attendance_sessions student policy → attendance_records → loop!
+--
+-- Fix: a SECURITY DEFINER function reads attendance_sessions bypassing RLS,
+-- so no RLS policy is re-entered during evaluation.
+-- ==========================================================================
+
+-- Helper: reads session branch bypassing RLS (SECURITY DEFINER)
+CREATE OR REPLACE FUNCTION get_session_branch(p_session_id UUID)
+RETURNS TEXT AS $$
+DECLARE
+  v_branch TEXT;
+BEGIN
+  SELECT branch INTO v_branch
+  FROM public.attendance_sessions
+  WHERE id = p_session_id;
+  RETURN v_branch;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- RLS Policies for attendance_records
+DROP POLICY IF EXISTS "Admins manage attendance records for permitted branch" ON public.attendance_records;
+CREATE POLICY "Admins manage attendance records for permitted branch"
+  ON public.attendance_records
+  FOR ALL
+  USING (is_admin_for_branch(get_session_branch(session_id)))
+  WITH CHECK (is_admin_for_branch(get_session_branch(session_id)));
+
+DROP POLICY IF EXISTS "Students read own attendance records" ON public.attendance_records;
+CREATE POLICY "Students read own attendance records"
+  ON public.attendance_records
+  FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.students s
+      WHERE s.id = public.attendance_records.student_id
+        AND s.uid = auth.uid()
+    )
+  );
+
+-- ==========================================================================
 -- INSTRUCTIONS TO BOOTSTRAP FIRST ADMIN:
 -- 1. In Supabase Dashboard → Authentication → Users → Add User:
 --    Email: admin@yourinstitution.com
