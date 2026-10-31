@@ -17,7 +17,8 @@ import {
   getISTNowIsoTimestamp,
   getISTTodayIso,
   getAcademicYear,
-  format12Hour
+  format12Hour,
+  parseTimeToMinutes
 } from "../utils/date-time.js";
 import { listStudents, getStudent } from "./student-service.js";
 import { buildAttendanceReportRows } from "./report-service.js";
@@ -80,7 +81,11 @@ export async function createAttendanceSession(sessionData) {
   if (!date) throw new Error("Date is required.");
   if (!startTime) throw new Error("Session start time is required.");
 
-  if (endTime && endTime <= startTime) {
+  const startMin = parseTimeToMinutes(startTime);
+  const endMin = parseTimeToMinutes(endTime);
+  if (startMin !== null && endMin !== null && endMin <= startMin) {
+    throw new Error("End time must be after start time.");
+  } else if (endTime && endTime <= startTime) {
     throw new Error("End time must be after start time.");
   }
 
@@ -137,7 +142,11 @@ export async function updateAttendanceSession(id, sessionData) {
   const startTime = sessionData.startTime !== undefined ? String(sessionData.startTime).trim() : existing.startTime;
   const endTime = sessionData.endTime !== undefined ? String(sessionData.endTime).trim() : existing.endTime;
 
-  if (endTime && startTime && endTime <= startTime) {
+  const startMin = parseTimeToMinutes(startTime);
+  const endMin = parseTimeToMinutes(endTime);
+  if (startMin !== null && endMin !== null && endMin <= startMin) {
+    throw new Error("End time must be after start time.");
+  } else if (endTime && startTime && endTime <= startTime) {
     throw new Error("End time must be after start time.");
   }
 
@@ -155,6 +164,14 @@ export async function updateAttendanceSession(id, sessionData) {
  */
 export async function deleteAttendanceSession(id) {
   if (!id) throw new Error("Session ID is required.");
+  try {
+    await supabase
+      .from(TABLES.ATTENDANCE_RECORDS)
+      .delete()
+      .eq("session_id", id);
+  } catch (err) {
+    console.warn("Could not delete child attendance records:", err);
+  }
   return deleteRowById(TABLES.ATTENDANCE_SESSIONS, id);
 }
 
@@ -459,7 +476,7 @@ export async function updateAttendanceRecord(recordId, updates) {
 export async function getStudentAttendance(studentId, filters = {}) {
   if (!studentId) return [];
 
-  let query = supabase
+    let query = supabase
     .from(TABLES.ATTENDANCE_RECORDS)
     .select(`
       id,
@@ -482,6 +499,16 @@ export async function getStudentAttendance(studentId, filters = {}) {
     `)
     .eq("student_id", studentId)
     .order("marked_at", { ascending: false });
+
+  if (filters.startDate) {
+    query = query.gte("attendance_sessions.date", filters.startDate);
+  }
+  if (filters.endDate) {
+    query = query.lte("attendance_sessions.date", filters.endDate);
+  }
+  if (filters.academicYear) {
+    query = query.eq("attendance_sessions.academic_year", filters.academicYear);
+  }
 
   const { data, error } = await query;
   if (error) {

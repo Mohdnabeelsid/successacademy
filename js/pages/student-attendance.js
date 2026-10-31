@@ -15,12 +15,14 @@ import {
 } from "../utils/date-time.js";
 import {
   getStudentAttendance,
+  listAttendanceSessions,
   ATTENDANCE_STATUS,
   calcAttendancePercentage
 } from "../services/attendance-service.js";
 
 let currentStudent = null;
 let allRecords = [];
+let allSessions = [];
 
 (async function init() {
   try {
@@ -52,8 +54,15 @@ function wireFilterEvents() {
 
 async function loadStudentAttendance() {
   try {
-    allRecords = await getStudentAttendance(currentStudent.id);
-    computeOverallStats(allRecords);
+    const [records, sessions] = await Promise.all([
+      getStudentAttendance(currentStudent.id),
+      listAttendanceSessions({
+        class: currentStudent.class,
+        branch: currentStudent.branch
+      })
+    ]);
+    allRecords = records || [];
+    allSessions = sessions || [];
     applyFilters();
   } catch (err) {
     console.error("Error loading student attendance:", err);
@@ -70,7 +79,7 @@ async function loadStudentAttendance() {
   }
 }
 
-function computeOverallStats(records) {
+function computeOverallStats(records, totalSessionsHeld = 0) {
   let present = 0;
   let late = 0;
   let absent = 0;
@@ -81,14 +90,17 @@ function computeOverallStats(records) {
     else if (r.status === ATTENDANCE_STATUS.ABSENT) absent++;
   });
 
-  const total = records.length;
+  const total = totalSessionsHeld > 0 ? totalSessionsHeld : records.length;
   const attended = present + late;
-  const percentage = calcAttendancePercentage(present, late, total);
+  const unmarked = Math.max(0, total - (present + late + absent));
+  const percentage = total > 0 ? calcAttendancePercentage(present, late, total) : 0;
 
   document.getElementById("stat-student-total").textContent = total;
   document.getElementById("stat-student-present").textContent = present;
   document.getElementById("stat-student-late").textContent = late;
   document.getElementById("stat-student-absent").textContent = absent;
+  const unmarkedEl = document.getElementById("stat-student-unmarked");
+  if (unmarkedEl) unmarkedEl.textContent = unmarked;
 
   const pctEl = document.getElementById("stat-student-pct");
   const pctSubEl = document.getElementById("stat-student-pct-sub");
@@ -97,18 +109,20 @@ function computeOverallStats(records) {
     pctEl.textContent = "—";
     pctSubEl.textContent = "No sessions recorded";
     pctSubEl.style.color = "var(--c-text-muted)";
+    pctEl.style.color = "var(--c-text)";
   } else {
     pctEl.textContent = `${percentage}%`;
+    const unmarkedNote = unmarked > 0 ? ` (${unmarked} unmarked)` : "";
     if (percentage >= 85) {
-      pctSubEl.textContent = `✓ ${attended}/${total} sessions (Excellent)`;
+      pctSubEl.textContent = `✓ ${attended}/${total} sessions (Excellent)${unmarkedNote}`;
       pctSubEl.style.color = "var(--c-success)";
       pctEl.style.color = "var(--c-success)";
     } else if (percentage >= 75) {
-      pctSubEl.textContent = `⚠️ ${attended}/${total} sessions (Satisfactory)`;
+      pctSubEl.textContent = `⚠️ ${attended}/${total} sessions (Satisfactory)${unmarkedNote}`;
       pctSubEl.style.color = "var(--c-warning)";
       pctEl.style.color = "var(--c-warning)";
     } else {
-      pctSubEl.textContent = `❗ ${attended}/${total} sessions (Low Attendance)`;
+      pctSubEl.textContent = `❗ ${attended}/${total} sessions (Low Attendance)${unmarkedNote}`;
       pctSubEl.style.color = "var(--c-danger)";
       pctEl.style.color = "var(--c-danger)";
     }
@@ -119,24 +133,38 @@ function applyFilters() {
   const statusFilter = document.getElementById("filter-status-select").value;
   const rangeFilter = document.getElementById("filter-time-range").value;
 
-  let filtered = [...allRecords];
-
-  // Apply Status Filter
-  if (statusFilter) {
-    filtered = filtered.filter((r) => r.status === statusFilter);
-  }
-
-  // Apply Date Range Filter
   const today = getISTTodayIso();
+  let startIso = null;
+  let endIso = null;
+
   if (rangeFilter === "30days") {
-    const startIso = addDaysToIso(today, -30);
-    filtered = filtered.filter((r) => r.date >= startIso);
+    startIso = addDaysToIso(today, -30);
   } else if (rangeFilter === "thisMonth") {
-    const { startIso, endIso } = getISTMonthRange();
-    filtered = filtered.filter((r) => r.date >= startIso && r.date <= endIso);
+    const range = getISTMonthRange();
+    startIso = range.startIso;
+    endIso = range.endIso;
   }
 
-  renderAttendanceTable(filtered);
+  // Filter sessions in selected range for accurate denominator
+  let sessionsInRange = allSessions;
+  if (startIso) sessionsInRange = sessionsInRange.filter((s) => s.date >= startIso);
+  if (endIso) sessionsInRange = sessionsInRange.filter((s) => s.date <= endIso);
+
+  // Filter records in selected range
+  let recordsInRange = allRecords;
+  if (startIso) recordsInRange = recordsInRange.filter((r) => r.date >= startIso);
+  if (endIso) recordsInRange = recordsInRange.filter((r) => r.date <= endIso);
+
+  // Synchronize top stat cards with selected date range and total sessions held
+  computeOverallStats(recordsInRange, sessionsInRange.length);
+
+  // Filter displayed table rows by chosen status
+  let displayed = [...recordsInRange];
+  if (statusFilter) {
+    displayed = displayed.filter((r) => r.status === statusFilter);
+  }
+
+  renderAttendanceTable(displayed);
 }
 
 function renderAttendanceTable(records) {

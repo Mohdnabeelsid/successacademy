@@ -272,6 +272,33 @@ export function format12Hour(timeStr) {
 }
 
 /**
+ * Parses a time string (in 24h "HH:MM" or 12h "hh:mm AM/PM") into total minutes from midnight.
+ * Returns null if invalid or missing.
+ * @param {string} timeStr
+ * @returns {number|null}
+ */
+export function parseTimeToMinutes(timeStr) {
+  if (!timeStr) return null;
+  const s = String(timeStr).trim();
+  const match12 = s.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/i);
+  if (match12) {
+    let h = parseInt(match12[1], 10);
+    const m = parseInt(match12[2], 10);
+    const ampm = match12[3].toLowerCase();
+    if (ampm === "pm" && h < 12) h += 12;
+    if (ampm === "am" && h === 12) h = 0;
+    return h * 60 + m;
+  }
+  const match24 = s.match(/^(\d{1,2}):(\d{2})$/);
+  if (match24) {
+    const h = parseInt(match24[1], 10);
+    const m = parseInt(match24[2], 10);
+    return h * 60 + m;
+  }
+  return null;
+}
+
+/**
  * Calculates start and end ISO dates ("YYYY-MM-DD") for the week (Monday to Sunday) in IST.
  * @param {Date|string} [date=new Date()]
  * @returns {{startIso: string, endIso: string}}

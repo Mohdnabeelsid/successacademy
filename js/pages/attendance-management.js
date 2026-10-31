@@ -11,7 +11,8 @@ import {
   getISTTodayIso,
   formatISTFullDate,
   format12Hour,
-  formatLogDate
+  formatLogDate,
+  parseTimeToMinutes
 } from "../utils/date-time.js";
 import {
   createAttendanceSession,
@@ -505,33 +506,66 @@ function setStudentStatus(studentId, status) {
 }
 
 /**
+ * Returns roster students currently matching active search query.
+ */
+function getVisibleRosterStudents() {
+  const query = (document.getElementById("roster-search")?.value || "").trim().toLowerCase();
+  if (!query) return currentRoster;
+  return currentRoster.filter((student) => {
+    return (
+      (student.name && student.name.toLowerCase().includes(query)) ||
+      (student.admissionNumber && student.admissionNumber.toLowerCase().includes(query)) ||
+      (student.phone && student.phone.includes(query))
+    );
+  });
+}
+
+/**
  * Quick action: Mark all students in roster as Present.
+ * If search query is active, only marks the visible filtered students.
  */
 function handleMarkAllPresent() {
-  if (!currentRoster.length) return;
-  currentRoster.forEach((r) => {
-    r.status = ATTENDANCE_STATUS.PRESENT;
-    r.dirty = true;
+  const targets = getVisibleRosterStudents();
+  if (!targets.length) return;
+  targets.forEach((r) => {
+    if (r.status !== ATTENDANCE_STATUS.PRESENT) {
+      r.status = ATTENDANCE_STATUS.PRESENT;
+      r.dirty = true;
+    }
   });
   renderRosterTable(currentRoster);
+  const q = document.getElementById("roster-search")?.value;
+  if (q) filterRosterTable(q);
   markDirtyState();
   recalculateLiveSummary();
-  toast.info("Marked all students as Present.");
+  const msg = q
+    ? `Marked ${targets.length} filtered student(s) as Present.`
+    : "Marked all students as Present.";
+  toast.info(msg);
 }
 
 /**
  * Quick action: Mark all students in roster as Absent.
+ * If search query is active, only marks the visible filtered students.
  */
 function handleMarkAllAbsent() {
-  if (!currentRoster.length) return;
-  currentRoster.forEach((r) => {
-    r.status = ATTENDANCE_STATUS.ABSENT;
-    r.dirty = true;
+  const targets = getVisibleRosterStudents();
+  if (!targets.length) return;
+  targets.forEach((r) => {
+    if (r.status !== ATTENDANCE_STATUS.ABSENT) {
+      r.status = ATTENDANCE_STATUS.ABSENT;
+      r.dirty = true;
+    }
   });
   renderRosterTable(currentRoster);
+  const q = document.getElementById("roster-search")?.value;
+  if (q) filterRosterTable(q);
   markDirtyState();
   recalculateLiveSummary();
-  toast.info("Marked all students as Absent.");
+  const msg = q
+    ? `Marked ${targets.length} filtered student(s) as Absent.`
+    : "Marked all students as Absent.";
+  toast.info(msg);
 }
 
 /**
@@ -702,7 +736,12 @@ async function handleSessionFormSubmit(e) {
     return;
   }
 
-  if (endTime && endTime <= startTime) {
+  const startMin = parseTimeToMinutes(startTime);
+  const endMin = parseTimeToMinutes(endTime);
+  if (startMin !== null && endMin !== null && endMin <= startMin) {
+    toast.error("End time must be after start time.");
+    return;
+  } else if (endTime && endTime <= startTime) {
     toast.error("End time must be after start time.");
     return;
   }

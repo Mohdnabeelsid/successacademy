@@ -11,31 +11,99 @@ export const SUPABASE_ANON_KEY = "sb_publishable_ix1qvKAccJd2-M8lDLah6g_W-f3phW9
  * Creates an in-memory stub for Node.js / offline test environments.
  */
 export function createSupabaseStub() {
-  const createQueryBuilder = () => {
+  const store = {};
+
+  const createQueryBuilder = (tableName) => {
+    let filters = [];
+    let orderCol = null;
+    let orderAsc = true;
+    let limitVal = null;
+
     const builder = {
       select: () => builder,
       insert: () => builder,
       update: () => builder,
       delete: () => builder,
       upsert: () => builder,
-      eq: () => builder,
-      neq: () => builder,
-      gt: () => builder,
-      gte: () => builder,
-      lt: () => builder,
-      lte: () => builder,
-      in: () => builder,
-      order: () => builder,
-      limit: () => builder,
-      single: async () => ({ data: null, error: null }),
-      maybeSingle: async () => ({ data: null, error: null }),
-      then: (resolve) => resolve({ data: [], error: null })
+      eq: (col, val) => {
+        filters.push((row) => row[col] === val);
+        return builder;
+      },
+      neq: (col, val) => {
+        filters.push((row) => row[col] !== val);
+        return builder;
+      },
+      gt: (col, val) => {
+        filters.push((row) => row[col] > val);
+        return builder;
+      },
+      gte: (col, val) => {
+        filters.push((row) => row[col] >= val);
+        return builder;
+      },
+      lt: (col, val) => {
+        filters.push((row) => row[col] < val);
+        return builder;
+      },
+      lte: (col, val) => {
+        filters.push((row) => row[col] <= val);
+        return builder;
+      },
+      in: (col, vals) => {
+        filters.push((row) => Array.isArray(vals) && vals.includes(row[col]));
+        return builder;
+      },
+      order: (col, opts = {}) => {
+        orderCol = col;
+        orderAsc = opts?.ascending !== false;
+        return builder;
+      },
+      limit: (n) => {
+        limitVal = n;
+        return builder;
+      },
+      single: async () => {
+        const rows = execute();
+        return { data: rows[0] || null, error: null };
+      },
+      maybeSingle: async () => {
+        const rows = execute();
+        return { data: rows[0] || null, error: null };
+      },
+      then: (resolve) => {
+        const rows = execute();
+        return resolve({ data: rows, error: null });
+      }
     };
+
+    function execute() {
+      let rows = store[tableName] ? [...store[tableName]] : [];
+      for (const f of filters) {
+        rows = rows.filter(f);
+      }
+      if (orderCol) {
+        rows.sort((a, b) => {
+          const valA = a[orderCol];
+          const valB = b[orderCol];
+          if (valA === valB) return 0;
+          const cmp = valA > valB ? 1 : -1;
+          return orderAsc ? cmp : -cmp;
+        });
+      }
+      if (limitVal !== null) {
+        rows = rows.slice(0, limitVal);
+      }
+      return rows;
+    }
+
     return builder;
   };
 
   return {
-    from: () => createQueryBuilder(),
+    seed: (tableName, rows) => {
+      store[tableName] = Array.isArray(rows) ? rows.map((r) => ({ ...r })) : [];
+    },
+    from: (table) => createQueryBuilder(table),
     rpc: async () => ({ data: null, error: null }),
     auth: {
       signUp: async () => ({ data: { user: { id: "test-uid" } }, error: null }),

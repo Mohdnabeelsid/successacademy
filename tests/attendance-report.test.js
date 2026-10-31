@@ -64,7 +64,7 @@ test("Formula injection with '=' is prefixed with single quote", () => {
 
 test("Formula injection with '+' is prefixed with single quote", () => {
   const sanitized = sanitizeCsvValue("+CMD|' /C calc'!A0");
-  assert.strictEqual(sanitized, "\生活'+CMD|' /C calc'!A0\"".replace("生活", ""));
+  assert.strictEqual(sanitized, "\"'+CMD|' /C calc'!A0\"");
 });
 
 test("Formula injection with '-' is prefixed with single quote", () => {
