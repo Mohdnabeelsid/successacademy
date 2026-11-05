@@ -12,14 +12,16 @@ import {
   bulkImportStudents,
   excelTemplateRows
 } from "../services/student-service.js";
-import { getStudentLogs, LOG_STATUS, addStudyLog } from "../services/studylog-service.js";
-import { getSubjectsForClass } from "../services/subject-service.js";
+import { getStudentLogs, LOG_STATUS, addStudyLog, calcStreak } from "../services/studylog-service.js";
+import { getSubjectsForClass, getStudentEffectiveSubjects } from "../services/subject-service.js";
 import { getISTWeekRange, getISTMonthRange, getISTTodayIso, formatLogDate } from "../utils/date-time.js";
 import { showConfirmModal } from "../components/confirm-modal.js";
 import { renderPagination } from "../components/pagination.js";
 import { getExamMarksForStudent, listExams, getExam } from "../services/exam-service.js";
 import { calculateGrade } from "../services/grading-service.js";
 import { getExamTypeBadge, escapeHtml } from "../utils/exam-ui.js";
+import { getStudentAttendance, getStudentAttendanceSummary, ATTENDANCE_STATUS } from "../services/attendance-service.js";
+import { getStudentFeeStatus, formatMonthYear, FEE_TYPES, PAYMENT_METHODS } from "../services/fee-service.js";
 
 let admin;
 let allStudents = [];
@@ -28,30 +30,55 @@ let currentPage = 1;
 const pageSize = 15;
 let currentStudentMarks = [];
 let currentStudentExamsMap = {};
+let currentStudentAttendance = [];
+let currentStudentAttendanceSummary = null;
+let currentStudentFeeStatus = null;
+let currentLogSubView = "weekly";
 
 (async function init() {
-  admin = await requireAuth("admin", "admin-login.html");
-  renderSidebar("admin", "students", { name: admin.name || admin.email, sub: "Branch Admin" });
+  // 1. Safety timeout to guarantee loader never hangs indefinitely
+  setTimeout(() => {
+    const loader = document.getElementById("page-loader");
+    if (loader && !loader.classList.contains("done")) {
+      loader.classList.add("done");
+    }
+  }, 2000);
+
+  // 2. Wire events upfront so all controls and modals are interactive immediately
+  wireEvents();
 
   try {
+    admin = await requireAuth("admin", "admin-login.html");
+    renderSidebar("admin", "students", { name: admin.name || admin.email, sub: "Branch Admin" });
     await refreshList();
   } catch (err) {
-    console.error("Student management refresh error:", err);
+    console.error("Student management initialization error:", err);
   } finally {
     document.getElementById("page-loader")?.classList.add("done");
   }
-  wireEvents();
 })();
 
-async function refreshList() {
+async function refreshList(resetPage = false) {
+  if (resetPage) {
+    currentPage = 1;
+  }
   const filters = {
     search: document.getElementById("search-input")?.value.trim() || "",
     branch: document.getElementById("filter-branch")?.value || "",
     class: document.getElementById("filter-class")?.value || "",
     includeDisabled: true  // Student Management must show disabled students so admins can re-enable them
   };
-  currentPage = 1;
   allStudents = await listStudents(filters);
+
+  // Clamp currentPage within valid bounds
+  const totalPages = Math.max(1, Math.ceil(allStudents.length / pageSize));
+  if (currentPage > totalPages) {
+    currentPage = totalPages;
+  }
+  if (currentPage < 1) {
+    currentPage = 1;
+  }
+
   renderTable(allStudents);
 }
 
@@ -65,8 +92,9 @@ function renderTable(students) {
     return;
   }
 
-  const totalPages = Math.ceil(students.length / pageSize) || 1;
+  const totalPages = Math.max(1, Math.ceil(students.length / pageSize));
   if (currentPage > totalPages) currentPage = totalPages;
+  if (currentPage < 1) currentPage = 1;
   const pagedStudents = students.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   body.innerHTML = pagedStudents
@@ -86,16 +114,16 @@ function renderTable(students) {
       <td>${s.loginDisabled ? '<span class="badge badge-danger">Disabled</span>' : '<span class="badge badge-success">Active</span>'}</td>
       <td>
         <div class="flex gap-2">
-          <button class="btn btn-ghost btn-sm" data-edit="${s.id}">Edit</button>
-          <button class="btn btn-ghost btn-sm" data-analytics="${s.id}" title="View Analytics" style="padding:0; display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; min-width:32px;">
+          <button type="button" class="btn btn-ghost btn-sm" data-edit="${s.id}">Edit</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-analytics="${s.id}" title="View Analytics" style="padding:0; display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; min-width:32px;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
               <circle cx="12" cy="12" r="3"></circle>
             </svg>
           </button>
-          <button class="btn btn-ghost btn-sm" data-reset="${s.id}">Reset PW</button>
-          <button class="btn btn-ghost btn-sm" data-toggle="${s.id}" data-disabled="${s.loginDisabled ? "1" : "0"}">${s.loginDisabled ? "Enable" : "Disable"}</button>
-          <button class="btn btn-ghost btn-sm" data-delete="${s.id}" style="color:var(--c-danger);">Delete</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-reset="${s.id}">Reset PW</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-toggle="${s.id}" data-disabled="${s.loginDisabled ? "1" : "0"}">${s.loginDisabled ? "Enable" : "Disable"}</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-delete="${s.id}" style="color:var(--c-danger);">Delete</button>
         </div>
       </td>
     </tr>`
@@ -115,9 +143,9 @@ function renderTable(students) {
 }
 
 function wireEvents() {
-  document.getElementById("search-input").addEventListener("input", debounce(refreshList, 300));
-  document.getElementById("filter-branch").addEventListener("change", refreshList);
-  document.getElementById("filter-class").addEventListener("change", refreshList);
+  document.getElementById("search-input").addEventListener("input", debounce(() => refreshList(true), 300));
+  document.getElementById("filter-branch").addEventListener("change", () => refreshList(true));
+  document.getElementById("filter-class").addEventListener("change", () => refreshList(true));
 
   const modal = document.getElementById("student-modal");
   const form = document.getElementById("student-form");
@@ -149,13 +177,14 @@ function wireEvents() {
         await updateStudent(id, data);
         toast.success("Student updated.");
         modal.classList.remove("active");
+        await refreshList(false);
       } else {
         const result = await createStudentWithCredentials(data);
         toast.success("Student created.");
         modal.classList.remove("active");
         showCredentials(result.admissionNumber, result.password);
+        await refreshList(true);
       }
-      await refreshList();
     } catch (err) {
       toast.error(err.message || "Could not save student.");
     } finally {
@@ -211,7 +240,7 @@ function wireEvents() {
       try {
         await toggleLogin(toggleId, !currentlyDisabled);
         toast.success(currentlyDisabled ? "Login enabled." : "Login disabled.");
-        await refreshList();
+        await refreshList(false);
       } catch (err) {
         toast.error("Could not update login status.");
       }
@@ -228,7 +257,7 @@ function wireEvents() {
       try {
         await deleteStudent(deleteId);
         toast.success("Student deleted.");
-        await refreshList();
+        await refreshList(false);
       } catch (err) {
         toast.error("Could not delete student.");
       }
@@ -256,20 +285,31 @@ function wireEvents() {
   }
 
   // Profile modal tab switcher listeners
-  const tabWeekly = document.getElementById("tab-pm-weekly");
-  const tabMonthly = document.getElementById("tab-pm-monthly");
-  const tabSubjects = document.getElementById("tab-pm-subjects");
+  const tabOverview = document.getElementById("tab-pm-overview");
+  const tabAttendance = document.getElementById("tab-pm-attendance");
+  const tabFees = document.getElementById("tab-pm-fees");
   const tabExams = document.getElementById("tab-pm-exams");
+  const tabLogs = document.getElementById("tab-pm-logs");
   const tabBulkAdd = document.getElementById("tab-pm-bulk-add");
 
-  if (tabWeekly) tabWeekly.addEventListener("click", () => switchProfileTab("weekly"));
-  if (tabMonthly) tabMonthly.addEventListener("click", () => switchProfileTab("monthly"));
-  if (tabSubjects) tabSubjects.addEventListener("click", () => switchProfileTab("subjects"));
+  if (tabOverview) tabOverview.addEventListener("click", () => switchProfileTab("overview"));
+  if (tabAttendance) tabAttendance.addEventListener("click", () => switchProfileTab("attendance"));
+  if (tabFees) tabFees.addEventListener("click", () => switchProfileTab("fees"));
   if (tabExams) tabExams.addEventListener("click", () => switchProfileTab("exams"));
+  if (tabLogs) tabLogs.addEventListener("click", () => switchProfileTab("logs"));
   if (tabBulkAdd) tabBulkAdd.addEventListener("click", () => switchProfileTab("bulk-add"));
 
-  document.getElementById("pm-jump-exams-btn")?.addEventListener("click", () => switchProfileTab("exams"));
-  document.getElementById("pm-header-exam-badge")?.addEventListener("click", () => switchProfileTab("exams"));
+  // Jump buttons from Overview snapshot tiles:
+  document.getElementById("pm-jump-att-btn")?.addEventListener("click", () => switchProfileTab("attendance"));
+  document.getElementById("pm-jump-fee-btn")?.addEventListener("click", () => switchProfileTab("fees"));
+  document.getElementById("pm-jump-exam-tab-btn")?.addEventListener("click", () => switchProfileTab("exams"));
+  document.getElementById("pm-jump-exam-tab-btn2")?.addEventListener("click", () => switchProfileTab("exams"));
+  document.getElementById("pm-jump-logs-btn")?.addEventListener("click", () => switchProfileTab("logs"));
+
+  // Study log sub-view switchers
+  document.getElementById("btn-pm-log-weekly")?.addEventListener("click", () => switchLogSubView("weekly"));
+  document.getElementById("btn-pm-log-monthly")?.addEventListener("click", () => switchLogSubView("monthly"));
+  document.getElementById("btn-pm-log-subjects")?.addEventListener("click", () => switchLogSubView("subjects"));
 
   // Bulk add row button listener
   const bulkAddRowBtn = document.getElementById("pm-bulk-add-row-btn");
@@ -333,7 +373,7 @@ function wireEvents() {
         toast.success(`Successfully saved ${logsToSave.length} logs.`);
         currentStudentLogs = await getStudentLogs(currentStudent.id, 500);
         tbody.innerHTML = "";
-        switchProfileTab("weekly");
+        switchProfileTab("logs");
       } catch (err) {
         console.error("Error saving bulk logs:", err);
         toast.error("Failed to save some log entries. Please try again.");
@@ -434,7 +474,7 @@ function wireEvents() {
         }
 
         if (resultsModal) resultsModal.classList.add("active");
-        await refreshList();
+        await refreshList(false);
       } catch (err) {
         if (progressModal) progressModal.classList.remove("active");
         console.error("Excel import error:", err);
@@ -467,15 +507,25 @@ async function openStudentProfileModal(studentId) {
   const modal = document.getElementById("profile-modal");
   if (!modal) return;
   
-  // Show loader/placeholder
+  // Show loader/placeholder immediately so there's no delay
   document.getElementById("pm-name").textContent = "Loading...";
-  document.getElementById("pm-meta").textContent = "Please wait while we load student profile data.";
+  document.getElementById("pm-meta").textContent = "Please wait while we load all student module records...";
   document.getElementById("pm-avatar").textContent = "?";
+  const profileTitleEl = document.getElementById("profile-modal-title");
+  if (profileTitleEl) profileTitleEl.textContent = "Student Profile — Loading...";
+  
+  const tabAttBadge = document.getElementById("pm-tab-att-badge");
+  const tabFeeBadge = document.getElementById("pm-tab-fee-badge");
   const tabExamBadge = document.getElementById("pm-tab-exam-badge");
+  if (tabAttBadge) tabAttBadge.textContent = "...";
+  if (tabFeeBadge) tabFeeBadge.textContent = "...";
   if (tabExamBadge) tabExamBadge.textContent = "...";
   
+  // Open modal immediately so user sees loading state right away
+  modal.classList.add("active");
+  switchProfileTab("overview");
+  
   try {
-    // Get student info
     const student = await getStudent(studentId);
     if (!student) {
       toast.error("Student not found.");
@@ -491,16 +541,49 @@ async function openStudentProfileModal(studentId) {
       .toUpperCase();
     document.getElementById("pm-avatar").textContent = initials;
     document.getElementById("pm-name").textContent = student.name || "—";
+    const modalTitleEl = document.getElementById("profile-modal-title");
+    if (modalTitleEl) modalTitleEl.textContent = `${student.name || "Student"} — Full Profile`;
     
-    // Fetch study logs, exam marks, and exams for student in parallel
-    const [logs, marks, exams] = await Promise.all([
-      getStudentLogs(studentId, 500),
-      getExamMarksForStudent(studentId),
-      listExams({ class: student.class })
+    // Fetch all modules in parallel: logs, marks, exams, attendance, attendance summary, fee status
+    const [logs, marks, exams, attendance, attSummary, feeStatus] = await Promise.all([
+      getStudentLogs(studentId, 500).catch(() => []),
+      getExamMarksForStudent(studentId).catch(() => []),
+      listExams({ class: student.class }).catch(() => []),
+      getStudentAttendance(studentId).catch(() => []),
+      getStudentAttendanceSummary(studentId).catch(() => null),
+      getStudentFeeStatus(studentId, student.class).catch(() => null)
     ]);
+    
     currentStudentLogs = logs || [];
     currentStudentMarks = marks || [];
+    currentStudentAttendance = attendance || [];
+    currentStudentFeeStatus = feeStatus || null;
 
+    // Build or normalize attendance summary
+    let presentCount = 0;
+    let lateCount = 0;
+    let absentCount = 0;
+    currentStudentAttendance.forEach((r) => {
+      if (r.status === ATTENDANCE_STATUS.PRESENT) presentCount++;
+      else if (r.status === ATTENDANCE_STATUS.LATE) lateCount++;
+      else if (r.status === ATTENDANCE_STATUS.ABSENT) absentCount++;
+    });
+
+    const totalSessions = attSummary?.totalSessions || currentStudentAttendance.length;
+    const attended = presentCount + lateCount;
+    const rawRate = totalSessions > 0 ? Number(((attended / totalSessions) * 100).toFixed(1)) : 0;
+    const attendanceRate = attSummary?.attendanceRate !== undefined ? attSummary.attendanceRate : rawRate;
+
+    currentStudentAttendanceSummary = {
+      totalSessions,
+      attended,
+      present: presentCount,
+      late: lateCount,
+      absent: absentCount,
+      attendanceRate
+    };
+
+    // Exam map & missing exams
     const examMap = Object.fromEntries((exams || []).map((e) => [e.id, e]));
     const missingExamIds = (marks || []).filter((m) => !examMap[m.examId]).map((m) => m.examId);
     if (missingExamIds.length > 0) {
@@ -509,8 +592,21 @@ async function openStudentProfileModal(studentId) {
     }
     currentStudentExamsMap = examMap;
 
-    if (tabExamBadge) tabExamBadge.textContent = currentStudentMarks.length;
+    // Update tab badges
+    if (tabAttBadge) {
+      tabAttBadge.textContent = `${attendanceRate}%`;
+      tabAttBadge.style.background = attendanceRate >= 75 ? "var(--c-success)" : "var(--c-danger)";
+    }
+    if (tabFeeBadge) {
+      const isPaid = feeStatus?.currentMonthPaid;
+      tabFeeBadge.textContent = isPaid ? "Paid ✅" : "Due ⚠️";
+      tabFeeBadge.style.background = isPaid ? "var(--c-success)" : "var(--c-warning)";
+    }
+    if (tabExamBadge) {
+      tabExamBadge.textContent = currentStudentMarks.length;
+    }
 
+    // Top Header Meta with Interactive Quick Pills
     const metaEl = document.getElementById("pm-meta");
     if (metaEl) {
       metaEl.innerHTML = `
@@ -519,22 +615,30 @@ async function openStudentProfileModal(studentId) {
         <span>Class <strong>${escapeHtml(student.class || "—")}</strong></span>
         <span>·</span>
         <span>${escapeHtml(student.branch || "—")} Branch</span>
-        <button type="button" class="badge badge-primary" id="pm-header-exam-badge" style="cursor:pointer; border:none; padding:3px 10px; font-size:11px; font-weight:700; border-radius:12px;" title="Click to view exam marks">
+        <span>·</span>
+        <span>${student.loginDisabled ? '<span class="badge badge-danger">Disabled</span>' : '<span class="badge badge-success">Active</span>'}</span>
+        <button type="button" class="badge" id="pm-header-att-pill" style="cursor:pointer; border:none; padding:3px 10px; font-size:11px; font-weight:700; border-radius:12px; background:rgba(16,185,129,0.15); color:#059669;" title="View attendance">
+          📅 ${attendanceRate}% Attendance
+        </button>
+        <button type="button" class="badge" id="pm-header-fee-pill" style="cursor:pointer; border:none; padding:3px 10px; font-size:11px; font-weight:700; border-radius:12px; background:${feeStatus?.currentMonthPaid ? "rgba(16,185,129,0.15); color:#059669;" : "rgba(239,68,68,0.15); color:#dc2626;"}" title="View fees">
+          💰 Fees: ${feeStatus?.currentMonthPaid ? "Paid" : "Due"}
+        </button>
+        <button type="button" class="badge badge-primary" id="pm-header-exam-pill" style="cursor:pointer; border:none; padding:3px 10px; font-size:11px; font-weight:700; border-radius:12px;" title="View exam marks">
           📝 ${currentStudentMarks.length} Exam Mark${currentStudentMarks.length === 1 ? "" : "s"}
         </button>
       `;
-      document.getElementById("pm-header-exam-badge")?.addEventListener("click", () => switchProfileTab("exams"));
+
+      document.getElementById("pm-header-att-pill")?.addEventListener("click", () => switchProfileTab("attendance"));
+      document.getElementById("pm-header-fee-pill")?.addEventListener("click", () => switchProfileTab("fees"));
+      document.getElementById("pm-header-exam-pill")?.addEventListener("click", () => switchProfileTab("exams"));
     }
     
     // Reset bulk add form
     const tbody = document.getElementById("pm-bulk-add-tbody");
     if (tbody) tbody.innerHTML = "";
     
-    // Default to weekly tab
-    switchProfileTab("weekly");
-    
-    // Show the modal
-    modal.classList.add("active");
+    // Refresh Overview tab with newly loaded data
+    switchProfileTab("overview");
   } catch (err) {
     toast.error("Could not load student profile.");
     console.error(err);
@@ -560,21 +664,320 @@ function switchProfileTab(tab) {
   }
   
   // Render tab specific data
-  if (tab === "weekly") {
-    renderWeeklyLogs();
-    renderWeeklyExamPreview();
-  } else if (tab === "monthly") {
-    renderMonthlyLogs();
-  } else if (tab === "subjects") {
-    renderSubjectAnalytics();
+  if (tab === "overview") {
+    renderOverviewTab();
+  } else if (tab === "attendance") {
+    renderAttendanceTab();
+  } else if (tab === "fees") {
+    renderFeesTab();
   } else if (tab === "exams") {
     renderExamMarks();
+  } else if (tab === "logs") {
+    renderStudyLogsTab();
   } else if (tab === "bulk-add") {
     const tbody = document.getElementById("pm-bulk-add-tbody");
     if (tbody && tbody.children.length === 0) {
       initializeBulkAddForm();
     }
   }
+}
+
+function renderOverviewTab() {
+  if (!currentStudent) return;
+  const s = currentStudent;
+
+  // Student details info card
+  const admEl = document.getElementById("pm-info-admission");
+  const clsEl = document.getElementById("pm-info-class");
+  const brEl = document.getElementById("pm-info-branch");
+  const phEl = document.getElementById("pm-info-phone");
+  const prEl = document.getElementById("pm-info-parent");
+  const emEl = document.getElementById("pm-info-email");
+  const stEl = document.getElementById("pm-info-status");
+  const subEl = document.getElementById("pm-info-subjects");
+
+  if (admEl) admEl.textContent = s.admissionNumber || "—";
+  if (clsEl) clsEl.textContent = `Class ${s.class || "—"}`;
+  if (brEl) brEl.textContent = `${s.branch || "—"} Campus`;
+  if (phEl) phEl.textContent = s.phone || "—";
+  if (prEl) prEl.textContent = s.parentName || "—";
+  if (emEl) emEl.textContent = s.email || "—";
+  if (stEl) {
+    stEl.innerHTML = s.loginDisabled
+      ? '<span class="badge badge-danger">Disabled</span>'
+      : '<span class="badge badge-success">Active</span>';
+  }
+
+  if (subEl) {
+    const enrolled = getStudentEffectiveSubjects(s);
+    subEl.innerHTML = enrolled.length
+      ? enrolled.map((subj) => `<span class="badge" style="background:var(--surface-2); font-size:11px;">${escapeHtml(subj)}</span>`).join("")
+      : '<span style="color:var(--c-text-muted);">No enrolled subjects</span>';
+  }
+
+  // 1. Attendance Snapshot
+  const att = currentStudentAttendanceSummary || { attendanceRate: 0, attended: 0, totalSessions: 0, present: 0, late: 0, absent: 0 };
+  const snapAttRate = document.getElementById("pm-snap-att-rate");
+  const snapAttAttended = document.getElementById("pm-snap-att-attended");
+  const snapAttDetails = document.getElementById("pm-snap-att-details");
+  if (snapAttRate) {
+    snapAttRate.textContent = `${att.attendanceRate}% Rate`;
+    snapAttRate.className = att.attendanceRate >= 75 ? "badge badge-success" : "badge badge-danger";
+  }
+  if (snapAttAttended) snapAttAttended.textContent = `${att.attended} / ${att.totalSessions} Sessions`;
+  if (snapAttDetails) snapAttDetails.textContent = `Present: ${att.present} · Late: ${att.late} · Absent: ${att.absent}`;
+
+  // 2. Fees Snapshot
+  const fee = currentStudentFeeStatus || {};
+  const totalPaidAmt = (fee.allPayments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+  const snapFeeBadge = document.getElementById("pm-snap-fee-status-badge");
+  const snapFeeMonth = document.getElementById("pm-snap-fee-month");
+  const snapFeeDetails = document.getElementById("pm-snap-fee-details");
+
+  if (snapFeeBadge) {
+    snapFeeBadge.innerHTML = fee.currentMonthPaid
+      ? '<span class="badge badge-success">Current Month Paid ✅</span>'
+      : '<span class="badge badge-danger">Current Month Due ⚠️</span>';
+  }
+  if (snapFeeMonth) {
+    snapFeeMonth.textContent = fee.currentMonthPaid
+      ? `₹${(Number(fee.currentMonthPayment?.amount) || fee.expectedMonthlyFee || 0).toLocaleString("en-IN")}`
+      : `₹${(fee.expectedMonthlyFee || 0).toLocaleString("en-IN")} Due`;
+    snapFeeMonth.style.color = fee.currentMonthPaid ? "#059669" : "#dc2626";
+  }
+  if (snapFeeDetails) {
+    const admStatus = fee.admissionPaid ? "Paid ✅" : "Pending ⏳";
+    snapFeeDetails.textContent = `Admission: ${admStatus} · Total Paid: ₹${totalPaidAmt.toLocaleString("en-IN")}`;
+  }
+
+  // 3. Exams Snapshot
+  const validMarks = currentStudentMarks.filter(
+    (m) => !m.isAbsent && m.marksObtained !== null && m.marksObtained !== undefined
+  );
+  let passedCount = 0;
+  let totalPct = 0;
+  let highestDisplay = "—";
+  let highestPct = -1;
+
+  validMarks.forEach((m) => {
+    const exam = currentStudentExamsMap[m.examId];
+    const max = Number(m.maxMarks) || (exam ? Number(exam.maxMarks) : 100);
+    const passing = exam ? Number(exam.passingMarks) : 35;
+    const score = Number(m.marksObtained);
+    const pct = (score / max) * 100;
+    totalPct += pct;
+
+    const res = calculateGrade(score, max, { passingMarks: passing });
+    if (res.passed) passedCount++;
+
+    if (pct > highestPct) {
+      highestPct = pct;
+      highestDisplay = `${score}/${max} (${res.percentageFormatted})`;
+    }
+  });
+
+  const avgPct = validMarks.length > 0 ? (totalPct / validMarks.length).toFixed(1) : "—";
+  const snapExamAvg = document.getElementById("pm-snap-exam-avg");
+  const snapExamCount = document.getElementById("pm-snap-exam-count");
+  const snapExamDetails = document.getElementById("pm-snap-exam-details");
+
+  if (snapExamAvg) snapExamAvg.textContent = avgPct !== "—" ? `${avgPct}% Avg` : "No scores";
+  if (snapExamCount) snapExamCount.textContent = `${validMarks.length} Exam${validMarks.length === 1 ? "" : "s"}`;
+  if (snapExamDetails) snapExamDetails.textContent = `Passed: ${passedCount} / ${validMarks.length} · Top: ${highestDisplay}`;
+
+  // 4. Study Logs Snapshot
+  const totalMinutes = currentStudentLogs
+    .filter((l) => l.status === LOG_STATUS.APPROVED)
+    .reduce((sum, l) => sum + Number(l.durationMinutes || 0), 0);
+  const totalHrs = (totalMinutes / 60).toFixed(1);
+  const streak = calcStreak(currentStudentLogs);
+
+  const { startIso: wStart, endIso: wEnd } = getWeeklyRange();
+  const weekMins = currentStudentLogs
+    .filter((l) => l.status === LOG_STATUS.APPROVED && l.date >= wStart && l.date <= wEnd)
+    .reduce((sum, l) => sum + Number(l.durationMinutes || 0), 0);
+
+  const { startIso: mStart, endIso: mEnd } = getMonthlyRange();
+  const monthMins = currentStudentLogs
+    .filter((l) => l.status === LOG_STATUS.APPROVED && l.date >= mStart && l.date <= mEnd)
+    .reduce((sum, l) => sum + Number(l.durationMinutes || 0), 0);
+
+  const snapStreak = document.getElementById("pm-snap-streak");
+  const snapTotalHours = document.getElementById("pm-snap-total-hours");
+  const snapLogDetails = document.getElementById("pm-snap-log-details");
+
+  if (snapStreak) snapStreak.textContent = `🔥 ${streak} day${streak === 1 ? "" : "s"} streak`;
+  if (snapTotalHours) snapTotalHours.textContent = `${totalHrs} hrs`;
+  if (snapLogDetails) snapLogDetails.textContent = `This week: ${(weekMins / 60).toFixed(1)} hrs · This month: ${(monthMins / 60).toFixed(1)} hrs`;
+
+  // 5. Render recent exam preview cards
+  renderWeeklyExamPreview();
+}
+
+function renderAttendanceTab() {
+  const att = currentStudentAttendanceSummary || { attendanceRate: 0, attended: 0, totalSessions: 0, present: 0, late: 0, absent: 0 };
+  
+  const rateEl = document.getElementById("pm-att-stat-rate");
+  const totalEl = document.getElementById("pm-att-stat-total");
+  const presentEl = document.getElementById("pm-att-stat-present");
+  const lateEl = document.getElementById("pm-att-stat-late");
+  const absentEl = document.getElementById("pm-att-stat-absent");
+  const tbody = document.getElementById("pm-att-table-body");
+
+  if (rateEl) {
+    rateEl.textContent = `${att.attendanceRate}%`;
+    rateEl.style.color = att.attendanceRate >= 75 ? "var(--c-success)" : "var(--c-danger)";
+  }
+  if (totalEl) totalEl.textContent = att.totalSessions;
+  if (presentEl) presentEl.textContent = att.present;
+  if (lateEl) lateEl.textContent = att.late;
+  if (absentEl) absentEl.textContent = att.absent;
+
+  if (!tbody) return;
+
+  if (!currentStudentAttendance || currentStudentAttendance.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state">No attendance records found for this student.</div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = currentStudentAttendance
+    .map((r) => {
+      const formattedDate = r.date ? formatLogDate(r.date) : "—";
+      const statusBadge =
+        r.status === ATTENDANCE_STATUS.PRESENT
+          ? '<span class="badge badge-success">Present</span>'
+          : r.status === ATTENDANCE_STATUS.LATE
+          ? '<span class="badge badge-warning" style="background:#FFFBEB; color:#D97706; border:1px solid #FCD34D;">Late</span>'
+          : '<span class="badge badge-danger">Absent</span>';
+
+      return `
+        <tr>
+          <td style="white-space:nowrap; font-size:var(--fs-xs); font-weight:600;">${formattedDate}</td>
+          <td>
+            <div style="font-weight:600; font-size:var(--fs-xs);">${escapeHtml(r.title || "Class Session")}</div>
+          </td>
+          <td style="font-size:var(--fs-xs); color:var(--c-text-muted);">${escapeHtml(r.formattedTime || "—")}</td>
+          <td>${statusBadge}</td>
+          <td style="font-size:var(--fs-xs); color:var(--c-text-muted);">${escapeHtml(r.remarks || "—")}</td>
+        </tr>
+      `;
+    })
+    .join("");
+}
+
+function renderFeesTab() {
+  const fee = currentStudentFeeStatus || {};
+  const payments = fee.allPayments || [];
+  const totalPaidAmt = payments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+
+  const admEl = document.getElementById("pm-fee-stat-admission");
+  const admSubEl = document.getElementById("pm-fee-stat-admission-sub");
+  const monthLbl = document.getElementById("pm-fee-stat-month-label");
+  const monthEl = document.getElementById("pm-fee-stat-month");
+  const monthSubEl = document.getElementById("pm-fee-stat-month-sub");
+  const rateEl = document.getElementById("pm-fee-stat-rate");
+  const rateSubEl = document.getElementById("pm-fee-stat-rate-sub");
+  const totalEl = document.getElementById("pm-fee-stat-total");
+  const totalCountEl = document.getElementById("pm-fee-stat-total-count");
+  const tbody = document.getElementById("pm-fees-table-body");
+
+  if (monthLbl && fee.currentMonthKey) {
+    monthLbl.textContent = `${formatMonthYear(fee.currentMonthKey)} Fee`;
+  }
+
+  if (admEl) {
+    admEl.innerHTML = fee.admissionPaid
+      ? '<span class="badge badge-success">Paid ✅</span>'
+      : '<span class="badge badge-warning">Pending ⏳</span>';
+  }
+  if (admSubEl) {
+    admSubEl.textContent = fee.admissionPaid
+      ? `Recorded on ${formatLogDate(fee.admissionPayment?.paymentDate)} via ${(fee.admissionPayment?.paymentMethod || "").toUpperCase()}`
+      : "One-time ₹1,000 fee";
+  }
+
+  if (monthEl) {
+    monthEl.innerHTML = fee.currentMonthPaid
+      ? `<span class="badge badge-success">Paid ₹${(Number(fee.currentMonthPayment?.amount) || fee.expectedMonthlyFee).toLocaleString("en-IN")} ✅</span>`
+      : `<span class="badge badge-danger">Due ₹${(fee.expectedMonthlyFee || 0).toLocaleString("en-IN")} ⚠️</span>`;
+  }
+  if (monthSubEl) {
+    monthSubEl.textContent = fee.currentMonthPaid
+      ? `Paid via ${(fee.currentMonthPayment?.paymentMethod || "").toUpperCase()} on ${formatLogDate(fee.currentMonthPayment?.paymentDate)}`
+      : "Due on 5th of this month";
+  }
+
+  if (rateEl) rateEl.textContent = `₹${(fee.expectedMonthlyFee || 0).toLocaleString("en-IN")}`;
+  if (rateSubEl) rateSubEl.textContent = `Rate for Class ${currentStudent?.class || "—"}`;
+
+  if (totalEl) totalEl.textContent = `₹${totalPaidAmt.toLocaleString("en-IN")}`;
+  if (totalCountEl) totalCountEl.textContent = `${payments.length} payment receipt${payments.length === 1 ? "" : "s"}`;
+
+  if (!tbody) return;
+
+  if (payments.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">No payment receipts recorded for this student.</div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = payments
+    .map((p) => {
+      const formattedDate = p.paymentDate ? formatLogDate(p.paymentDate) : "—";
+      const isAdmission = p.feeType === FEE_TYPES.ADMISSION;
+      const typeBadge = isAdmission
+        ? '<span class="badge" style="background:rgba(245,158,11,0.15); color:#d97706; border:1px solid rgba(245,158,11,0.3);">Admission Fee</span>'
+        : '<span class="badge" style="background:rgba(14,165,233,0.15); color:#0284c7; border:1px solid rgba(14,165,233,0.3);">Monthly Fee</span>';
+
+      const period = isAdmission ? "One-time Admission" : formatMonthYear(p.monthYear);
+      const isUpi = p.paymentMethod === PAYMENT_METHODS.UPI;
+      const methodBadge = isUpi
+        ? '<span class="badge" style="background:rgba(99,102,241,0.15); color:#4f46e5; border:1px solid rgba(99,102,241,0.3);">📱 UPI</span>'
+        : '<span class="badge" style="background:rgba(16,185,129,0.15); color:#059669; border:1px solid rgba(16,185,129,0.3);">💵 Cash</span>';
+
+      return `
+        <tr>
+          <td style="white-space:nowrap; font-size:var(--fs-xs); font-weight:600;">${formattedDate}</td>
+          <td>${typeBadge}</td>
+          <td style="font-size:var(--fs-xs);"><strong>${escapeHtml(period)}</strong></td>
+          <td style="font-weight:700; font-size:var(--fs-sm);">₹${(Number(p.amount) || 0).toLocaleString("en-IN")}</td>
+          <td>${methodBadge}</td>
+          <td style="font-size:var(--fs-xs); color:var(--c-text-muted);">${escapeHtml(p.remarks || "—")}</td>
+        </tr>
+      `;
+    })
+    .join("");
+}
+
+function renderStudyLogsTab() {
+  const totalMinutes = currentStudentLogs
+    .filter((l) => l.status === LOG_STATUS.APPROVED)
+    .reduce((sum, l) => sum + Number(l.durationMinutes || 0), 0);
+  const totalHrs = (totalMinutes / 60).toFixed(1);
+  const streak = calcStreak(currentStudentLogs);
+
+  const totalHrsEl = document.getElementById("pm-log-total-hours");
+  const streakEl = document.getElementById("pm-log-streak");
+  if (totalHrsEl) totalHrsEl.textContent = `${totalHrs} hrs`;
+  if (streakEl) streakEl.textContent = `🔥 ${streak} day${streak === 1 ? "" : "s"}`;
+
+  renderWeeklyLogs();
+  renderMonthlyLogs();
+  renderSubjectAnalytics();
+  switchLogSubView(currentLogSubView || "weekly");
+}
+
+function switchLogSubView(subview) {
+  currentLogSubView = subview;
+  document.querySelectorAll(".pm-log-view-btn").forEach((btn) => btn.classList.remove("active"));
+  document.getElementById(`btn-pm-log-${subview}`)?.classList.add("active");
+
+  const weeklyEl = document.getElementById("pm-subview-weekly");
+  const monthlyEl = document.getElementById("pm-subview-monthly");
+  const subjectsEl = document.getElementById("pm-subview-subjects");
+
+  if (weeklyEl) weeklyEl.style.display = subview === "weekly" ? "block" : "none";
+  if (monthlyEl) monthlyEl.style.display = subview === "monthly" ? "block" : "none";
+  if (subjectsEl) subjectsEl.style.display = subview === "subjects" ? "block" : "none";
 }
 
 function getWeeklyRange() {

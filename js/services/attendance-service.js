@@ -57,6 +57,103 @@ export function normalizeClass(cls) {
 }
 
 /**
+ * Formats class into ordinal Standard representation (e.g. "10" -> "10th Standard").
+ * Supports standard class numbers, "Class 10", "Plus One", "Plus Two", etc.
+ * @param {string|number} cls
+ * @returns {string}
+ */
+export function formatClassStandard(cls) {
+  const raw = String(cls || "").trim();
+  const lower = raw.toLowerCase();
+  if (lower.includes("plus one") || lower.includes("plus 1") || lower.includes("+1")) {
+    return "11th Standard";
+  }
+  if (lower.includes("plus two") || lower.includes("plus 2") || lower.includes("+2")) {
+    return "12th Standard";
+  }
+  const num = parseInt(raw.replace(/\D/g, ""), 10);
+  if (!isNaN(num)) {
+    const s = ["th", "st", "nd", "rd"];
+    const v = num % 100;
+    const suffix = s[(v - 20) % 10] || s[v] || s[0];
+    return `${num}${suffix} Standard`;
+  }
+  return raw ? `${raw} Standard` : "10th Standard";
+}
+
+/**
+ * Returns time of day slot string for a session ("morning class", "afternoon class", "evening class").
+ * Accurately determines time slot based on session start time or current Indian Standard Time (IST):
+ * - Morning: 12:00 AM – 11:59 AM (< 12:00 PM) -> "morning class"
+ * - Afternoon: 12:00 PM – 3:59 PM (< 4:00 PM) -> "afternoon class"
+ * - Evening: 4:00 PM onward (>= 4:00 PM) -> "evening class"
+ * 
+ * @param {string} [startTime] - e.g. "09:00", "09:00:00", "14:30", "04:30 PM"
+ * @returns {string} "morning class" | "afternoon class" | "evening class"
+ */
+export function getTimeSlotDescription(startTime) {
+  let mins = null;
+  if (startTime) {
+    mins = parseTimeToMinutes(startTime);
+  }
+
+  // If no startTime or parsing failed, determine by current IST wall-clock time
+  if (mins === null) {
+    const now = new Date();
+    const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+    const istMs = utcMs + 5.5 * 3600000;
+    const istDate = new Date(istMs);
+    mins = istDate.getHours() * 60 + istDate.getMinutes();
+  }
+
+  if (mins < 12 * 60) {
+    return "morning class";
+  } else if (mins < 16 * 60) {
+    return "afternoon class";
+  } else {
+    return "evening class";
+  }
+}
+
+/**
+ * Generates the WhatsApp absentees announcement message for a session.
+ * 
+ * Format:
+ * Today morning class – 10th Standard absentees🌆
+ * (or "Today afternoon class – 10th Standard absentees🌆" / "Today evening class – 10th Standard absentees🌆")
+ * 
+ * • Student 1
+ * • Student 2
+ * 
+ * 👉 Kindly inform Farook sir about the leave 🙌
+ * 
+ * @param {Object} session - The session object ({ class, startTime, start_time, ... })
+ * @param {Array} absentees - Array of student records or name strings
+ * @param {string} [overrideTimeSlot] - Optional explicit time slot (e.g. "morning class", "afternoon class", "evening class")
+ * @returns {string}
+ */
+export function generateSessionAbsenteesWhatsAppMessage(session, absentees = [], overrideTimeSlot = null) {
+  const classStandard = formatClassStandard(session?.class || "10");
+  const timeSlot = overrideTimeSlot || getTimeSlotDescription(session?.startTime || session?.start_time);
+
+  // Extract student names and sort alphabetically (A-Z)
+  const names = (absentees || [])
+    .map((s) => {
+      if (!s) return "";
+      if (typeof s === "string") return s.trim();
+      return (s.studentName || s.name || "").trim();
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+
+  const listText = names.length > 0
+    ? names.map((name) => `• ${name}`).join("\n")
+    : "No absentees today! 🎉";
+
+  return `Today ${timeSlot} – ${classStandard} absentees🌆\n\n${listText}\n\n👉 Kindly inform Farook sir about the leave 🙌`;
+}
+
+/**
  * Creates a new attendance session.
  * @param {Object} sessionData
  * @param {string} sessionData.branch - 'MAN', 'ALP', etc.

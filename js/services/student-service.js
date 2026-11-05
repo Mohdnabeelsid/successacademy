@@ -174,6 +174,14 @@ export async function listStudents(filters = {}) {
   return students;
 }
 
+/**
+ * Convenience helper to list students filtered by branch.
+ * @param {string} branch
+ * @returns {Promise<Array>}
+ */
+export async function getStudentsByBranch(branch) {
+  return listStudents({ branch });
+}
 
 export async function getStudent(id) {
   return getRowById(TABLES.STUDENTS, id);

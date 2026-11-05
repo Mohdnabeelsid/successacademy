@@ -16,6 +16,7 @@ import { formatISTFullDate, getISTTodayIso } from "../utils/date-time.js";
 import { getStudent } from "../services/student-service.js";
 // Fix #11: moved here from line 168 where it was incorrectly placed mid-file
 import { getSubjectsForClass, getStudentEffectiveSubjects } from "../services/subject-service.js";
+import { getStudentFeeStatus, formatMonthYear } from "../services/fee-service.js";
 // Fix #7: import shared wireTimePicker instead of duplicating the implementation
 import { wireTimePicker } from "../utils/time-picker.js";
 import { setButtonLoading } from "../utils/ui-helpers.js";
@@ -23,6 +24,14 @@ import { setButtonLoading } from "../utils/ui-helpers.js";
 let student;
 
 (async function init() {
+  // Safety timeout to guarantee loader never hangs indefinitely
+  setTimeout(() => {
+    const loader = document.getElementById("page-loader");
+    if (loader && !loader.classList.contains("done")) {
+      loader.classList.add("done");
+    }
+  }, 2000);
+
   try {
     const authStudent = await requireAuth("student", "student-login.html");
     const dbStudent = await getStudent(authStudent.id);
@@ -38,6 +47,9 @@ let student;
     populateSubjects(student);
 
     await refreshData();
+
+    // Check fee alert if past 5th of month
+    checkFeeAlert(student);
   } catch (err) {
     console.error("Dashboard initialization error:", err);
     toast.error("Error loading dashboard data.");
@@ -263,6 +275,27 @@ function populateSubjects(studentObj) {
     opt.textContent = subj;
     select.appendChild(opt);
   });
+}
+
+/**
+ * Checks if monthly fee is overdue (after 5th of current month) and shows banner if unpaid.
+ */
+async function checkFeeAlert(studentObj) {
+  try {
+    if (!studentObj?.id) return;
+    const feeStatus = await getStudentFeeStatus(studentObj.id, studentObj.class);
+    if (feeStatus?.shouldAlert) {
+      const banner = document.getElementById("fee-due-alert-banner");
+      const txt = document.getElementById("fee-alert-dashboard-text");
+      if (banner) banner.style.display = "block";
+      if (txt) {
+        const monthStr = formatMonthYear(feeStatus.currentMonthKey);
+        txt.textContent = `Your tuition fee of ₹${feeStatus.expectedMonthlyFee} for ${monthStr} is due (${feeStatus.daysPastDue} day${feeStatus.daysPastDue === 1 ? "" : "s"} past the 5th). Please pay at the office via Cash or UPI.`;
+      }
+    }
+  } catch (err) {
+    console.warn("Could not check fee status for dashboard alert:", err);
+  }
 }
 
 // Fix #7: wireTimePicker removed — replaced with shared utility from ../utils/time-picker.js

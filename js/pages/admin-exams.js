@@ -44,6 +44,13 @@ let currentExamMarks = [];
 let analyticsChartInstance = null;
 
 (async function init() {
+  setTimeout(() => {
+    const loader = document.getElementById("page-loader");
+    if (loader && !loader.classList.contains("done")) {
+      loader.classList.add("done");
+    }
+  }, 2000);
+
   try {
     admin = await requireAuth("admin", "admin-login.html");
     renderSidebar("admin", "exams", { name: admin.name || admin.email, sub: "Branch Admin" });

@@ -157,71 +157,315 @@
         </div>
       </div>
       
-      <!-- Tabs for Weekly, Monthly, Subject Analytics, Exam Marks, Bulk Add -->
-      <div class="tabs" style="margin-bottom:var(--sp-4);">
-        <button class="tab-btn active" id="tab-pm-weekly">Weekly View</button>
-        <button class="tab-btn" id="tab-pm-monthly">Monthly View</button>
-        <button class="tab-btn" id="tab-pm-subjects">Subject Analytics</button>
+      <!-- Tabs for All Modules: Overview, Attendance, Fees, Exams, Study Logs, Bulk Add -->
+      <div class="tabs" style="margin-bottom:var(--sp-4); flex-wrap:wrap; gap:4px;">
+        <button class="tab-btn active" id="tab-pm-overview">📊 Overview</button>
+        <button class="tab-btn" id="tab-pm-attendance">
+          📅 Attendance
+          <span class="badge" id="pm-tab-att-badge" style="margin-left:4px; font-size:10px; padding:1px 6px; background:var(--c-primary); color:#fff; border-radius:10px;">—</span>
+        </button>
+        <button class="tab-btn" id="tab-pm-fees">
+          💰 Fees
+          <span class="badge" id="pm-tab-fee-badge" style="margin-left:4px; font-size:10px; padding:1px 6px; background:var(--c-primary); color:#fff; border-radius:10px;">—</span>
+        </button>
         <button class="tab-btn" id="tab-pm-exams">
-          Exam Marks
+          📝 Exams & Marks
           <span class="badge" id="pm-tab-exam-badge" style="margin-left:4px; font-size:10px; padding:1px 6px; background:var(--c-primary); color:#fff; border-radius:10px;">0</span>
         </button>
-        <button class="tab-btn" id="tab-pm-bulk-add">Bulk Add Logs</button>
+        <button class="tab-btn" id="tab-pm-logs">⏱️ Study Logs</button>
+        <button class="tab-btn" id="tab-pm-bulk-add">➕ Bulk Add Logs</button>
       </div>
       
       <!-- Content Areas -->
-      <!-- Weekly Content -->
-      <div id="pm-content-weekly" class="tab-content active">
-        <div class="card card-stat" style="margin-bottom:var(--sp-4); background:var(--surface-1);">
-          <div class="stat-label">Weekly Hours (Approved)</div>
-          <div class="stat-value" id="pm-weekly-hours">0 hrs</div>
-        </div>
-        <div class="table-wrap" style="max-height: 250px; overflow-y: auto;">
-          <table>
-            <thead><tr><th>Date</th><th>Day</th><th>Subject</th><th>Chapter</th><th>Duration</th></tr></thead>
-            <tbody id="pm-weekly-table-body">
-              <tr><td colspan="5"><div class="empty-state">No logs for this week</div></td></tr>
-            </tbody>
-          </table>
+
+      <!-- 1. OVERVIEW CONTENT (All Modules Snapshot) -->
+      <div id="pm-content-overview" class="tab-content active">
+        <!-- Student Details Card -->
+        <div class="card" style="margin-bottom:var(--sp-4); background:var(--surface-1); padding:14px 18px;">
+          <h4 style="margin:0 0 10px; font-size:var(--fs-sm); font-weight:700; color:var(--c-text);">👤 Student Information</h4>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px; font-size:var(--fs-xs);">
+            <div><strong>Admission No:</strong> <span id="pm-info-admission">—</span></div>
+            <div><strong>Class:</strong> <span id="pm-info-class">—</span></div>
+            <div><strong>Branch:</strong> <span id="pm-info-branch">—</span></div>
+            <div><strong>Phone:</strong> <span id="pm-info-phone">—</span></div>
+            <div><strong>Parent Name:</strong> <span id="pm-info-parent">—</span></div>
+            <div><strong>Login ID / Email:</strong> <span id="pm-info-email">—</span></div>
+            <div><strong>Account Status:</strong> <span id="pm-info-status">—</span></div>
+          </div>
+          <div style="margin-top:10px; pt-2; border-top:1px dashed var(--c-border); font-size:var(--fs-xs);">
+            <strong>Enrolled Subjects:</strong>
+            <div id="pm-info-subjects" style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;">
+              <span class="badge">Loading subjects...</span>
+            </div>
+          </div>
         </div>
 
-        <!-- Recent Exam Marks Preview in Weekly View -->
-        <div style="margin-top:var(--sp-4); padding-top:var(--sp-3); border-top:1px solid var(--c-border);">
-          <div class="flex items-center justify-between" style="margin-bottom:var(--sp-2);">
-            <h4 style="font-weight:700; margin:0; font-size:var(--fs-sm); display:flex; align-items:center; gap:6px;">
-              <span>📝</span> Recent Exam Results
-            </h4>
-            <button type="button" class="btn btn-ghost btn-sm" id="pm-jump-exams-btn" style="font-size:11px; padding:2px 8px; color:var(--c-primary); font-weight:600;">
+        <!-- 4 Core Modules 360 Snapshot Grid -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:12px; margin-bottom:var(--sp-4);">
+          <!-- Attendance Snapshot Card -->
+          <div class="card card-stat" style="background:var(--surface-0); border:1px solid var(--c-border); padding:14px;">
+            <div class="flex items-center justify-between" style="margin-bottom:6px;">
+              <span style="font-size:var(--fs-xs); font-weight:700; color:var(--c-text-muted);">📅 ATTENDANCE</span>
+              <span id="pm-snap-att-rate" class="badge badge-success" style="font-weight:700;">—</span>
+            </div>
+            <div class="stat-value" id="pm-snap-att-attended" style="font-size:1.4rem; color:var(--c-primary);">0 / 0</div>
+            <div id="pm-snap-att-details" style="font-size:var(--fs-xs); color:var(--c-text-muted); margin-top:4px;">
+              Present: 0 · Late: 0 · Absent: 0
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm" id="pm-jump-att-btn" style="margin-top:8px; font-size:11px; padding:3px 8px; width:100%; justify-content:center; color:var(--c-primary); border:1px solid var(--c-border);">
+              View Attendance Records →
+            </button>
+          </div>
+
+          <!-- Fees Snapshot Card -->
+          <div class="card card-stat" style="background:var(--surface-0); border:1px solid var(--c-border); padding:14px;">
+            <div class="flex items-center justify-between" style="margin-bottom:6px;">
+              <span style="font-size:var(--fs-xs); font-weight:700; color:var(--c-text-muted);">💰 FEES & DUES</span>
+              <span id="pm-snap-fee-status-badge" class="badge">—</span>
+            </div>
+            <div class="stat-value" id="pm-snap-fee-month" style="font-size:1.4rem;">—</div>
+            <div id="pm-snap-fee-details" style="font-size:var(--fs-xs); color:var(--c-text-muted); margin-top:4px;">
+              Admission: — · Total: ₹0
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm" id="pm-jump-fee-btn" style="margin-top:8px; font-size:11px; padding:3px 8px; width:100%; justify-content:center; color:var(--c-primary); border:1px solid var(--c-border);">
+              View Fee Payment History →
+            </button>
+          </div>
+
+          <!-- Exams Snapshot Card -->
+          <div class="card card-stat" style="background:var(--surface-0); border:1px solid var(--c-border); padding:14px;">
+            <div class="flex items-center justify-between" style="margin-bottom:6px;">
+              <span style="font-size:var(--fs-xs); font-weight:700; color:var(--c-text-muted);">📝 ACADEMIC EXAMS</span>
+              <span id="pm-snap-exam-avg" class="badge badge-primary" style="font-weight:700;">—</span>
+            </div>
+            <div class="stat-value" id="pm-snap-exam-count" style="font-size:1.4rem; color:var(--c-academic);">0 Exams</div>
+            <div id="pm-snap-exam-details" style="font-size:var(--fs-xs); color:var(--c-text-muted); margin-top:4px;">
+              Passed: 0 / 0 · Highest: —
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm" id="pm-jump-exam-tab-btn" style="margin-top:8px; font-size:11px; padding:3px 8px; width:100%; justify-content:center; color:var(--c-primary); border:1px solid var(--c-border);">
               View Full Scorecard →
             </button>
           </div>
+
+          <!-- Study Logs Snapshot Card -->
+          <div class="card card-stat" style="background:var(--surface-0); border:1px solid var(--c-border); padding:14px;">
+            <div class="flex items-center justify-between" style="margin-bottom:6px;">
+              <span style="font-size:var(--fs-xs); font-weight:700; color:var(--c-text-muted);">⏱️ STUDY LOGS</span>
+              <span id="pm-snap-streak" class="badge" style="background:#FFFBEB; color:#D97706; border:1px solid #FCD34D;">🔥 0 days</span>
+            </div>
+            <div class="stat-value" id="pm-snap-total-hours" style="font-size:1.4rem;">0 hrs</div>
+            <div id="pm-snap-log-details" style="font-size:var(--fs-xs); color:var(--c-text-muted); margin-top:4px;">
+              This week: 0 hrs · This month: 0 hrs
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm" id="pm-jump-logs-btn" style="margin-top:8px; font-size:11px; padding:3px 8px; width:100%; justify-content:center; color:var(--c-primary); border:1px solid var(--c-border);">
+              View Study Log Entries →
+            </button>
+          </div>
+        </div>
+
+        <!-- Recent Exam Scores Preview (shown in Overview) -->
+        <div style="margin-bottom:var(--sp-4);">
+          <div class="flex items-center justify-between" style="margin-bottom:8px;">
+            <h4 style="margin:0; font-size:var(--fs-sm); font-weight:700; color:var(--c-text);">📝 Recent Exam Scores</h4>
+            <button type="button" class="btn btn-ghost btn-sm" id="pm-jump-exam-tab-btn2" style="font-size:11px; padding:3px 8px; color:var(--c-primary); border:1px solid var(--c-border);">
+              See All Exams →
+            </button>
+          </div>
           <div id="pm-weekly-exam-preview">
-            <div class="empty-state" style="padding:12px; font-size:var(--fs-xs);">Loading exam marks...</div>
+            <div class="empty-state" style="padding:14px; font-size:var(--fs-xs);">Loading exam scores...</div>
           </div>
         </div>
       </div>
-      
-      <!-- Monthly Content -->
-      <div id="pm-content-monthly" class="tab-content" style="display:none;">
-        <div class="card card-stat" style="margin-bottom:var(--sp-4); background:var(--surface-1);">
-          <div class="stat-label">Monthly Hours (Approved)</div>
-          <div class="stat-value" id="pm-monthly-hours">0 hrs</div>
+
+      <!-- 2. ATTENDANCE CONTENT (NEW) -->
+      <div id="pm-content-attendance" class="tab-content" style="display:none;">
+        <div class="flex items-center justify-between flex-wrap gap-2" style="margin-bottom:var(--sp-3);">
+          <div>
+            <h4 style="margin:0; font-weight:700; font-size:var(--fs-md);">Attendance Records</h4>
+            <p style="margin:2px 0 0; font-size:var(--fs-xs); color:var(--c-text-muted);">Complete record of sessions attended, on-time arrivals, and absences.</p>
+          </div>
+          <a href="attendance-management.html" class="btn btn-ghost btn-sm" style="font-size:11px; padding:4px 10px; border:1px solid var(--c-border); display:inline-flex; align-items:center; gap:4px;">
+            Go to Attendance Module ↗
+          </a>
         </div>
-        <div class="table-wrap" style="max-height: 250px; overflow-y: auto;">
-          <table>
-            <thead><tr><th>Date</th><th>Day</th><th>Subject</th><th>Chapter</th><th>Duration</th><th>Status</th></tr></thead>
-            <tbody id="pm-monthly-table-body">
-              <tr><td colspan="6"><div class="empty-state">No logs for this month</div></td></tr>
+
+        <!-- Attendance Stats -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-bottom:var(--sp-4);">
+          <div class="card card-stat" style="background:var(--surface-1); padding:10px 14px;">
+            <div class="stat-label">Attendance Rate</div>
+            <div class="stat-value" id="pm-att-stat-rate" style="font-size:1.35rem; color:var(--c-primary);">—</div>
+          </div>
+          <div class="card card-stat" style="background:var(--surface-1); padding:10px 14px;">
+            <div class="stat-label">Sessions Held</div>
+            <div class="stat-value" id="pm-att-stat-total" style="font-size:1.35rem;">0</div>
+          </div>
+          <div class="card card-stat" style="background:var(--surface-1); padding:10px 14px;">
+            <div class="stat-label" style="color:var(--c-success);">Present</div>
+            <div class="stat-value" id="pm-att-stat-present" style="font-size:1.35rem; color:var(--c-success);">0</div>
+          </div>
+          <div class="card card-stat" style="background:var(--surface-1); padding:10px 14px;">
+            <div class="stat-label" style="color:#d97706;">Late</div>
+            <div class="stat-value" id="pm-att-stat-late" style="font-size:1.35rem; color:#d97706;">0</div>
+          </div>
+          <div class="card card-stat" style="background:var(--surface-1); padding:10px 14px;">
+            <div class="stat-label" style="color:var(--c-danger);">Absent</div>
+            <div class="stat-value" id="pm-att-stat-absent" style="font-size:1.35rem; color:var(--c-danger);">0</div>
+          </div>
+        </div>
+
+        <!-- Attendance Table -->
+        <div class="table-wrap" style="max-height: 290px; overflow-y: auto; border:1px solid var(--c-border); border-radius:var(--r-md);">
+          <table style="width:100%;">
+            <thead style="position:sticky; top:0; background:var(--surface-1); z-index:1;">
+              <tr>
+                <th style="width:18%;">Date</th>
+                <th style="width:28%;">Session Title</th>
+                <th style="width:20%;">Time</th>
+                <th style="width:16%;">Status</th>
+                <th style="width:18%;">Remarks</th>
+              </tr>
+            </thead>
+            <tbody id="pm-att-table-body">
+              <tr><td colspan="5"><div class="empty-state">Loading attendance records...</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 3. FEES CONTENT (NEW) -->
+      <div id="pm-content-fees" class="tab-content" style="display:none;">
+        <div class="flex items-center justify-between flex-wrap gap-2" style="margin-bottom:var(--sp-3);">
+          <div>
+            <h4 style="margin:0; font-weight:700; font-size:var(--fs-md);">Fee Records & Receipts</h4>
+            <p style="margin:2px 0 0; font-size:var(--fs-xs); color:var(--c-text-muted);">Admission fees, monthly tuition status, and payment receipts.</p>
+          </div>
+          <a href="fee-management.html" class="btn btn-ghost btn-sm" style="font-size:11px; padding:4px 10px; border:1px solid var(--c-border); display:inline-flex; align-items:center; gap:4px;">
+            Go to Fees Module ↗
+          </a>
+        </div>
+
+        <!-- Fee Stats Cards -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:10px; margin-bottom:var(--sp-4);">
+          <div class="card card-stat" style="background:var(--surface-1); padding:10px 14px;">
+            <div class="stat-label">Admission Fee (₹1,000)</div>
+            <div class="stat-value" id="pm-fee-stat-admission" style="font-size:1.15rem; margin:4px 0;">—</div>
+            <div id="pm-fee-stat-admission-sub" style="font-size:11px; color:var(--c-text-muted);">One-time</div>
+          </div>
+          <div class="card card-stat" style="background:var(--surface-1); padding:10px 14px;">
+            <div class="stat-label" id="pm-fee-stat-month-label">Current Month Fee</div>
+            <div class="stat-value" id="pm-fee-stat-month" style="font-size:1.15rem; margin:4px 0;">—</div>
+            <div id="pm-fee-stat-month-sub" style="font-size:11px; color:var(--c-text-muted);">Due by 5th</div>
+          </div>
+          <div class="card card-stat" style="background:var(--surface-1); padding:10px 14px;">
+            <div class="stat-label">Class Monthly Rate</div>
+            <div class="stat-value" id="pm-fee-stat-rate" style="font-size:1.35rem; color:var(--c-primary);">₹0</div>
+            <div id="pm-fee-stat-rate-sub" style="font-size:11px; color:var(--c-text-muted);">Based on class</div>
+          </div>
+          <div class="card card-stat" style="background:var(--surface-1); padding:10px 14px;">
+            <div class="stat-label">Total Fees Paid</div>
+            <div class="stat-value" id="pm-fee-stat-total" style="font-size:1.35rem; color:#059669;">₹0</div>
+            <div id="pm-fee-stat-total-count" style="font-size:11px; color:var(--c-text-muted);">0 receipts</div>
+          </div>
+        </div>
+
+        <!-- Fee Receipts Table -->
+        <div class="table-wrap" style="max-height: 290px; overflow-y: auto; border:1px solid var(--c-border); border-radius:var(--r-md);">
+          <table style="width:100%;">
+            <thead style="position:sticky; top:0; background:var(--surface-1); z-index:1;">
+              <tr>
+                <th style="width:16%;">Date</th>
+                <th style="width:20%;">Fee Type</th>
+                <th style="width:20%;">Period</th>
+                <th style="width:14%;">Amount</th>
+                <th style="width:14%;">Method</th>
+                <th style="width:16%;">Remarks</th>
+              </tr>
+            </thead>
+            <tbody id="pm-fees-table-body">
+              <tr><td colspan="6"><div class="empty-state">Loading fee records...</div></td></tr>
             </tbody>
           </table>
         </div>
       </div>
       
-      <!-- Subject Content -->
-      <div id="pm-content-subjects" class="tab-content" style="display:none;">
-        <h4 style="margin-bottom:var(--sp-3); font-weight:600;">Subject-wise Study Time</h4>
-        <div id="pm-subject-bars" style="display:flex; flex-direction:column; gap:var(--sp-3);">
-          <div class="empty-state">No approved study time recorded</div>
+      <!-- 5. STUDY LOGS CONTENT -->
+      <div id="pm-content-logs" class="tab-content" style="display:none;">
+        <div class="flex items-center justify-between flex-wrap gap-2" style="margin-bottom:var(--sp-3);">
+          <div>
+            <h4 style="margin:0; font-weight:700; font-size:var(--fs-md);">Study Logs & Learning Hours</h4>
+            <p style="margin:2px 0 0; font-size:var(--fs-xs); color:var(--c-text-muted);">Self-study duration, subjects covered, and streak tracking.</p>
+          </div>
+          <a href="study-log-management.html" class="btn btn-ghost btn-sm" style="font-size:11px; padding:4px 10px; border:1px solid var(--c-border); display:inline-flex; align-items:center; gap:4px;">
+            Go to Study Logs Module ↗
+          </a>
+        </div>
+
+        <!-- Quick Stats Cards -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-bottom:var(--sp-4);">
+          <div class="card card-stat" style="background:var(--surface-1); padding:10px 14px;">
+            <div class="stat-label">Total Study Time</div>
+            <div class="stat-value" id="pm-log-total-hours" style="font-size:1.35rem; color:var(--c-primary);">0 hrs</div>
+          </div>
+          <div class="card card-stat" style="background:var(--surface-1); padding:10px 14px;">
+            <div class="stat-label">Current Streak</div>
+            <div class="stat-value" id="pm-log-streak" style="font-size:1.35rem; color:#d97706;">🔥 0 days</div>
+          </div>
+          <div class="card card-stat" style="background:var(--surface-1); padding:10px 14px;">
+            <div class="stat-label">Weekly Hours</div>
+            <div class="stat-value" id="pm-weekly-hours" style="font-size:1.35rem;">0 hrs</div>
+          </div>
+          <div class="card card-stat" style="background:var(--surface-1); padding:10px 14px;">
+            <div class="stat-label">Monthly Hours</div>
+            <div class="stat-value" id="pm-monthly-hours" style="font-size:1.35rem;">0 hrs</div>
+          </div>
+        </div>
+
+        <!-- View Sub-tabs -->
+        <div class="flex items-center gap-2" style="margin-bottom:var(--sp-3);">
+          <button type="button" class="btn btn-sm btn-ghost pm-log-view-btn active" id="btn-pm-log-weekly" style="padding:4px 12px; font-size:var(--fs-xs); font-weight:600; border-radius:var(--r-full); border:1px solid var(--c-border);">
+            Weekly Logs
+          </button>
+          <button type="button" class="btn btn-sm btn-ghost pm-log-view-btn" id="btn-pm-log-monthly" style="padding:4px 12px; font-size:var(--fs-xs); font-weight:600; border-radius:var(--r-full); border:1px solid var(--c-border);">
+            Monthly Logs
+          </button>
+          <button type="button" class="btn btn-sm btn-ghost pm-log-view-btn" id="btn-pm-log-subjects" style="padding:4px 12px; font-size:var(--fs-xs); font-weight:600; border-radius:var(--r-full); border:1px solid var(--c-border);">
+            Subject Breakdown
+          </button>
+        </div>
+
+        <!-- Weekly Section -->
+        <div id="pm-subview-weekly">
+          <div class="table-wrap" style="max-height: 250px; overflow-y: auto; border:1px solid var(--c-border); border-radius:var(--r-md);">
+            <table style="width:100%;">
+              <thead style="position:sticky; top:0; background:var(--surface-1); z-index:1;">
+                <tr><th>Date</th><th>Day</th><th>Subject</th><th>Chapter</th><th>Duration</th></tr>
+              </thead>
+              <tbody id="pm-weekly-table-body">
+                <tr><td colspan="5"><div class="empty-state">No logs for this week</div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Monthly Section -->
+        <div id="pm-subview-monthly" style="display:none;">
+          <div class="table-wrap" style="max-height: 250px; overflow-y: auto; border:1px solid var(--c-border); border-radius:var(--r-md);">
+            <table style="width:100%;">
+              <thead style="position:sticky; top:0; background:var(--surface-1); z-index:1;">
+                <tr><th>Date</th><th>Day</th><th>Subject</th><th>Chapter</th><th>Duration</th><th>Status</th></tr>
+              </thead>
+              <tbody id="pm-monthly-table-body">
+                <tr><td colspan="6"><div class="empty-state">No logs for this month</div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Subjects Section -->
+        <div id="pm-subview-subjects" style="display:none;">
+          <div id="pm-subject-bars" style="display:flex; flex-direction:column; gap:var(--sp-3);">
+            <div class="empty-state">No approved study time recorded</div>
+          </div>
         </div>
       </div>
 

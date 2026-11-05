@@ -23,7 +23,9 @@ import {
   getSessionAttendance,
   markAttendance,
   ATTENDANCE_STATUS,
-  calcAttendancePercentage
+  calcAttendancePercentage,
+  generateSessionAbsenteesWhatsAppMessage,
+  formatClassStandard
 } from "../services/attendance-service.js";
 
 let currentAdmin = null;
@@ -38,6 +40,13 @@ let isDirty = false;
 let selectSessionRequestId = 0;
 
 (async function init() {
+  setTimeout(() => {
+    const loader = document.getElementById("page-loader");
+    if (loader && !loader.classList.contains("done")) {
+      loader.classList.add("done");
+    }
+  }, 2000);
+
   try {
     currentAdmin = await requireAuth("admin", "admin-login.html");
     renderSidebar("admin", "attendance", {
@@ -184,6 +193,11 @@ function wireEventListeners() {
   document.getElementById("btn-mark-all-absent").addEventListener("click", handleMarkAllAbsent);
   document.getElementById("btn-save-attendance").addEventListener("click", handleSaveAttendance);
 
+  // WhatsApp absentees sharing triggers
+  document.getElementById("btn-share-whatsapp-absentees")?.addEventListener("click", openWhatsAppAbsenteesModal);
+  document.getElementById("btn-roster-share-wa")?.addEventListener("click", openWhatsAppAbsenteesModal);
+  wireWhatsAppAbsenteesHandlers();
+
   // Search filter in roster
   document.getElementById("roster-search").addEventListener("input", (e) => {
     filterRosterTable(e.target.value);
@@ -195,6 +209,106 @@ function wireEventListeners() {
       e.preventDefault();
       e.returnValue = "";
     }
+  });
+}
+
+/**
+ * Opens WhatsApp Absentees Modal with formatted message preview.
+ */
+function openWhatsAppAbsenteesModal() {
+  if (!activeSession) {
+    toast.info("Please select or create a class session first.");
+    return;
+  }
+
+  // Filter absent students from current live roster
+  const absentees = currentRoster.filter((r) => r.status === ATTENDANCE_STATUS.ABSENT);
+
+  const modal = document.getElementById("whatsapp-absentees-modal");
+  if (!modal) return;
+
+  const countBadge = document.getElementById("wa-absentees-count-badge");
+  const infoBadge = document.getElementById("wa-session-info-badge");
+  const timeslotSelect = document.getElementById("wa-timeslot-select");
+
+  const classStandard = formatClassStandard(activeSession.class);
+  const timeFormatted = activeSession.startTime ? format12Hour(activeSession.startTime) : "";
+  const title = activeSession.title ? ` • ${activeSession.title}` : "";
+  if (infoBadge) {
+    infoBadge.textContent = `${classStandard}${title}${timeFormatted ? ` • ${timeFormatted}` : ""}`;
+  }
+
+  if (countBadge) {
+    countBadge.textContent = `${absentees.length} Absentee${absentees.length === 1 ? "" : "s"}`;
+    countBadge.className = absentees.length > 0 ? "badge badge-danger" : "badge badge-success";
+  }
+
+  if (timeslotSelect) {
+    timeslotSelect.value = "auto";
+  }
+
+  updateWhatsAppAbsenteesPreview();
+  modal.classList.add("active");
+}
+
+function updateWhatsAppAbsenteesPreview() {
+  const textarea = document.getElementById("wa-absentees-textarea");
+  if (!textarea || !activeSession) return;
+
+  const timeslotSelect = document.getElementById("wa-timeslot-select");
+  const chosenSlot = timeslotSelect && timeslotSelect.value !== "auto" ? timeslotSelect.value : null;
+
+  const absentees = currentRoster.filter((r) => r.status === ATTENDANCE_STATUS.ABSENT);
+  const generatedMessage = generateSessionAbsenteesWhatsAppMessage(activeSession, absentees, chosenSlot);
+  textarea.value = generatedMessage;
+}
+
+function wireWhatsAppAbsenteesHandlers() {
+  const modal = document.getElementById("whatsapp-absentees-modal");
+  const closeBtn = document.getElementById("close-wa-absentees-modal");
+  const cancelBtn = document.getElementById("btn-cancel-wa-absentees");
+  const copyBtn = document.getElementById("btn-copy-wa-absentees");
+  const sendBtn = document.getElementById("btn-send-wa-absentees");
+  const timeslotSelect = document.getElementById("wa-timeslot-select");
+
+  timeslotSelect?.addEventListener("change", updateWhatsAppAbsenteesPreview);
+
+  const closeModal = () => modal?.classList.remove("active");
+  closeBtn?.addEventListener("click", closeModal);
+  cancelBtn?.addEventListener("click", closeModal);
+  modal?.addEventListener("click", (e) => {
+    if (e.target === modal) closeModal();
+  });
+
+  copyBtn?.addEventListener("click", async () => {
+    const text = document.getElementById("wa-absentees-textarea")?.value || "";
+    if (!text.trim()) {
+      toast.error("No message to copy.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("WhatsApp absentees message copied to clipboard!");
+    } catch (_) {
+      const textarea = document.getElementById("wa-absentees-textarea");
+      if (textarea) {
+        textarea.select();
+        document.execCommand("copy");
+        toast.success("WhatsApp absentees message copied to clipboard!");
+      } else {
+        toast.error("Failed to copy message to clipboard.");
+      }
+    }
+  });
+
+  sendBtn?.addEventListener("click", () => {
+    const text = document.getElementById("wa-absentees-textarea")?.value || "";
+    if (!text.trim()) {
+      toast.error("No message to send.");
+      return;
+    }
+    const encoded = encodeURIComponent(text);
+    window.open(`https://api.whatsapp.com/send?text=${encoded}`, "_blank");
   });
 }
 

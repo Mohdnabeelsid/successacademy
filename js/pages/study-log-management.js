@@ -26,6 +26,14 @@ const pageSize = 20;
 
 // Fix #10: init() now has try/catch/finally so network errors don't hang the page-loader spinner
 (async function init() {
+  // Safety timeout to guarantee loader never hangs indefinitely
+  setTimeout(() => {
+    const loader = document.getElementById("page-loader");
+    if (loader && !loader.classList.contains("done")) {
+      loader.classList.add("done");
+    }
+  }, 2000);
+
   try {
     admin = await requireAuth("admin", "admin-login.html");
     renderSidebar("admin", "logs", { name: admin.name || admin.email, sub: "Branch Admin" });

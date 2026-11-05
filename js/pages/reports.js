@@ -20,45 +20,53 @@ let currentTab = "leaderboard";
 let currentAdmin = null;
 
 (async function init() {
-  currentAdmin = await requireAuth("admin", "admin-login.html");
-  const isAllBranch = !currentAdmin.branch || currentAdmin.branch === "ALL";
-  const subTitle = isAllBranch ? "Admin (All Branches)" : `${currentAdmin.branch} Branch Admin`;
-  renderSidebar("admin", "reports", { name: currentAdmin.name || currentAdmin.email, sub: subTitle });
-
-  // Lock branch filters if restricted to a specific branch
-  if (!isAllBranch) {
-    const filterBranch = document.getElementById("filter-branch");
-    if (filterBranch) {
-      filterBranch.value = currentAdmin.branch;
-      filterBranch.disabled = true;
+  // Safety timeout to guarantee loader never hangs indefinitely
+  setTimeout(() => {
+    const loader = document.getElementById("page-loader");
+    if (loader && !loader.classList.contains("done")) {
+      loader.classList.add("done");
     }
-    const attFilterBranch = document.getElementById("att-filter-branch");
-    if (attFilterBranch) {
-      attFilterBranch.value = currentAdmin.branch;
-      attFilterBranch.disabled = true;
-    }
-  }
+  }, 2000);
 
-  // Set default academic year date range
-  const acadRange = getAcademicYearRange();
-  const startDateInput = document.getElementById("att-start-date");
-  const endDateInput = document.getElementById("att-end-date");
-  if (startDateInput && !startDateInput.value) {
-    startDateInput.value = acadRange.startIso;
-  }
-  if (endDateInput && !endDateInput.value) {
-    endDateInput.value = acadRange.endIso;
-  }
+  wireEvents();
 
   try {
+    currentAdmin = await requireAuth("admin", "admin-login.html");
+    const isAllBranch = !currentAdmin.branch || currentAdmin.branch === "ALL";
+    const subTitle = isAllBranch ? "Admin (All Branches)" : `${currentAdmin.branch} Branch Admin`;
+    renderSidebar("admin", "reports", { name: currentAdmin.name || currentAdmin.email, sub: subTitle });
+
+    // Lock branch filters if restricted to a specific branch
+    if (!isAllBranch) {
+      const filterBranch = document.getElementById("filter-branch");
+      if (filterBranch) {
+        filterBranch.value = currentAdmin.branch;
+        filterBranch.disabled = true;
+      }
+      const attFilterBranch = document.getElementById("att-filter-branch");
+      if (attFilterBranch) {
+        attFilterBranch.value = currentAdmin.branch;
+        attFilterBranch.disabled = true;
+      }
+    }
+
+    // Set default academic year date range
+    const acadRange = getAcademicYearRange();
+    const startDateInput = document.getElementById("att-start-date");
+    const endDateInput = document.getElementById("att-end-date");
+    if (startDateInput && !startDateInput.value) {
+      startDateInput.value = acadRange.startIso;
+    }
+    if (endDateInput && !endDateInput.value) {
+      endDateInput.value = acadRange.endIso;
+    }
+
     await refreshLeaderboard();
   } catch (err) {
     console.error("Reports refresh error:", err);
   } finally {
     document.getElementById("page-loader")?.classList.add("done");
   }
-
-  wireEvents();
 })();
 
 async function refreshLeaderboard() {

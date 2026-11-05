@@ -37,6 +37,14 @@ const pageSize = 15;
 let editingLogId = null;
 
 (async function init() {
+  // Safety timeout to guarantee loader never hangs indefinitely
+  setTimeout(() => {
+    const loader = document.getElementById("page-loader");
+    if (loader && !loader.classList.contains("done")) {
+      loader.classList.add("done");
+    }
+  }, 2000);
+
   try {
     const authStudent = await requireAuth("student", "student-login.html");
     const dbStudent = await getStudent(authStudent.id);

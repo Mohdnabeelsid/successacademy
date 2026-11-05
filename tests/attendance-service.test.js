@@ -6,6 +6,9 @@
 import {
   calcAttendancePercentage,
   normalizeClass,
+  formatClassStandard,
+  getTimeSlotDescription,
+  generateSessionAbsenteesWhatsAppMessage,
   ATTENDANCE_STATUS,
   markAttendance,
   createAttendanceSession,
@@ -408,6 +411,84 @@ console.log("--- 10. Session Time Validation & Immutability ---");
     setSupabaseClient(createSupabaseStub());
   }
   assertEqual(updateTimeErr, "End time must be after start time.", "updateAttendanceSession validates endTime > startTime");
+}
+
+// --------------------------------------------------------------------------
+// 11. WhatsApp Absentees Sharing Message Format Tests
+// --------------------------------------------------------------------------
+console.log("\n--- 11. WhatsApp Absentees Sharing Message Format ---");
+{
+  // 11.1 Class standard formatting
+  assertEqual(formatClassStandard("10"), "10th Standard", "Formats '10' as '10th Standard'");
+  assertEqual(formatClassStandard("Class 10"), "10th Standard", "Formats 'Class 10' as '10th Standard'");
+  assertEqual(formatClassStandard("5"), "5th Standard", "Formats '5' as '5th Standard'");
+  assertEqual(formatClassStandard("6"), "6th Standard", "Formats '6' as '6th Standard'");
+  assertEqual(formatClassStandard("8"), "8th Standard", "Formats '8' as '8th Standard'");
+  assertEqual(formatClassStandard("Plus One"), "11th Standard", "Formats 'Plus One' as '11th Standard'");
+  assertEqual(formatClassStandard("Plus Two"), "12th Standard", "Formats 'Plus Two' as '12th Standard'");
+
+  // 11.2 Time of day slot description (supports HH:MM, HH:MM:SS, AM/PM)
+  assertEqual(getTimeSlotDescription("09:00"), "morning class", "09:00 is morning class");
+  assertEqual(getTimeSlotDescription("09:00:00"), "morning class", "09:00:00 is morning class");
+  assertEqual(getTimeSlotDescription("11:30"), "morning class", "11:30 is morning class");
+  assertEqual(getTimeSlotDescription("12:00:00"), "afternoon class", "12:00:00 is afternoon class");
+  assertEqual(getTimeSlotDescription("13:00"), "afternoon class", "13:00 is afternoon class");
+  assertEqual(getTimeSlotDescription("14:30:00"), "afternoon class", "14:30:00 is afternoon class");
+  assertEqual(getTimeSlotDescription("15:45"), "afternoon class", "15:45 is afternoon class");
+  assertEqual(getTimeSlotDescription("16:00:00"), "evening class", "16:00:00 is evening class");
+  assertEqual(getTimeSlotDescription("16:30"), "evening class", "16:30 is evening class");
+  assertEqual(getTimeSlotDescription("05:30 PM"), "evening class", "05:30 PM is evening class");
+
+  // 11.3 Message generator with morning, afternoon, evening according to time
+  const morningSession = { class: "10", startTime: "09:00:00" };
+  const afternoonSession = { class: "10", startTime: "14:00:00" };
+  const eveningSession = { class: "10", startTime: "16:30:00" };
+
+  const absentees = [{ studentName: "Adil" }, { studentName: "Bilal" }];
+
+  const morningMsg = generateSessionAbsenteesWhatsAppMessage(morningSession, absentees);
+  assert(morningMsg.startsWith("Today morning class – 10th Standard absentees🌆"), "Morning session produces 'Today morning class'");
+
+  const afternoonMsg = generateSessionAbsenteesWhatsAppMessage(afternoonSession, absentees);
+  assert(afternoonMsg.startsWith("Today afternoon class – 10th Standard absentees🌆"), "Afternoon session produces 'Today afternoon class'");
+
+  const eveningMsg = generateSessionAbsenteesWhatsAppMessage(eveningSession, absentees);
+  assert(eveningMsg.startsWith("Today evening class – 10th Standard absentees🌆"), "Evening session produces 'Today evening class'");
+
+  // 11.4 Manual override of time slot
+  const overrideMsg = generateSessionAbsenteesWhatsAppMessage(morningSession, absentees, "evening class");
+  assert(overrideMsg.startsWith("Today evening class – 10th Standard absentees🌆"), "Explicit time slot override produces 'Today evening class'");
+
+  // 11.5 Message generator with A-Z sorting
+  const session = {
+    class: "10",
+    startTime: "09:00",
+    title: "Mathematics"
+  };
+
+  const absenteesUnsorted = [
+    { studentName: "Zayd", name: "Zayd" },
+    { studentName: "Bilal", name: "Bilal" },
+    { studentName: "Adil", name: "Adil" }
+  ];
+
+  const generatedMsg = generateSessionAbsenteesWhatsAppMessage(session, absenteesUnsorted);
+
+  const expectedMsg = `Today morning class – 10th Standard absentees🌆\n\n• Adil\n• Bilal\n• Zayd\n\n👉 Kindly inform Farook sir about the leave 🙌`;
+
+  assertEqual(generatedMsg, expectedMsg, "Message matches exact requested format with A-Z bulleted list and Farook sir leave notice");
+  assert(generatedMsg.startsWith("Today morning class – 10th Standard absentees🌆"), "Message has exact header with 🌆 emoji");
+  assert(generatedMsg.includes("• Adil\n• Bilal\n• Zayd"), "Absentees are sorted in A-Z order with bullet points");
+  assert(generatedMsg.endsWith("👉 Kindly inform Farook sir about the leave 🙌"), "Message has exact footer notice");
+
+  // 11.4 Handles string array inputs as well
+  const stringAbsentees = ["Fathima", "Ali", "Basim"];
+  const msgFromStrings = generateSessionAbsenteesWhatsAppMessage(session, stringAbsentees);
+  assert(msgFromStrings.includes("• Ali\n• Basim\n• Fathima"), "String array absentees are properly sorted and formatted");
+
+  // 11.5 Empty absentees fallback
+  const emptyMsg = generateSessionAbsenteesWhatsAppMessage(session, []);
+  assert(emptyMsg.includes("No absentees today! 🎉"), "Empty absentees displays friendly status");
 }
 
 console.log(`\n================================================================`);

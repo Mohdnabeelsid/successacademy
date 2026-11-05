@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Fees — SUCCESS Learning Log</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <style>
+    .due-alert-banner {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(239, 68, 68, 0.12));
+      border: 1.5px solid #f59e0b;
+      border-radius: var(--r-md);
+      padding: 16px 20px;
+      margin-bottom: var(--sp-5);
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.15);
+      animation: alertSlideDown 0.3s ease-out;
+    }
+
+    @keyframes alertSlideDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .due-alert-icon {
+      font-size: 26px;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+
+    .due-alert-content {
+      flex: 1;
+    }
+
+    .due-alert-title {
+      font-size: var(--fs-md);
+      font-weight: 800;
+      color: #b45309;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .due-alert-body {
+      font-size: var(--fs-sm);
+      color: var(--c-text);
+      line-height: 1.5;
+    }
+
+    .due-alert-note {
+      font-size: var(--fs-xs);
+      color: var(--c-text-muted);
+      margin-top: 6px;
+    }
+
+    .status-pill-paid {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      background: rgba(16, 185, 129, 0.15);
+      color: #059669;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: var(--r-full);
+      font-size: var(--fs-xs);
+      font-weight: 700;
+    }
+
+    .status-pill-due {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      background: rgba(239, 68, 68, 0.15);
+      color: #dc2626;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: var(--r-full);
+      font-size: var(--fs-xs);
+      font-weight: 700;
+    }
+
+    .method-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: var(--r-full);
+      font-size: var(--fs-xs);
+      font-weight: 700;
+    }
+
+    .method-badge-cash {
+      background: rgba(16, 185, 129, 0.15);
+      color: #059669;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .method-badge-upi {
+      background: rgba(99, 102, 241, 0.15);
+      color: #4f46e5;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+  </style>
+</head>
+
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <div class="page-loader" id="page-loader">
+    <div class="spinner spinner-dark"></div>
+  </div>
+
+  <div class="app-shell">
+    <div id="sidebar-root"></div>
+
+    <main class="main" id="main-content" tabindex="-1">
+      <header class="topbar">
+        <div class="flex items-center gap-3">
+          <button class="btn-icon menu-toggle" id="menu-toggle" aria-label="Open menu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+          <div>
+            <h1>My Fees</h1>
+            <div class="topbar-sub" id="student-meta-label">Loading student details...</div>
+          </div>
+        </div>
+        <div class="topbar-actions flex items-center gap-2">
+          <a href="student-dashboard.html" class="btn btn-ghost btn-sm">🏠 Dashboard</a>
+          <a href="student-exams.html" class="btn btn-ghost btn-sm">🏆 My Exams</a>
+        </div>
+      </header>
+
+      <div class="page-body">
+        <!-- Conditional Due Alert Banner (shown after 5th of month if unpaid) -->
+        <div id="due-alert-container" style="display: none;">
+          <div class="due-alert-banner">
+            <div class="due-alert-icon">⚠️</div>
+            <div class="due-alert-content">
+              <div class="due-alert-title">
+                <span>Monthly Fee Due Reminder</span>
+                <span class="badge badge-warning" id="alert-days-overdue">Past 5th of Month</span>
+              </div>
+              <div class="due-alert-body" id="alert-message-text">
+                Your monthly tuition fee of <strong>₹0</strong> for this month is pending. Please pay at the office via Cash or UPI at your earliest convenience.
+              </div>
+              <div class="due-alert-note">
+                💡 Monthly fees are requested to be cleared on or before the 5th of each month.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stat / Status Cards -->
+        <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin-bottom: var(--sp-5);">
+          <!-- Admission Fee Status -->
+          <div class="card card-stat">
+            <div class="stat-label">Admission Fee</div>
+            <div class="stat-value" id="card-admission-status" style="font-size: var(--fs-md); margin: 6px 0;">—</div>
+            <div id="card-admission-detail" style="font-size: var(--fs-xs); color: var(--c-text-muted);">
+              One-time fee: ₹1,000
+            </div>
+          </div>
+
+          <!-- Current Month Status -->
+          <div class="card card-stat">
+            <div class="stat-label" id="card-current-month-label">Current Month Fee</div>
+            <div class="stat-value" id="card-current-month-status" style="font-size: var(--fs-md); margin: 6px 0;">—</div>
+            <div id="card-current-month-detail" style="font-size: var(--fs-xs); color: var(--c-text-muted);">
+              Due by 5th of the month
+            </div>
+          </div>
+
+          <!-- Monthly Fee Rate for Class -->
+          <div class="card card-stat">
+            <div class="stat-label">Monthly Fee Rate</div>
+            <div class="stat-value" id="card-fee-rate" style="color: var(--c-primary);">₹0</div>
+            <div id="card-fee-rate-sub" style="font-size: var(--fs-xs); color: var(--c-text-muted);">
+              Standard rate for your class
+            </div>
+          </div>
+
+          <!-- Total Paid -->
+          <div class="card card-stat">
+            <div class="stat-label">Total Fees Paid</div>
+            <div class="stat-value" id="card-total-paid" style="color: #059669;">₹0</div>
+            <div id="card-total-count" style="font-size: var(--fs-xs); color: var(--c-text-muted);">
+              0 recorded payments
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment History Table -->
+        <div class="card" style="padding: 0; overflow: hidden;">
+          <div style="padding: 16px 20px; border-bottom: 1px solid var(--c-border); display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="font-size: var(--fs-md); font-weight: 700; margin: 0;">
+              Payment History <span id="payment-count-badge" class="badge" style="margin-left: 8px;">0</span>
+            </h2>
+            <div style="font-size: var(--fs-xs); color: var(--c-text-muted);">
+              Official payment receipts recorded by administration
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table" id="student-fees-table" style="width: 100%;">
+              <thead>
+                <tr>
+                  <th>Payment Date</th>
+                  <th>Fee Type</th>
+                  <th>Period</th>
+                  <th>Amount</th>
+                  <th>Payment Method</th>
+                  <th>Remarks</th>
+                </tr>
+              </thead>
+              <tbody id="student-fees-tbody">
+                <tr>
+                  <td colspan="6" style="text-align: center; padding: 36px; color: var(--c-text-muted);">
+                    Loading payment records...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="toast-root"></div>
+
+  <script type="module" src="../js/pages/student-fees.js"></script>
+</body>
+
+</html>
+

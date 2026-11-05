@@ -88,7 +88,9 @@ export async function adminLogin(email, password) {
     throw new Error("This account is not authorized for admin access.");
   }
 
-  return { uid, ...profile };
+  const result = { uid, ...profile };
+  sessionStorage.setItem("success_user_admin", JSON.stringify(result));
+  return result;
 }
 
 /** Sign in a student using Admission Number + password. */
@@ -114,7 +116,9 @@ export async function studentLogin(admissionNumber, password) {
     throw new Error("This account has been disabled. Contact your branch admin.");
   }
 
-  return { uid, ...student };
+  const result = { uid, ...student };
+  sessionStorage.setItem("success_user_student", JSON.stringify(result));
+  return result;
 }
 
 export function logout() {
@@ -135,55 +139,84 @@ export function onAuthChange(callback) {
 export function requireAuth(requiredRole, loginPath) {
   return new Promise((resolve) => {
     const cacheKey = `success_user_${requiredRole}`;
+    let isResolved = false;
 
     // Attempt instant resolution from session storage cache
     const cached = sessionStorage.getItem(cacheKey);
     if (cached) {
       try {
         const parsed = JSON.parse(cached);
+        isResolved = true;
         resolve(parsed);
       } catch (err) {
         console.warn("Failed to parse cached auth state", err);
       }
     }
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session || !session.user) {
-        sessionStorage.removeItem(cacheKey);
+    // Safety timeout: if getSession takes more than 3.5 seconds and not yet resolved, redirect
+    const timer = setTimeout(() => {
+      if (!isResolved) {
+        const fallback = sessionStorage.getItem(cacheKey);
+        if (fallback) {
+          try {
+            resolve(JSON.parse(fallback));
+            return;
+          } catch (_) {}
+        }
+        console.warn("Auth check timed out, redirecting to login:", loginPath);
         window.location.href = loginPath;
-        return;
       }
+    }, 3500);
 
-      try {
-        let profile;
-        const uid = session.user.id;
-
-        if (requiredRole === "admin") {
-          profile = await getUserProfile(uid);
-          if (!profile || profile.role !== "admin") {
-            sessionStorage.removeItem(cacheKey);
-            window.location.href = loginPath;
-            return;
-          }
-          profile = { uid, ...profile };
-        } else {
-          profile = await getStudentByUid(uid);
-          if (!profile || profile.loginDisabled) {
-            sessionStorage.removeItem(cacheKey);
-            window.location.href = loginPath;
-            return;
-          }
-          profile = { uid, ...profile };
+    supabase.auth.getSession()
+      .then(async ({ data: { session } }) => {
+        clearTimeout(timer);
+        if (!session || !session.user) {
+          sessionStorage.removeItem(cacheKey);
+          window.location.href = loginPath;
+          return;
         }
 
-        sessionStorage.setItem(cacheKey, JSON.stringify(profile));
-        resolve(profile);
-      } catch (e) {
-        console.error("Auth guard error:", e);
-        sessionStorage.removeItem(cacheKey);
-        window.location.href = loginPath;
-      }
-    });
+        try {
+          let profile;
+          const uid = session.user.id;
+
+          if (requiredRole === "admin") {
+            profile = await getUserProfile(uid);
+            if (!profile || profile.role !== "admin") {
+              sessionStorage.removeItem(cacheKey);
+              window.location.href = loginPath;
+              return;
+            }
+            profile = { uid, ...profile };
+          } else {
+            profile = await getStudentByUid(uid);
+            if (!profile || profile.loginDisabled) {
+              sessionStorage.removeItem(cacheKey);
+              window.location.href = loginPath;
+              return;
+            }
+            profile = { uid, ...profile };
+          }
+
+          sessionStorage.setItem(cacheKey, JSON.stringify(profile));
+          if (!isResolved) {
+            isResolved = true;
+            resolve(profile);
+          }
+        } catch (e) {
+          console.error("Auth guard error:", e);
+          sessionStorage.removeItem(cacheKey);
+          window.location.href = loginPath;
+        }
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        console.error("getSession error:", err);
+        if (!isResolved) {
+          window.location.href = loginPath;
+        }
+      });
   });
 }
 

@@ -15,9 +15,16 @@ import {
 } from "../services/frame-service.js";
 
 (async function init() {
-  const authStudent = await requireAuth("student", "student-login.html");
-  
+  // Safety timeout to guarantee loader never hangs indefinitely
+  setTimeout(() => {
+    const loader = document.getElementById("page-loader");
+    if (loader && !loader.classList.contains("done")) {
+      loader.classList.add("done");
+    }
+  }, 2000);
+
   try {
+    const authStudent = await requireAuth("student", "student-login.html");
     // Fetch fresh student profile from database
     const dbStudent = await getStudent(authStudent.id);
     const student = dbStudent || authStudent;

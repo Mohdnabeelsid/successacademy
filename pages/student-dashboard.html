@@ -60,6 +60,22 @@
       </header>
 
       <div class="page-body">
+        <!-- Monthly Fee Overdue Alert Banner -->
+        <div id="fee-due-alert-banner" style="display: none; margin-bottom: var(--sp-4);">
+          <div style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(239, 68, 68, 0.12)); border: 1.5px solid #f59e0b; border-radius: var(--r-md); padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 22px;">⚠️</span>
+              <div>
+                <strong style="color: #b45309;">Monthly Fee Due:</strong>
+                <span id="fee-alert-dashboard-text" style="color: var(--c-text); font-size: var(--fs-sm); margin-left: 4px;">Your tuition fee for this month is due. Please settle via Cash or UPI at the office.</span>
+              </div>
+            </div>
+            <a href="student-fees.html" class="btn btn-sm btn-ghost" style="color: #b45309; border-color: #f59e0b; font-weight: 700;">
+              View My Fees →
+            </a>
+          </div>
+        </div>
+
         <div class="stat-grid">
           <div class="card card-stat">
             <div class="stat-label">Current Streak</div>

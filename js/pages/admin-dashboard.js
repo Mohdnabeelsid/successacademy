@@ -12,6 +12,13 @@ let allStudents = [];
 let allLogs = [];
 
 (async function init() {
+  setTimeout(() => {
+    const loader = document.getElementById("page-loader");
+    if (loader && !loader.classList.contains("done")) {
+      loader.classList.add("done");
+    }
+  }, 2000);
+
   try {
     const admin = await requireAuth("admin", "admin-login.html");
     renderSidebar("admin", "dashboard", { name: admin.name || admin.email, sub: "Branch Admin" });

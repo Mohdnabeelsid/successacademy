@@ -280,7 +280,7 @@ export function format12Hour(timeStr) {
 export function parseTimeToMinutes(timeStr) {
   if (!timeStr) return null;
   const s = String(timeStr).trim();
-  const match12 = s.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/i);
+  const match12 = s.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(am|pm)$/i);
   if (match12) {
     let h = parseInt(match12[1], 10);
     const m = parseInt(match12[2], 10);
@@ -289,7 +289,7 @@ export function parseTimeToMinutes(timeStr) {
     if (ampm === "am" && h === 12) h = 0;
     return h * 60 + m;
   }
-  const match24 = s.match(/^(\d{1,2}):(\d{2})$/);
+  const match24 = s.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
   if (match24) {
     const h = parseInt(match24[1], 10);
     const m = parseInt(match24[2], 10);
