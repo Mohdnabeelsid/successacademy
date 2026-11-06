@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>NEXTGEN Live Session Check-In — SUCCESS ACADEMY</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/variables.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/nextgen.css">
+</head>
+<body class="nextgen-body">
+
+<div class="nextgen-container">
+  <!-- Brand Header -->
+  <header class="nextgen-header">
+    <img src="../assets/logo.png" alt="SUCCESS ACADEMY Logo" class="nextgen-logo" onerror="this.style.display='none'">
+    <h1 class="nextgen-brand-title">SUCCESS ACADEMY</h1>
+    <p class="nextgen-brand-tagline">NEXTGEN · Online Student Development</p>
+  </header>
+
+  <!-- Main Interaction Card -->
+  <main class="nextgen-card">
+    <div class="nextgen-card-top-accent"></div>
+
+    <!-- Initial Loading State -->
+    <div id="session-loading" style="text-align:center; padding:40px 20px;">
+      <div style="width:36px; height:36px; border:3px solid #E5E7EB; border-top-color:#0FA15D; border-radius:50%; animation:ngSpin 0.8s linear infinite; margin:0 auto 16px auto;"></div>
+      <p style="font-size:0.9rem; color:#4B5E58; font-weight:600; margin:0;">Connecting to NEXTGEN session...</p>
+    </div>
+
+    <!-- No Live Session Screen -->
+    <div id="no-session-card" class="no-session-card" style="display:none;">
+      <div class="no-session-icon">📡</div>
+      <h2 class="no-session-title">No Live Session Right Now</h2>
+      <p class="no-session-desc">
+        There is currently no live NEXTGEN session.
+        <br><br>
+        Please follow <strong>SUCCESS ACADEMY</strong> announcements on WhatsApp and Instagram for upcoming session schedules.
+      </p>
+      <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:20px;">
+        <button type="button" id="retry-check-btn" class="btn-submit-checkin" style="width:auto; padding:10px 22px; font-size:0.88rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Check Again
+        </button>
+      </div>
+    </div>
+
+    <!-- Live Session Active & Check-in Form -->
+    <div id="checkin-container" style="display:none;">
+      <!-- Live Indicator -->
+      <div class="nextgen-pill-live">
+        <span class="pulse-dot"></span> Live Session Active
+      </div>
+
+      <!-- Live Session Meta -->
+      <div class="session-info-box">
+        <h2 class="session-title" id="session-title">NEXTGEN Session</h2>
+        <div class="session-meta-row">
+          <div class="session-meta-item">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span id="session-facilitator">Facilitator</span>
+          </div>
+          <div class="session-meta-item">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span id="session-time">Today</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Error Banner -->
+      <div id="form-error" style="display:none; background:#FEE2E2; border:1px solid #FCA5A5; color:#991B1B; padding:12px 14px; border-radius:8px; font-size:0.82rem; font-weight:600; margin-bottom:16px; line-height:1.4;"></div>
+
+      <!-- Student Check-in Form -->
+      <form id="checkin-form" novalidate>
+        <!-- Student Name -->
+        <div class="ng-field">
+          <label class="ng-label" for="student-name">Student Full Name *</label>
+          <input type="text" id="student-name" name="student_name" class="ng-input" required autocomplete="name" placeholder="e.g. Rahul Sharma" maxlength="100">
+        </div>
+
+        <!-- Class Dropdown -->
+        <div class="ng-field">
+          <label class="ng-label" for="class-level">Class *</label>
+          <select id="class-level" name="class_level" class="ng-select" required>
+            <option value="">Select Class</option>
+            <option value="8">Class 8</option>
+            <option value="9">Class 9</option>
+            <option value="10">Class 10</option>
+            <option value="11">Class 11</option>
+            <option value="12">Class 12</option>
+          </select>
+        </div>
+
+        <!-- School Name -->
+        <div class="ng-field">
+          <label class="ng-label" for="school-name">School Name *</label>
+          <input type="text" id="school-name" name="school_name" class="ng-input" required autocomplete="organization" placeholder="e.g. Model High School, Alappuzha" maxlength="150">
+        </div>
+
+        <!-- Phone Number -->
+        <div class="ng-field">
+          <label class="ng-label" for="phone-number">WhatsApp / Phone Number *</label>
+          <input type="tel" id="phone-number" name="phone" class="ng-input" required autocomplete="tel" placeholder="10-digit mobile number (e.g. 9876543210)" maxlength="15">
+          <div class="ng-help">Enter 10-digit Indian mobile number.</div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn-submit-checkin" id="submit-checkin-btn">
+          <span id="btn-text">Check-in & Join Google Meet</span>
+          <span id="btn-spinner" style="display:none; width:18px; height:18px; border:2px solid rgba(255,255,255,0.4); border-top-color:#fff; border-radius:50%; animation:ngSpin 0.8s linear infinite;"></span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Success Screen -->
+    <div id="success-screen" class="success-screen" style="display:none;">
+      <div class="success-icon-wrap">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h2 style="font-size:1.3rem; font-weight:800; color:#071A17; margin:0 0 6px 0;">Check-in Confirmed!</h2>
+      <p style="font-size:0.88rem; color:#4B5E58; margin:0 0 16px 0; line-height:1.4;">
+        Welcome <strong id="success-student-name"></strong>. Redirecting you to Google Meet...
+      </p>
+
+      <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:10px; padding:12px; margin-bottom:18px;">
+        <p style="font-size:0.82rem; color:#166534; font-weight:700; margin:0;">
+          Auto-redirecting in <span id="countdown">2</span>s
+        </p>
+      </div>
+
+      <!-- Fallback button if in-app browser blocks window.location redirect -->
+      <a id="manual-join-meet-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn-submit-checkin" style="text-decoration:none; display:inline-flex; width:100%; box-sizing:border-box;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;"><path d="M15 10l5-5v14l-5-5z"/><rect x="4" y="6" width="11" height="12" rx="2"/></svg>
+        Join Google Meet Now
+      </a>
+
+      <p style="font-size:0.75rem; color:#6B7280; margin-top:12px;">
+        If Google Meet doesn't open automatically, tap the button above.
+      </p>
+    </div>
+  </main>
+
+  <!-- Brand Footer -->
+  <footer class="nextgen-footer">
+    <p style="margin:0 0 4px 0;">SUCCESS ACADEMY · Alappuzha &amp; Mannancherry</p>
+    <p style="margin:0;">Attendance verification for online student development sessions.</p>
+  </footer>
+</div>
+
+<style>
+@keyframes ngSpin {
+  to { transform: rotate(360deg); }
+}
+</style>
+
+<script type="module" src="../js/pages/nextgen-checkin.js"></script>
+</body>
+</html>
+

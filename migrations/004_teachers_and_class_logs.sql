@@ -88,3 +88,4 @@ CREATE POLICY "Admins have full access to class_logs"
       WHERE users.id = auth.uid() AND users.role = 'admin'
     )
   );
+

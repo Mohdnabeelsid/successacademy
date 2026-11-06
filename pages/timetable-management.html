@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timetable Management — SUCCESS Learning Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/variables.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<style>
+  .week-nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+    padding: 10px 16px;
+    margin-bottom: var(--sp-4);
+    flex-wrap: wrap;
+  }
+  .week-nav-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .week-label {
+    font-weight: 700;
+    font-size: var(--fs-md);
+    color: var(--c-text);
+  }
+  .view-toggle-btns {
+    display: inline-flex;
+    background: var(--surface-2);
+    padding: 3px;
+    border-radius: var(--r-sm);
+    gap: 4px;
+  }
+  .view-toggle-btn {
+    padding: 6px 14px;
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    border: none;
+    background: transparent;
+    border-radius: var(--r-xs);
+    cursor: pointer;
+    color: var(--c-text-muted);
+    transition: all var(--dur-fast);
+  }
+  .view-toggle-btn.active {
+    background: var(--c-surface);
+    color: var(--c-primary);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  /* Week Grid 7-column layout */
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(150px, 1fr));
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+  .day-column {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+    display: flex;
+    flex-direction: column;
+    min-height: 480px;
+    transition: border-color var(--dur-fast);
+  }
+  .day-column.is-today {
+    border: 2px solid var(--c-primary);
+    background: rgba(59, 130, 246, 0.02);
+  }
+  .day-header {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--c-border);
+    background: var(--surface-2);
+    border-top-left-radius: var(--r-md);
+    border-top-right-radius: var(--r-md);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .day-column.is-today .day-header {
+    background: rgba(59, 130, 246, 0.12);
+  }
+  .day-title {
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    color: var(--c-text);
+  }
+  .day-date {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    font-weight: 600;
+  }
+  .day-badge-today {
+    background: var(--c-primary);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 800;
+    padding: 1px 5px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+  .day-entries {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+  }
+  .timetable-card {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-left: 4px solid var(--c-primary);
+    border-radius: var(--r-sm);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    position: relative;
+    transition: transform var(--dur-fast), box-shadow var(--dur-fast);
+  }
+  .timetable-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  }
+  .card-type-class { border-left-color: var(--c-primary); }
+  .card-type-exam  { border-left-color: #f59e0b; }
+  .card-type-event { border-left-color: #10b981; }
+  .card-type-other { border-left-color: #8b5cf6; }
+
+  .tt-time {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--c-text);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .tt-subject {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--c-text);
+    line-height: 1.3;
+  }
+  .tt-title {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    line-height: 1.2;
+  }
+  .tt-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+  .tt-pill {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: var(--surface-2);
+    color: var(--c-text-muted);
+  }
+  .tt-pill.primary {
+    background: rgba(59, 130, 246, 0.12);
+    color: var(--c-primary);
+  }
+  .tt-card-actions {
+    display: flex;
+    gap: 4px;
+    justify-content: flex-end;
+    margin-top: 6px;
+    padding-top: 4px;
+    border-top: 1px dashed var(--c-border);
+  }
+  .empty-day {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--c-text-muted);
+    font-size: 11px;
+    font-style: italic;
+    padding: 24px 8px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<div class="page-loader" id="page-loader"><div class="spinner spinner-dark"></div></div>
+
+<div class="app-shell">
+  <div id="sidebar-root"></div>
+
+  <main class="main" id="main-content" tabindex="-1">
+    <header class="topbar">
+      <div class="flex items-center gap-3">
+        <button class="btn-icon menu-toggle" id="menu-toggle" aria-label="Toggle navigation">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div>
+          <h1 style="margin:0;">Timetable Management</h1>
+          <p class="text-sm" id="branch-meta-label" style="color:var(--c-text-muted); margin:2px 0 0;">Schedule classes, exams & sessions for upcoming days</p>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button type="button" class="btn btn-primary btn-sm" id="open-add-entry-btn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+          + Add Timetable Entry
+        </button>
+      </div>
+    </header>
+
+    <div class="page-body">
+      <!-- Overview Stats -->
+      <div class="grid grid-4" style="margin-bottom:var(--sp-4);">
+        <div class="card card-stat">
+          <div class="stat-label">Upcoming Week Sessions</div>
+          <div class="stat-value" id="stat-total-sessions" style="color:var(--c-primary);">0</div>
+          <div class="stat-sub">Across selected filters</div>
+        </div>
+        <div class="card card-stat">
+          <div class="stat-label">Classes Scheduled</div>
+          <div class="stat-value" id="stat-class-sessions">0</div>
+          <div class="stat-sub">Regular lectures</div>
+        </div>
+        <div class="card card-stat">
+          <div class="stat-label" style="color:#f59e0b;">Exams & Tests</div>
+          <div class="stat-value" id="stat-exam-sessions" style="color:#f59e0b;">0</div>
+          <div class="stat-sub">Upcoming assessments</div>
+        </div>
+        <div class="card card-stat">
+          <div class="stat-label" style="color:#10b981;">Special Events</div>
+          <div class="stat-value" id="stat-event-sessions" style="color:#10b981;">0</div>
+          <div class="stat-sub">Events & other sessions</div>
+        </div>
+      </div>
+
+      <!-- Navigation & Filter Bar -->
+      <div class="week-nav-bar">
+        <div class="week-nav-controls">
+          <button type="button" class="btn btn-ghost btn-sm" id="prev-week-btn" title="Previous 7 Days">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm" id="today-btn">Today</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="next-week-btn" title="Next 7 Days">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <div class="week-label" id="week-range-label">Loading week…</div>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+          <select id="filter-class" style="padding:6px 12px; font-size:var(--fs-xs);">
+            <option value="">All Classes</option>
+            <option>5</option><option>6</option><option>7</option>
+            <option>8</option><option>9</option><option>10</option>
+            <option>11 Science</option><option>11 Commerce</option>
+            <option>12 Science</option><option>12 Commerce</option>
+          </select>
+
+          <select id="filter-branch" style="padding:6px 12px; font-size:var(--fs-xs);">
+            <option value="">All Branches</option>
+            <option value="ALP">Alappuzha (ALP)</option>
+            <option value="MAN">Mannancherry (MAN)</option>
+          </select>
+
+          <select id="filter-type" style="padding:6px 12px; font-size:var(--fs-xs);">
+            <option value="">All Types</option>
+            <option value="Class">Class (Regular)</option>
+            <option value="Exam">Exam / Test</option>
+            <option value="Event">Event</option>
+            <option value="Other">Other</option>
+          </select>
+
+          <div class="view-toggle-btns">
+            <button type="button" class="view-toggle-btn active" id="toggle-view-grid" title="Week Grid View">
+              📅 Grid View
+            </button>
+            <button type="button" class="view-toggle-btn" id="toggle-view-table" title="Table List View">
+              ☰ Table View
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 1: Week Grid View -->
+      <div id="view-week-grid" style="display:block;">
+        <div class="week-grid" id="week-grid-container">
+          <!-- 7 day columns injected by JS -->
+        </div>
+      </div>
+
+      <!-- VIEW 2: Table List View -->
+      <div id="view-table-list" style="display:none;">
+        <div class="card" style="padding:0;">
+          <div class="table-wrap" style="border:none;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date & Day</th>
+                  <th>Time</th>
+                  <th>Type</th>
+                  <th>Class / Branch</th>
+                  <th>Subjects & Title</th>
+                  <th>Location</th>
+                  <th style="width:120px; text-align:right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="timetable-table-body">
+                <tr class="skeleton-row"><td colspan="7"><div class="skeleton skeleton-text" style="width:100%;"></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="timetable-pagination" style="padding:12px;"></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL: ADD / EDIT TIMETABLE ENTRY -->
+<!-- ============================================================ -->
+<div class="modal-overlay" id="timetable-entry-modal" role="dialog" aria-modal="true" aria-labelledby="modal-entry-title">
+  <div class="modal" style="max-width:540px;">
+    <div class="modal-header">
+      <h3 id="modal-entry-title">Add Timetable Entry</h3>
+      <button type="button" class="btn-icon" id="close-entry-modal-btn" aria-label="Close modal">✕</button>
+    </div>
+    <form id="timetable-entry-form">
+      <input type="hidden" id="entry-id">
+      
+      <div class="grid grid-2">
+        <div class="field">
+          <label for="entry-date">Date <span style="color:var(--c-danger);">*</span></label>
+          <input type="date" id="entry-date" required>
+        </div>
+        <div class="field">
+          <label for="entry-session-type">Session Type <span style="color:var(--c-danger);">*</span></label>
+          <select id="entry-session-type" required>
+            <option value="Class">📚 Class (Regular)</option>
+            <option value="Exam">📝 Exam / Assessment</option>
+            <option value="Event">🎯 Event / Activity</option>
+            <option value="Other">📌 Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-2">
+        <div class="field">
+          <label for="entry-class">Class <span style="color:var(--c-danger);">*</span></label>
+          <select id="entry-class" required>
+            <option value="">Select Class</option>
+            <option>5</option><option>6</option><option>7</option>
+            <option>8</option><option>9</option><option>10</option>
+            <option>11 Science</option><option>11 Commerce</option>
+            <option>12 Science</option><option>12 Commerce</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="entry-branch">Branch <span style="color:var(--c-danger);">*</span></label>
+          <select id="entry-branch" required>
+            <option value="ALP">Alappuzha (ALP)</option>
+            <option value="MAN" selected>Mannancherry (MAN)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="flex items-center justify-between" style="margin-bottom:6px;">
+          <label style="margin:0;">Subjects <span style="font-size:11px; font-weight:normal; color:var(--c-text-muted);">(Choose up to 3)</span></label>
+          <span id="subject-count-indicator" style="font-size:11px; font-weight:700; color:var(--c-primary);">0/3 Selected</span>
+        </div>
+        <!-- Selected chips container -->
+        <div id="selected-subjects-chips" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; min-height:28px; align-items:center;">
+          <span style="font-size:12px; color:var(--c-text-muted); font-style:italic;" id="no-subjects-placeholder">No subjects selected yet. Pick from below or add custom.</span>
+        </div>
+        <!-- Available subjects quick-pick buttons -->
+        <div id="available-subjects-container" style="display:flex; flex-wrap:wrap; gap:6px; max-height:110px; overflow-y:auto; padding:8px; background:var(--surface-2); border-radius:var(--r-sm); border:1px solid var(--c-border); margin-bottom:8px;">
+          <span style="font-size:11px; color:var(--c-text-muted);">Select Class first to load subjects.</span>
+        </div>
+        <!-- Custom subject input option -->
+        <div style="display:flex; gap:6px;">
+          <input type="text" id="custom-subject-input" placeholder="Type custom subject..." style="flex:1; font-size:var(--fs-xs); padding:6px 10px;">
+          <button type="button" class="btn btn-ghost btn-sm" id="add-custom-subject-btn">+ Add</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="entry-title">Title / Topic</label>
+        <input type="text" id="entry-title" placeholder="e.g. Chapter 4 Revision, Model Exam, Special Lab">
+      </div>
+
+      <div class="field">
+        <label>Time Schedule</label>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <div style="flex:1;">
+            <label for="entry-start-time" style="font-size:0.75rem; color:var(--c-text-muted); font-weight:600; text-transform:uppercase;">From</label>
+            <input type="time" id="entry-start-time" required style="width:100%; margin-top:4px;">
+          </div>
+          <div style="flex:1;">
+            <label for="entry-end-time" style="font-size:0.75rem; color:var(--c-text-muted); font-weight:600; text-transform:uppercase;">To (Optional)</label>
+            <input type="time" id="entry-end-time" style="width:100%; margin-top:4px;">
+          </div>
+          <div style="min-width:90px; text-align:center;">
+            <label style="font-size:0.75rem; color:var(--c-text-muted); font-weight:600; text-transform:uppercase;">Duration</label>
+            <div id="entry-duration-display" style="margin-top:8px; font-size:12px; font-weight:700; color:var(--c-primary);">—</div>
+            <input type="hidden" id="entry-duration">
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="entry-location">Room / Hall</label>
+        <input type="text" id="entry-location" placeholder="e.g. Room 2, Main Hall">
+      </div>
+
+      <div class="field">
+        <label for="entry-description">Additional Instructions / Notes</label>
+        <textarea id="entry-description" rows="2" placeholder="e.g. Bring scientific calculator & formula sheet"></textarea>
+      </div>
+
+      <div class="modal-footer" style="padding-top:var(--sp-3); border-top:1px solid var(--c-border); display:flex; justify-content:flex-end; gap:8px;">
+        <button type="button" class="btn btn-ghost" id="cancel-entry-btn">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="save-entry-btn">Save Entry</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toast-region" class="toast-region" aria-live="polite"></div>
+
+<script type="module" src="../js/pages/timetable-management.js"></script>
+</body>
+</html>
+

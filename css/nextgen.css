@@ -1,0 +1,277 @@
+/* ==========================================================================
+   SUCCESS ACADEMY — NEXTGEN ONLINE SESSIONS STYLES
+   Brand Colors:
+   - Emerald: #0FA15D
+   - Teal: #1F7A78
+   - Academic Blue: #2E4C8C
+   - Deep Forest: #071A17
+   - Forest Teal: #0E3B36
+   - Warm Beige: #D8C7AA
+   - White: #FFFFFF
+   ========================================================================== */
+
+.nextgen-body {
+  background: linear-gradient(135deg, #071A17 0%, #0E3B36 50%, #132A25 100%);
+  color: #FFFFFF;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-family: 'Montserrat', sans-serif;
+  padding: 16px;
+  margin: 0;
+}
+
+.nextgen-container {
+  max-width: 520px;
+  width: 100%;
+  margin: 20px auto;
+}
+
+.nextgen-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.nextgen-logo {
+  height: 52px;
+  width: auto;
+  margin-bottom: 12px;
+}
+
+.nextgen-brand-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #FFFFFF;
+  margin: 0 0 4px 0;
+  text-transform: uppercase;
+}
+
+.nextgen-brand-tagline {
+  font-size: 0.8rem;
+  color: #D8C7AA;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.nextgen-card {
+  background: #FFFFFF;
+  color: #071A17;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+  padding: 28px 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.nextgen-card-top-accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, #0FA15D 0%, #1F7A78 50%, #2E4C8C 100%);
+}
+
+.nextgen-pill-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(15, 161, 93, 0.12);
+  color: #0FA15D;
+  border: 1px solid rgba(15, 161, 93, 0.3);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 14px;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background: #0FA15D;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(15, 161, 93, 0.7);
+  animation: pulseLive 1.5s infinite;
+}
+
+@keyframes pulseLive {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(15, 161, 93, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(15, 161, 93, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(15, 161, 93, 0);
+  }
+}
+
+.session-info-box {
+  background: #EEF2FA;
+  border: 1px solid #D1DCF0;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 22px;
+}
+
+.session-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #071A17;
+  margin: 0 0 6px 0;
+  line-height: 1.3;
+}
+
+.session-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  color: #33433F;
+  font-weight: 600;
+}
+
+.session-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Form inputs */
+.ng-field {
+  margin-bottom: 16px;
+}
+
+.ng-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #071A17;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.ng-input, .ng-select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #D1DCF0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: #071A17;
+  background: #FFFFFF;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ng-input:focus, .ng-select:focus {
+  outline: none;
+  border-color: #0FA15D;
+  box-shadow: 0 0 0 3px rgba(15, 161, 93, 0.15);
+}
+
+.ng-help {
+  font-size: 0.72rem;
+  color: #66706D;
+  margin-top: 4px;
+}
+
+.btn-submit-checkin {
+  width: 100%;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #0FA15D 0%, #1F7A78 100%);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 4px 14px rgba(15, 161, 93, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-submit-checkin:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(15, 161, 93, 0.45);
+}
+
+.btn-submit-checkin:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* No session live state */
+.no-session-card {
+  text-align: center;
+  padding: 36px 20px;
+}
+
+.no-session-icon {
+  font-size: 42px;
+  margin-bottom: 14px;
+  display: inline-block;
+}
+
+.no-session-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #071A17;
+  margin: 0 0 10px 0;
+}
+
+.no-session-desc {
+  font-size: 0.9rem;
+  color: #4B5E58;
+  line-height: 1.5;
+  margin: 0 0 20px 0;
+}
+
+/* Success state */
+.success-screen {
+  text-align: center;
+  padding: 24px 10px;
+}
+
+.success-icon-wrap {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(15, 161, 93, 0.12);
+  color: #0FA15D;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px auto;
+  font-size: 32px;
+}
+
+.nextgen-footer {
+  text-align: center;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 16px 0;
+}
+
+.nextgen-footer a {
+  color: #D8C7AA;
+  text-decoration: none;
+  font-weight: 600;
+}
+

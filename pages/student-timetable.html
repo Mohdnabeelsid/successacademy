@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Timetable — SUCCESS Learning Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/variables.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<style>
+  .alert-banner {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(99, 102, 241, 0.1));
+    border: 1.5px solid var(--c-primary);
+    border-radius: var(--r-md);
+    padding: 14px 18px;
+    margin-bottom: var(--sp-4);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .alert-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .alert-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .alert-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 4px;
+  }
+  .alert-item-card {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-sm);
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .priority-badge {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .priority-level-1 { background: rgba(239, 68, 68, 0.15); color: #dc2626; border: 1px solid rgba(239,68,68,0.3); }
+  .priority-level-2 { background: rgba(245, 158, 11, 0.15); color: #b45309; border: 1px solid rgba(245,158,11,0.3); }
+  .priority-level-3 { background: rgba(59, 130, 246, 0.15); color: #2563eb; border: 1px solid rgba(59,130,246,0.3); }
+
+  .week-nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+    padding: 10px 16px;
+    margin-bottom: var(--sp-4);
+    flex-wrap: wrap;
+  }
+  .week-grid-student {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(140px, 1fr));
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+  @media (max-width: 900px) {
+    .week-grid-student {
+      grid-template-columns: 1fr;
+    }
+  }
+  .student-day-col {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+    display: flex;
+    flex-direction: column;
+    min-height: 400px;
+    transition: all var(--dur-fast);
+  }
+  .student-day-col.is-today {
+    border: 2px solid var(--c-primary);
+    background: rgba(59, 130, 246, 0.02);
+  }
+  .student-day-header {
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--c-border);
+    border-top-left-radius: var(--r-md);
+    border-top-right-radius: var(--r-md);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .student-day-col.is-today .student-day-header {
+    background: rgba(59, 130, 246, 0.12);
+  }
+  .st-card {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-left: 4px solid var(--c-primary);
+    border-radius: var(--r-sm);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .card-type-class { border-left-color: var(--c-primary); }
+  .card-type-exam  { border-left-color: #f59e0b; }
+  .card-type-event { border-left-color: #10b981; }
+  .card-type-other { border-left-color: #8b5cf6; }
+
+  .st-time {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--c-text);
+  }
+  .st-subject {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--c-text);
+  }
+  .st-title {
+    font-size: 11px;
+    color: var(--c-text-muted);
+  }
+  .st-details {
+    font-size: 11px;
+    color: var(--c-text-muted);
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px dashed var(--c-border);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .empty-day-student {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--c-text-muted);
+    font-size: 11px;
+    font-style: italic;
+    padding: 24px 8px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<div class="page-loader" id="page-loader"><div class="spinner spinner-dark"></div></div>
+
+<div class="app-shell">
+  <div id="sidebar-root"></div>
+
+  <main class="main" id="main-content" tabindex="-1">
+    <header class="topbar">
+      <div class="flex items-center gap-3">
+        <button class="btn-icon menu-toggle" id="menu-toggle" aria-label="Open menu">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+        <div>
+          <h1 style="margin:0;">My Timetable</h1>
+          <div class="topbar-sub" id="student-meta-label">Loading schedule…</div>
+        </div>
+      </div>
+      <div class="topbar-actions flex items-center gap-2">
+        <a href="student-dashboard.html" class="btn btn-ghost btn-sm">
+          🏠 Dashboard
+        </a>
+        <a href="student-attendance.html" class="btn btn-ghost btn-sm">
+          📅 Attendance
+        </a>
+        <a href="student-exams.html" class="btn btn-ghost btn-sm">
+          🏆 My Exams
+        </a>
+      </div>
+    </header>
+
+    <div class="page-body">
+      <!-- In-App Notification Alerts (Sessions within 2 days) -->
+      <div id="timetable-alerts-banner" class="alert-banner" style="display:none;">
+        <div class="alert-header">
+          <div class="alert-title-wrap">
+            <span style="font-size:22px;">🔔</span>
+            <div>
+              <strong style="color:var(--c-primary); font-size:var(--fs-sm);">Upcoming Session Alerts</strong>
+              <div id="alerts-summary-text" style="font-size:var(--fs-xs); color:var(--c-text-muted);">
+                You have scheduled sessions in the next 48 hours.
+              </div>
+            </div>
+          </div>
+          <span class="badge" id="alerts-count-badge" style="background:var(--c-primary); color:#fff; font-weight:700;">
+            0 Alerts
+          </span>
+        </div>
+        <div class="alert-items-list" id="alerts-items-container">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Week Navigation Bar -->
+      <div class="week-nav-bar">
+        <div class="flex items-center gap-2">
+          <button type="button" class="btn btn-ghost btn-sm" id="prev-week-btn" title="Previous 7 Days">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm" id="today-btn">Today</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="next-week-btn" title="Next 7 Days">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <div class="week-label" id="student-week-label" style="font-weight:700; font-size:var(--fs-sm); margin-left:8px;">
+            Loading week…
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <span class="badge" id="session-count-badge" style="background:var(--surface-2); font-weight:700;">
+            0 Sessions This Week
+          </span>
+        </div>
+      </div>
+
+      <!-- 7-Day Timetable Grid -->
+      <div class="week-grid-student" id="student-week-grid">
+        <!-- Day columns populated by JS -->
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast-region" class="toast-region" aria-live="polite"></div>
+
+<script type="module" src="../js/pages/student-timetable.js"></script>
+</body>
+</html>
+

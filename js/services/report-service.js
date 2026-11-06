@@ -28,6 +28,9 @@ export function toCSV(rows, columns) {
 }
 
 export function downloadCSV(filename, csvString) {
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    return csvString;
+  }
   const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -37,6 +40,7 @@ export function downloadCSV(filename, csvString) {
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+  return csvString;
 }
 
 /** Requires SheetJS (xlsx) to be loaded globally as `XLSX`. */

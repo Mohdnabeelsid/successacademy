@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teacher Management & Class Diary — SUCCESS Learning Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/variables.css">
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/components.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<style>
+  .nav-tabs-wrapper {
+    display: flex;
+    gap: 8px;
+    border-bottom: 2px solid var(--c-border);
+    margin-bottom: var(--sp-4);
+    padding-bottom: 2px;
+  }
+  .nav-tab-btn {
+    padding: 10px 18px;
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    color: var(--c-text-muted);
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all var(--dur-fast) var(--ease-standard);
+  }
+  .nav-tab-btn:hover {
+    color: var(--c-primary);
+  }
+  .nav-tab-btn.active {
+    color: var(--c-primary);
+    border-bottom-color: var(--c-primary);
+  }
+  .tab-pane {
+    display: none;
+  }
+  .tab-pane.active {
+    display: block;
+  }
+  .badge-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: var(--r-sm);
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--surface-2);
+    color: var(--c-text);
+    margin-right: 4px;
+    margin-bottom: 4px;
+  }
+  .time-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--c-text-muted);
+  }
+  .duration-pill {
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    background: rgba(16, 185, 129, 0.12);
+    color: #059669;
+  }
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<div class="page-loader" id="page-loader"><div class="spinner spinner-dark"></div></div>
+
+<div class="app-shell">
+  <div id="sidebar-root"></div>
+
+  <main class="main" id="main-content" tabindex="-1">
+    <header class="topbar">
+      <div class="flex items-center gap-3">
+        <button class="btn-icon menu-toggle" id="menu-toggle" aria-label="Toggle navigation">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div>
+          <h1 style="margin:0;">Teachers & Class Diary</h1>
+          <p class="text-sm" id="branch-meta-label" style="color:var(--c-text-muted); margin:2px 0 0;">Manage faculty & daily teaching diary logs</p>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button type="button" class="btn btn-ghost btn-sm" id="export-logs-csv-btn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export Diary (CSV)
+        </button>
+        <button type="button" class="btn btn-ghost btn-sm" id="open-add-teacher-btn">
+          + Add Teacher
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" id="open-new-log-btn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+          + Record Class Log
+        </button>
+      </div>
+    </header>
+
+    <div class="page-body">
+      <!-- Top Level Tabs: Directory vs Diary Logs -->
+      <div class="nav-tabs-wrapper">
+        <button type="button" class="nav-tab-btn active" id="tab-btn-teachers">
+          👩‍🏫 Teachers Directory
+          <span class="badge" id="teachers-count-badge" style="background:var(--c-primary); color:#fff; font-size:11px; padding:1px 6px; border-radius:10px;">0</span>
+        </button>
+        <button type="button" class="nav-tab-btn" id="tab-btn-logs">
+          📖 Class Diary / Teaching Logs
+          <span class="badge" id="logs-count-badge" style="background:var(--surface-2); font-size:11px; padding:1px 6px; border-radius:10px;">0</span>
+        </button>
+      </div>
+
+      <!-- ============================================================ -->
+      <!-- PANE 1: TEACHERS DIRECTORY -->
+      <!-- ============================================================ -->
+      <div class="tab-pane active" id="pane-teachers">
+        <!-- Teachers Overview Stats -->
+        <div class="grid grid-4" style="margin-bottom:var(--sp-4);">
+          <div class="card card-stat">
+            <div class="stat-label">Total Faculty</div>
+            <div class="stat-value" id="stat-total-teachers">0</div>
+            <div class="stat-sub">Registered teachers</div>
+          </div>
+          <div class="card card-stat">
+            <div class="stat-label" style="color:var(--c-success);">Active Teachers</div>
+            <div class="stat-value" id="stat-active-teachers" style="color:var(--c-success);">0</div>
+            <div class="stat-sub">Currently teaching</div>
+          </div>
+          <div class="card card-stat">
+            <div class="stat-label">Alappuzha (ALP)</div>
+            <div class="stat-value" id="stat-alp-teachers">0</div>
+            <div class="stat-sub">Assigned to ALP</div>
+          </div>
+          <div class="card card-stat">
+            <div class="stat-label">Mannancherry (MAN)</div>
+            <div class="stat-value" id="stat-man-teachers">0</div>
+            <div class="stat-sub">Assigned to MAN</div>
+          </div>
+        </div>
+
+        <!-- Teachers Filters -->
+        <div class="filter-bar" style="margin-bottom:var(--sp-4);">
+          <div class="search-input">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="teacher-search-input" placeholder="Search teacher by name, phone, subject…">
+          </div>
+          <select id="teacher-filter-branch">
+            <option value="">All Branches</option>
+            <option value="ALP">Alappuzha (ALP)</option>
+            <option value="MAN">Mannancherry (MAN)</option>
+          </select>
+          <select id="teacher-filter-status">
+            <option value="">All Statuses</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+
+        <!-- Teachers Table -->
+        <div class="card" style="padding:0;">
+          <div class="table-wrap" style="border:none;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Teacher</th>
+                  <th>Contact</th>
+                  <th>Branch</th>
+                  <th>Subjects Handled</th>
+                  <th>Classes</th>
+                  <th>Status</th>
+                  <th style="width:160px; text-align:right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="teachers-table-body">
+                <tr class="skeleton-row"><td colspan="7"><div class="skeleton skeleton-text" style="width:100%;"></div></td></tr>
+                <tr class="skeleton-row"><td colspan="7"><div class="skeleton skeleton-text" style="width:100%;"></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="teachers-pagination"></div>
+        </div>
+      </div>
+
+      <!-- ============================================================ -->
+      <!-- PANE 2: CLASS DIARY / TEACHING LOGS -->
+      <!-- ============================================================ -->
+      <div class="tab-pane" id="pane-logs">
+        <!-- Class Logs Overview Stats -->
+        <div class="grid grid-4" style="margin-bottom:var(--sp-4);">
+          <div class="card card-stat">
+            <div class="stat-label">Today's Sessions</div>
+            <div class="stat-value" id="stat-log-today-count" style="color:var(--c-primary);">0</div>
+            <div class="stat-sub" id="stat-log-today-hours">0 hrs taught today</div>
+          </div>
+          <div class="card card-stat">
+            <div class="stat-label">Active Teachers Today</div>
+            <div class="stat-value" id="stat-log-today-teachers">0</div>
+            <div class="stat-sub">Conducted sessions</div>
+          </div>
+          <div class="card card-stat">
+            <div class="stat-label">Classes Covered Today</div>
+            <div class="stat-value" id="stat-log-today-classes">0</div>
+            <div class="stat-sub">Distinct standards</div>
+          </div>
+          <div class="card card-stat">
+            <div class="stat-label">Total Diary Entries</div>
+            <div class="stat-value" id="stat-log-total-count">0</div>
+            <div class="stat-sub" id="stat-log-total-hours">0 total teaching hrs</div>
+          </div>
+        </div>
+
+        <!-- Class Logs Filters -->
+        <div class="filter-bar" style="margin-bottom:var(--sp-4); flex-wrap:wrap;">
+          <div class="field" style="margin:0; min-width:140px;">
+            <input type="date" id="log-filter-date" title="Filter by specific date">
+          </div>
+          <div class="search-input" style="min-width:200px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="log-search-teacher" placeholder="Search teacher or topic…">
+          </div>
+          <select id="log-filter-class">
+            <option value="">All Classes</option>
+            <option>5</option><option>6</option><option>7</option>
+            <option>8</option><option>9</option><option>10</option>
+            <option>11 Science</option><option>11 Commerce</option>
+            <option>12 Science</option><option>12 Commerce</option>
+          </select>
+          <select id="log-filter-branch">
+            <option value="">All Branches</option>
+            <option value="ALP">Alappuzha (ALP)</option>
+            <option value="MAN">Mannancherry (MAN)</option>
+          </select>
+          <button type="button" class="btn btn-ghost btn-sm" id="log-filter-reset-btn" title="Reset filters">
+            Clear Filters
+          </button>
+        </div>
+
+        <!-- Class Logs Table -->
+        <div class="card" style="padding:0;">
+          <div class="table-wrap" style="border:none;">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:110px;">Date</th>
+                  <th style="width:140px;">Time / Duration</th>
+                  <th>Teacher</th>
+                  <th style="width:90px;">Class</th>
+                  <th style="width:140px;">Subject</th>
+                  <th>Topic Covered / Remarks</th>
+                  <th style="width:80px;">Branch</th>
+                  <th style="width:100px; text-align:right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="logs-table-body">
+                <tr class="skeleton-row"><td colspan="8"><div class="skeleton skeleton-text" style="width:100%;"></div></td></tr>
+                <tr class="skeleton-row"><td colspan="8"><div class="skeleton skeleton-text" style="width:100%;"></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="logs-pagination"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL 1: ADD / EDIT TEACHER -->
+<!-- ============================================================ -->
+<div class="modal-overlay" id="teacher-modal">
+  <div class="modal" style="max-width:580px;">
+    <div class="modal-header">
+      <h3 id="teacher-modal-title">Add Teacher</h3>
+      <button class="btn-icon" id="close-teacher-modal" type="button">✕</button>
+    </div>
+    <form id="teacher-form">
+      <input type="hidden" id="t-id">
+      
+      <div class="field">
+        <label for="t-name">Teacher Name *</label>
+        <input type="text" id="t-name" placeholder="e.g. Farook Sir" required>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div class="field">
+          <label for="t-phone">Phone Number</label>
+          <input type="tel" id="t-phone" placeholder="e.g. 9847012345">
+        </div>
+        <div class="field">
+          <label for="t-email">Email Address</label>
+          <input type="email" id="t-email" placeholder="e.g. teacher@success.com">
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div class="field">
+          <label for="t-branch">Campus / Branch *</label>
+          <select id="t-branch" required>
+            <option value="MAN" selected>Mannancherry (MAN)</option>
+            <option value="ALP">Alappuzha (ALP)</option>
+            <option value="ALL">Both Branches (ALL)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="t-status">Status *</label>
+          <select id="t-status" required>
+            <option value="Active" selected>Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="t-subjects">Subjects Handled (comma-separated)</label>
+        <input type="text" id="t-subjects" placeholder="e.g. Maths, Physics, Chemistry">
+        <small style="color:var(--c-text-muted); font-size:11px;">Separate multiple subjects with commas.</small>
+      </div>
+
+      <div class="field">
+        <label for="t-classes">Classes Assigned (comma-separated)</label>
+        <input type="text" id="t-classes" placeholder="e.g. 9, 10, 11 Science">
+        <small style="color:var(--c-text-muted); font-size:11px;">e.g. 8, 9, 10, 11 Commerce</small>
+      </div>
+
+      <div class="field">
+        <label for="t-notes">Internal Notes</label>
+        <textarea id="t-notes" rows="2" placeholder="Experience, qualifications, or notes..."></textarea>
+      </div>
+
+      <div class="flex justify-end gap-2" style="margin-top:var(--sp-4);">
+        <button type="button" class="btn btn-ghost btn-sm" id="cancel-teacher-modal">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-sm" id="save-teacher-btn">Save Teacher</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL 2: RECORD / EDIT CLASS LOG (DIARY ENTRY) -->
+<!-- ============================================================ -->
+<div class="modal-overlay" id="log-modal">
+  <div class="modal" style="max-width:620px;">
+    <div class="modal-header">
+      <h3 id="log-modal-title">Record Class Log</h3>
+      <button class="btn-icon" id="close-log-modal" type="button">✕</button>
+    </div>
+    <form id="log-form">
+      <input type="hidden" id="log-id">
+      
+      <!-- Date & Branch -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div class="field">
+          <label for="log-date">Session Date *</label>
+          <input type="date" id="log-date" required>
+        </div>
+        <div class="field">
+          <label for="log-branch">Branch *</label>
+          <select id="log-branch" required>
+            <option value="MAN" selected>Mannancherry (MAN)</option>
+            <option value="ALP">Alappuzha (ALP)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Teacher selection -->
+      <div class="field">
+        <label for="log-teacher">Teacher Name *</label>
+        <div style="display:flex; gap:8px;">
+          <select id="log-teacher-select" style="flex:1;">
+            <option value="">-- Select from Teacher Master --</option>
+          </select>
+          <input type="text" id="log-teacher-custom" placeholder="Or type teacher's name..." style="flex:1;">
+        </div>
+        <small style="color:var(--c-text-muted); font-size:11px;">Pick a teacher from the list or type directly if guest/substitute.</small>
+      </div>
+
+      <!-- Times & Computed Duration -->
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; align-items:end;">
+        <div class="field" style="margin:0;">
+          <label for="log-start-time">Start Time *</label>
+          <input type="time" id="log-start-time" required>
+        </div>
+        <div class="field" style="margin:0;">
+          <label for="log-end-time">End Time</label>
+          <input type="time" id="log-end-time">
+        </div>
+        <div class="field" style="margin:0;">
+          <label>Duration</label>
+          <div id="log-duration-preview" style="padding:9px 12px; border:1px solid var(--c-border); border-radius:var(--r-md); background:var(--surface-1); font-weight:700; font-size:var(--fs-xs); color:var(--c-primary); text-align:center;">
+            0 mins
+          </div>
+        </div>
+      </div>
+
+      <!-- Class & Subject -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:var(--sp-3);">
+        <div class="field">
+          <label for="log-class">Class *</label>
+          <select id="log-class" required>
+            <option value="">Select Class</option>
+            <option>5</option><option>6</option><option>7</option>
+            <option>8</option><option>9</option><option>10</option>
+            <option>11 Science</option><option>11 Commerce</option>
+            <option>12 Science</option><option>12 Commerce</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="log-subject">Subject *</label>
+          <select id="log-subject" required>
+            <option value="">Select Class First</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Topic Covered -->
+      <div class="field">
+        <label for="log-topic">Topic Covered / Chapter</label>
+        <input type="text" id="log-topic" placeholder="e.g. Chapter 4 — Quadratic Equations">
+      </div>
+
+      <!-- Notes / Remarks -->
+      <div class="field">
+        <label for="log-notes">Remarks / Homework</label>
+        <textarea id="log-notes" rows="2" placeholder="e.g. Exercises 4.1 given for home, all students attended attentively"></textarea>
+      </div>
+
+      <div class="flex justify-end gap-2" style="margin-top:var(--sp-4);">
+        <button type="button" class="btn btn-ghost btn-sm" id="cancel-log-modal">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-sm" id="save-log-btn">Save Diary Entry</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL 3: TEACHER DETAILS & TEACHING HISTORY (EYE BUTTON) -->
+<!-- ============================================================ -->
+<div class="modal-overlay" id="teacher-profile-modal">
+  <div class="modal" style="max-width:850px; width:92%; max-height:90vh; overflow-y:auto;">
+    <div class="modal-header">
+      <h3 id="tpm-title">Teacher Profile</h3>
+      <button class="btn-icon" id="close-tpm-modal" type="button">✕</button>
+    </div>
+
+    <div class="modal-body" style="padding-top:0;">
+      <!-- Teacher Header -->
+      <div class="flex items-center gap-4" style="margin-bottom:var(--sp-4); padding-bottom:var(--sp-4); border-bottom:1px solid var(--c-border);">
+        <div class="avatar" id="tpm-avatar" style="width:60px; height:60px; font-size:1.4rem;">?</div>
+        <div>
+          <h2 id="tpm-name" style="margin:0; font-size:var(--fs-lg); font-weight:700;">—</h2>
+          <div id="tpm-meta" style="color:var(--c-text-muted); font-size:var(--fs-xs); margin-top:3px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">—</div>
+        </div>
+      </div>
+
+      <!-- Quick Stats Grid -->
+      <div class="grid grid-4" style="margin-bottom:var(--sp-4);">
+        <div class="card card-stat" style="background:var(--surface-1); padding:10px 14px;">
+          <div class="stat-label">Total Sessions</div>
+          <div class="stat-value" id="tpm-stat-sessions" style="font-size:1.3rem;">0</div>
+        </div>
+        <div class="card card-stat" style="background:var(--surface-1); padding:10px 14px;">
+          <div class="stat-label">Total Hours</div>
+          <div class="stat-value" id="tpm-stat-hours" style="font-size:1.3rem; color:var(--c-primary);">0 hrs</div>
+        </div>
+        <div class="card card-stat" style="background:var(--surface-1); padding:10px 14px;">
+          <div class="stat-label">Top Subject</div>
+          <div class="stat-value" id="tpm-stat-subject" style="font-size:1.15rem; color:var(--c-academic);">—</div>
+        </div>
+        <div class="card card-stat" style="background:var(--surface-1); padding:10px 14px;">
+          <div class="stat-label">Primary Class</div>
+          <div class="stat-value" id="tpm-stat-class" style="font-size:1.15rem;">—</div>
+        </div>
+      </div>
+
+      <!-- Info Card: Subjects & Classes -->
+      <div class="card" style="background:var(--surface-1); padding:12px 16px; margin-bottom:var(--sp-4);">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div>
+            <div style="font-size:var(--fs-xs); font-weight:700; color:var(--c-text-muted); text-transform:uppercase; margin-bottom:6px;">Assigned Subjects</div>
+            <div id="tpm-subjects-list" style="display:flex; flex-wrap:wrap; gap:4px;">—</div>
+          </div>
+          <div>
+            <div style="font-size:var(--fs-xs); font-weight:700; color:var(--c-text-muted); text-transform:uppercase; margin-bottom:6px;">Assigned Classes</div>
+            <div id="tpm-classes-list" style="display:flex; flex-wrap:wrap; gap:4px;">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Teaching History Table -->
+      <div>
+        <div class="flex items-center justify-between" style="margin-bottom:var(--sp-2);">
+          <h4 style="margin:0; font-weight:700;">Teaching Log History</h4>
+          <span style="font-size:var(--fs-xs); color:var(--c-text-muted);" id="tpm-history-count">0 sessions recorded</span>
+        </div>
+        <div class="table-wrap" style="max-height:260px; overflow-y:auto; border:1px solid var(--c-border); border-radius:var(--r-md);">
+          <table>
+            <thead style="position:sticky; top:0; background:var(--surface-1); z-index:1;">
+              <tr>
+                <th>Date</th>
+                <th>Time / Duration</th>
+                <th>Class</th>
+                <th>Subject</th>
+                <th>Topic</th>
+                <th>Branch</th>
+              </tr>
+            </thead>
+            <tbody id="tpm-history-body">
+              <tr><td colspan="6"><div class="empty-state">Loading history...</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-region"></div>
+<script type="module" src="../js/pages/teacher-management.js"></script>
+</body>
+</html>
+

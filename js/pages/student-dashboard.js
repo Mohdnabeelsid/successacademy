@@ -17,6 +17,7 @@ import { getStudent } from "../services/student-service.js";
 // Fix #11: moved here from line 168 where it was incorrectly placed mid-file
 import { getSubjectsForClass, getStudentEffectiveSubjects } from "../services/subject-service.js";
 import { getStudentFeeStatus, formatMonthYear } from "../services/fee-service.js";
+import { getUpcomingAlerts } from "../services/timetable-service.js";
 // Fix #7: import shared wireTimePicker instead of duplicating the implementation
 import { wireTimePicker } from "../utils/time-picker.js";
 import { setButtonLoading } from "../utils/ui-helpers.js";
@@ -50,6 +51,9 @@ let student;
 
     // Check fee alert if past 5th of month
     checkFeeAlert(student);
+
+    // Check upcoming timetable alerts (within 48 hours)
+    checkTimetableAlerts(student);
   } catch (err) {
     console.error("Dashboard initialization error:", err);
     toast.error("Error loading dashboard data.");
@@ -295,6 +299,36 @@ async function checkFeeAlert(studentObj) {
     }
   } catch (err) {
     console.warn("Could not check fee status for dashboard alert:", err);
+  }
+}
+
+/**
+ * Checks for upcoming timetable entries (within 48 hours) and surfaces a high-priority dashboard alert.
+ */
+async function checkTimetableAlerts(studentObj) {
+  try {
+    if (!studentObj?.class || !studentObj?.branch) return;
+    const { alerts } = await getUpcomingAlerts(studentObj.class, studentObj.branch);
+    if (alerts && alerts.length > 0) {
+      const banner = document.getElementById("timetable-alert-banner");
+      const txt = document.getElementById("timetable-alert-dashboard-text");
+      if (banner) banner.style.display = "block";
+      if (txt) {
+        const todayCount = alerts.filter(a => a.priority?.level === 1).length;
+        const tomorrowCount = alerts.filter(a => a.priority?.level === 2).length;
+        const inTwoDaysCount = alerts.filter(a => a.priority?.level === 3).length;
+
+        let parts = [];
+        if (todayCount > 0) parts.push(`${todayCount} session${todayCount > 1 ? "s" : ""} today`);
+        if (tomorrowCount > 0) parts.push(`${tomorrowCount} session${tomorrowCount > 1 ? "s" : ""} tomorrow`);
+        if (inTwoDaysCount > 0 && todayCount === 0 && tomorrowCount === 0) {
+          parts.push(`${inTwoDaysCount} session${inTwoDaysCount > 1 ? "s" : ""} in 2 days`);
+        }
+        txt.textContent = `You have ${parts.join(" and ")}. Check your timetable for timings, rooms, and topics.`;
+      }
+    }
+  } catch (err) {
+    console.warn("Could not check timetable alerts for dashboard:", err);
   }
 }
 

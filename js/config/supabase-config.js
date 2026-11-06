@@ -161,7 +161,12 @@ export const TABLES = {
   SUBJECTS: "subjects",
   ACADEMIC_YEARS: "academic_years",
   FEE_SCHEDULE: "fee_schedule",
-  FEE_PAYMENTS: "fee_payments"
+  FEE_PAYMENTS: "fee_payments",
+  TEACHERS: "teachers",
+  CLASS_LOGS: "class_logs",
+  TIMETABLE_ENTRIES: "timetable_entries",
+  NEXTGEN_SESSIONS: "nextgen_sessions",
+  NEXTGEN_ATTENDEES: "nextgen_attendees"
 };
 
 // Backwards compatibility alias for COLLECTIONS

@@ -1,5 +1,10 @@
 {
   "framework": null,
   "buildCommand": null,
-  "outputDirectory": "."
+  "outputDirectory": ".",
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/nextgen", "destination": "/pages/nextgen-checkin.html" },
+    { "source": "/nextgen/", "destination": "/pages/nextgen-checkin.html" }
+  ]
 }

@@ -836,6 +836,210 @@ CREATE POLICY "Students read own fee payments"
   );
 
 -- ==========================================================================
+-- 8. Teachers & Class Diary Logs Module
+-- ==========================================================================
+
+CREATE TABLE IF NOT EXISTS public.teachers (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  phone TEXT DEFAULT '',
+  email TEXT DEFAULT '',
+  branch TEXT NOT NULL DEFAULT 'MAN',
+  subjects JSONB DEFAULT '[]'::jsonb,
+  classes JSONB DEFAULT '[]'::jsonb,
+  status TEXT NOT NULL DEFAULT 'Active' CHECK (status IN ('Active', 'Inactive')),
+  notes TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.class_logs (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  teacher_id UUID REFERENCES public.teachers(id) ON DELETE SET NULL,
+  teacher_name TEXT NOT NULL,
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
+  start_time TEXT NOT NULL DEFAULT '',
+  end_time TEXT DEFAULT '',
+  duration_minutes INTEGER DEFAULT 0,
+  class TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  branch TEXT NOT NULL DEFAULT 'MAN',
+  topic TEXT DEFAULT '',
+  notes TEXT DEFAULT '',
+  academic_year TEXT DEFAULT '2026-2027',
+  created_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_teachers_branch ON public.teachers(branch);
+CREATE INDEX IF NOT EXISTS idx_teachers_status ON public.teachers(status);
+CREATE INDEX IF NOT EXISTS idx_teachers_name ON public.teachers(name);
+
+CREATE INDEX IF NOT EXISTS idx_class_logs_teacher_id ON public.class_logs(teacher_id);
+CREATE INDEX IF NOT EXISTS idx_class_logs_date ON public.class_logs(date);
+CREATE INDEX IF NOT EXISTS idx_class_logs_class ON public.class_logs(class);
+CREATE INDEX IF NOT EXISTS idx_class_logs_subject ON public.class_logs(subject);
+CREATE INDEX IF NOT EXISTS idx_class_logs_branch ON public.class_logs(branch);
+
+DROP TRIGGER IF EXISTS trg_teachers_updated_at ON public.teachers;
+CREATE TRIGGER trg_teachers_updated_at 
+  BEFORE UPDATE ON public.teachers 
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+DROP TRIGGER IF EXISTS trg_class_logs_updated_at ON public.class_logs;
+CREATE TRIGGER trg_class_logs_updated_at 
+  BEFORE UPDATE ON public.class_logs 
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+ALTER TABLE public.teachers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.class_logs ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Admins manage teachers" ON public.teachers;
+CREATE POLICY "Admins manage teachers"
+  ON public.teachers FOR ALL
+  USING (is_admin()) WITH CHECK (is_admin());
+
+DROP POLICY IF EXISTS "Admins manage class logs" ON public.class_logs;
+CREATE POLICY "Admins manage class logs"
+  ON public.class_logs FOR ALL
+  USING (is_admin()) WITH CHECK (is_admin());
+
+-- ==========================================================================
+-- 9. Timetable Module
+-- ==========================================================================
+
+CREATE TABLE IF NOT EXISTS public.timetable_entries (
+  id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  branch          TEXT NOT NULL DEFAULT 'MAN',
+  class           TEXT NOT NULL,
+  date            DATE NOT NULL,
+  start_time      TEXT NOT NULL DEFAULT '',    -- "HH:MM" 24h format
+  end_time        TEXT DEFAULT '',             -- optional "HH:MM" 24h format
+  session_type    TEXT NOT NULL DEFAULT 'Class'
+                  CHECK (session_type IN ('Class', 'Exam', 'Event', 'Other')),
+  subject         TEXT DEFAULT '',             -- Curriculum subject name (or comma-separated)
+  subjects        JSONB DEFAULT '[]'::jsonb,   -- Array of up to 3 subjects
+  title           TEXT DEFAULT '',             -- e.g. "Chemistry Unit Test" / "Special Revision"
+  description     TEXT DEFAULT '',             -- Additional notes or instructions
+  location        TEXT DEFAULT '',             -- Room/hall (optional)
+  academic_year   TEXT DEFAULT '2026-2027',
+  created_by      UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_timetable_entries_branch
+  ON public.timetable_entries(branch);
+CREATE INDEX IF NOT EXISTS idx_timetable_entries_class
+  ON public.timetable_entries(class);
+CREATE INDEX IF NOT EXISTS idx_timetable_entries_date
+  ON public.timetable_entries(date);
+CREATE INDEX IF NOT EXISTS idx_timetable_entries_session_type
+  ON public.timetable_entries(session_type);
+CREATE INDEX IF NOT EXISTS idx_timetable_entries_class_branch_date
+  ON public.timetable_entries(class, branch, date);
+
+-- Ensure subjects column exists on existing databases
+ALTER TABLE public.timetable_entries ADD COLUMN IF NOT EXISTS subjects JSONB DEFAULT '[]'::jsonb;
+
+DROP TRIGGER IF EXISTS trg_timetable_entries_updated_at ON public.timetable_entries;
+CREATE TRIGGER trg_timetable_entries_updated_at
+  BEFORE UPDATE ON public.timetable_entries
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+ALTER TABLE public.timetable_entries ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Admins manage timetable entries" ON public.timetable_entries;
+CREATE POLICY "Admins manage timetable entries"
+  ON public.timetable_entries FOR ALL
+  USING (is_admin_for_branch(branch))
+  WITH CHECK (is_admin_for_branch(branch));
+
+DROP POLICY IF EXISTS "Students read own timetable" ON public.timetable_entries;
+CREATE POLICY "Students read own timetable"
+  ON public.timetable_entries FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.students s
+      WHERE s.uid = auth.uid()
+        AND (s.class = public.timetable_entries.class OR s.class = ('Class ' || public.timetable_entries.class) OR ('Class ' || s.class) = public.timetable_entries.class)
+        AND s.branch = public.timetable_entries.branch
+    )
+  );
+
+-- ==========================================================================
+-- 10. NEXTGEN Online Sessions & Attendance Check-In Module
+-- ==========================================================================
+
+CREATE TABLE IF NOT EXISTS public.nextgen_sessions (
+  id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title             TEXT NOT NULL,
+  facilitator_name  TEXT NOT NULL,
+  scheduled_at      TIMESTAMPTZ NOT NULL,
+  meet_url          TEXT NOT NULL CHECK (meet_url ~* '^https:\/\/meet\.google\.com\/[a-zA-Z0-9_\-]+'),
+  status            TEXT NOT NULL DEFAULT 'scheduled'
+                    CHECK (status IN ('scheduled', 'live', 'finished')),
+  created_by        UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  live_at           TIMESTAMPTZ,
+  finished_at       TIMESTAMPTZ,
+  created_at        TIMESTAMPTZ DEFAULT NOW(),
+  updated_at        TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_nextgen_single_live 
+  ON public.nextgen_sessions (status) 
+  WHERE status = 'live';
+
+CREATE INDEX IF NOT EXISTS idx_nextgen_sessions_status ON public.nextgen_sessions(status);
+CREATE INDEX IF NOT EXISTS idx_nextgen_sessions_scheduled_at ON public.nextgen_sessions(scheduled_at);
+CREATE INDEX IF NOT EXISTS idx_nextgen_sessions_created_at ON public.nextgen_sessions(created_at);
+
+DROP TRIGGER IF EXISTS trg_nextgen_sessions_updated_at ON public.nextgen_sessions;
+CREATE TRIGGER trg_nextgen_sessions_updated_at
+  BEFORE UPDATE ON public.nextgen_sessions
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+CREATE TABLE IF NOT EXISTS public.nextgen_attendees (
+  id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  session_id        UUID NOT NULL REFERENCES public.nextgen_sessions(id) ON DELETE RESTRICT,
+  student_name      TEXT NOT NULL,
+  class_level       INTEGER NOT NULL CHECK (class_level IN (8, 9, 10, 11, 12)),
+  school_name       TEXT NOT NULL,
+  phone             TEXT NOT NULL,
+  phone_normalized  TEXT NOT NULL,
+  submitted_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at        TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_nextgen_attendees_session_id ON public.nextgen_attendees(session_id);
+CREATE INDEX IF NOT EXISTS idx_nextgen_attendees_submitted_at ON public.nextgen_attendees(submitted_at);
+CREATE INDEX IF NOT EXISTS idx_nextgen_attendees_class_level ON public.nextgen_attendees(class_level);
+CREATE INDEX IF NOT EXISTS idx_nextgen_attendees_phone_norm ON public.nextgen_attendees(phone_normalized);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_nextgen_attendee_dedup 
+  ON public.nextgen_attendees(session_id, phone_normalized, LOWER(TRIM(student_name)));
+
+ALTER TABLE public.nextgen_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.nextgen_attendees ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Admins manage nextgen sessions" ON public.nextgen_sessions;
+CREATE POLICY "Admins manage nextgen sessions"
+  ON public.nextgen_sessions FOR ALL
+  USING (is_admin())
+  WITH CHECK (is_admin());
+
+DROP POLICY IF EXISTS "Admins read nextgen attendees" ON public.nextgen_attendees;
+CREATE POLICY "Admins read nextgen attendees"
+  ON public.nextgen_attendees FOR SELECT
+  USING (is_admin());
+
+DROP POLICY IF EXISTS "Admins delete nextgen attendees" ON public.nextgen_attendees;
+CREATE POLICY "Admins delete nextgen attendees"
+  ON public.nextgen_attendees FOR DELETE
+  USING (is_admin());
+
+-- ==========================================================================
 -- INSTRUCTIONS TO BOOTSTRAP FIRST ADMIN:
 -- 1. In Supabase Dashboard → Authentication → Users → Add User:
 --    Email: admin@yourinstitution.com
