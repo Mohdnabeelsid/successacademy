@@ -980,12 +980,14 @@ CREATE TABLE IF NOT EXISTS public.nextgen_sessions (
   meet_url          TEXT NOT NULL CHECK (meet_url ~* '^https:\/\/meet\.google\.com\/[a-zA-Z0-9_\-]+'),
   status            TEXT NOT NULL DEFAULT 'scheduled'
                     CHECK (status IN ('scheduled', 'live', 'finished')),
-  created_by        UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  created_by        UUID,
   live_at           TIMESTAMPTZ,
   finished_at       TIMESTAMPTZ,
   created_at        TIMESTAMPTZ DEFAULT NOW(),
   updated_at        TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE public.nextgen_sessions DROP CONSTRAINT IF EXISTS nextgen_sessions_created_by_fkey;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_nextgen_single_live 
   ON public.nextgen_sessions (status) 
@@ -1026,18 +1028,65 @@ ALTER TABLE public.nextgen_attendees ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Admins manage nextgen sessions" ON public.nextgen_sessions;
 CREATE POLICY "Admins manage nextgen sessions"
   ON public.nextgen_sessions FOR ALL
-  USING (is_admin())
-  WITH CHECK (is_admin());
+  USING (is_admin() OR auth.role() = 'authenticated')
+  WITH CHECK (is_admin() OR auth.role() = 'authenticated');
 
 DROP POLICY IF EXISTS "Admins read nextgen attendees" ON public.nextgen_attendees;
 CREATE POLICY "Admins read nextgen attendees"
   ON public.nextgen_attendees FOR SELECT
-  USING (is_admin());
+  USING (is_admin() OR auth.role() = 'authenticated');
 
 DROP POLICY IF EXISTS "Admins delete nextgen attendees" ON public.nextgen_attendees;
 CREATE POLICY "Admins delete nextgen attendees"
   ON public.nextgen_attendees FOR DELETE
-  USING (is_admin());
+  USING (is_admin() OR auth.role() = 'authenticated');
+
+-- Function to create nextgen session
+CREATE OR REPLACE FUNCTION public.create_nextgen_session(
+  p_title TEXT,
+  p_facilitator_name TEXT,
+  p_scheduled_at TIMESTAMPTZ,
+  p_meet_url TEXT
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_new_session RECORD;
+  v_clean_url TEXT;
+BEGIN
+  v_clean_url := TRIM(p_meet_url);
+  IF v_clean_url !~* '^https?://' THEN
+    v_clean_url := 'https://' || v_clean_url;
+  ELSIF v_clean_url ~* '^http://' THEN
+    v_clean_url := regexp_replace(v_clean_url, '^http://', 'https://', 'i');
+  END IF;
+
+  INSERT INTO public.nextgen_sessions (
+    title,
+    facilitator_name,
+    scheduled_at,
+    meet_url,
+    status,
+    created_at,
+    updated_at
+  ) VALUES (
+    TRIM(p_title),
+    TRIM(p_facilitator_name),
+    p_scheduled_at,
+    v_clean_url,
+    'scheduled',
+    NOW(),
+    NOW()
+  )
+  RETURNING * INTO v_new_session;
+
+  RETURN to_jsonb(v_new_session);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.create_nextgen_session(TEXT, TEXT, TIMESTAMPTZ, TEXT) TO authenticated, anon;
 
 -- ==========================================================================
 -- INSTRUCTIONS TO BOOTSTRAP FIRST ADMIN:

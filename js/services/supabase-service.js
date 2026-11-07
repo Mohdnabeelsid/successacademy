@@ -28,14 +28,18 @@ export function toCamelCase(obj) {
 
 export async function createRow(tableName, data) {
   const dbData = toSnakeCase(data);
-  const { data: inserted, error } = await supabase
-    .from(tableName)
-    .insert([dbData])
-    .select()
-    .single();
+  const query = supabase.from(tableName).insert([dbData]).select();
+  const res = typeof query?.single === "function" ? await query.single() : await query;
+  const { data: inserted, error } = res || {};
 
   if (error) throw new Error(error.message);
-  return inserted.id;
+  if (Array.isArray(inserted) && inserted.length > 0) {
+    return inserted[0]?.id || null;
+  }
+  if (inserted && typeof inserted === "object" && inserted.id) {
+    return inserted.id;
+  }
+  return null;
 }
 
 export async function setRowById(tableName, id, data) {

@@ -469,7 +469,21 @@ async function handleSaveSession(e) {
     return;
   }
 
-  const scheduled_at = new Date(scheduled_at_raw).toISOString();
+  let cleanMeetUrl = meet_url;
+  if (!/^https?:\/\//i.test(cleanMeetUrl)) {
+    cleanMeetUrl = `https://${cleanMeetUrl}`;
+  } else if (/^http:\/\//i.test(cleanMeetUrl)) {
+    cleanMeetUrl = cleanMeetUrl.replace(/^http:\/\//i, "https://");
+  }
+
+  let scheduled_at = "";
+  try {
+    scheduled_at = new Date(scheduled_at_raw).toISOString();
+  } catch (_e) {
+    toast.error("Please enter a valid date and time.");
+    modalSessionScheduledAt?.focus();
+    return;
+  }
 
   setButtonLoading(saveSessionBtn, true, "Saving...");
 
@@ -479,7 +493,7 @@ async function handleSaveSession(e) {
         title,
         facilitator_name,
         scheduled_at,
-        meet_url
+        meet_url: cleanMeetUrl
       });
       toast.success("NEXTGEN session updated successfully.");
     } else {
@@ -487,8 +501,8 @@ async function handleSaveSession(e) {
         title,
         facilitator_name,
         scheduled_at,
-        meet_url,
-        created_by: currentAdmin?.id || null
+        meet_url: cleanMeetUrl,
+        created_by: currentAdmin?.id || currentAdmin?.uid || null
       });
       toast.success("NEXTGEN session scheduled successfully.");
     }

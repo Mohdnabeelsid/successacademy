@@ -289,10 +289,12 @@ function createMockSupabase() {
             }));
             mockSessions.push(...inserted);
             return {
-              select: () => ({
-                single: () => Promise.resolve({ data: { ...inserted[0] }, error: null }),
-                maybeSingle: () => Promise.resolve({ data: { ...inserted[0] }, error: null })
-              })
+              select: () => {
+                const p = Promise.resolve({ data: inserted, error: null });
+                p.single = () => Promise.resolve({ data: { ...inserted[0] }, error: null });
+                p.maybeSingle = () => Promise.resolve({ data: { ...inserted[0] }, error: null });
+                return p;
+              }
             };
           },
           update: (updates) => {
@@ -376,10 +378,12 @@ function createMockSupabase() {
             }));
             mockAttendees.push(...inserted);
             return {
-              select: () => ({
-                single: () => Promise.resolve({ data: { ...inserted[0] }, error: null }),
-                maybeSingle: () => Promise.resolve({ data: { ...inserted[0] }, error: null })
-              })
+              select: () => {
+                const p = Promise.resolve({ data: inserted, error: null });
+                p.single = () => Promise.resolve({ data: { ...inserted[0] }, error: null });
+                p.maybeSingle = () => Promise.resolve({ data: { ...inserted[0] }, error: null });
+                return p;
+              }
             };
           }
         };
@@ -388,6 +392,21 @@ function createMockSupabase() {
     },
     rpc: (funcName, args) => {
       // Simulate PostgreSQL functions
+      if (funcName === "create_nextgen_session") {
+        const session = {
+          id: "session-" + Math.random().toString(36).substring(2, 9),
+          title: args.p_title,
+          facilitator_name: args.p_facilitator_name,
+          scheduled_at: args.p_scheduled_at,
+          meet_url: args.p_meet_url,
+          status: "scheduled",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        mockSessions.push(session);
+        return Promise.resolve({ data: session, error: null });
+      }
+
       if (funcName === "get_live_nextgen_session") {
         const live = mockSessions.find(s => s.status === "live");
         if (!live) return Promise.resolve({ data: null, error: null });
