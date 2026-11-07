@@ -20,7 +20,8 @@ import {
   listSessionAttendees,
   exportSessionAttendeesToCSV,
   getNextgenDashboardStats,
-  isValidGoogleMeetUrl
+  isValidGoogleMeetUrl,
+  calculateCountdown
 } from "../services/nextgen-service.js";
 
 // Page State
@@ -319,6 +320,28 @@ function renderSessionsTable() {
     const scheduledAt = session.scheduled_at || session.scheduledAt || "";
     const meetUrl = session.meet_url || session.meetUrl || "";
 
+    // Live countdown badge for scheduled sessions
+    let countdownBadge = "";
+    if (session.status === "scheduled" && scheduledAt) {
+      const cd = calculateCountdown(scheduledAt);
+      if (cd.isPassed) {
+        countdownBadge = `<div style="font-size:11px; color:#D97706; font-weight:700; margin-top:3px; display:inline-flex; align-items:center; gap:3px;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Starting Soon
+        </div>`;
+      } else {
+        let label = "";
+        if (cd.days > 0) label = `${cd.days}d ${cd.hours}h left`;
+        else if (cd.hours > 0) label = `${cd.hours}h ${cd.minutes}m left`;
+        else label = `${cd.minutes}m ${cd.seconds}s left`;
+
+        countdownBadge = `<div style="font-size:11px; color:#059669; font-weight:700; margin-top:3px; display:inline-flex; align-items:center; gap:3px;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          ${label}
+        </div>`;
+      }
+    }
+
     // Attendees action (for all)
     actions.push(`
       <button type="button" class="btn btn-ghost btn-xs view-attendees-btn" data-id="${session.id}" title="View Attendees">
@@ -369,6 +392,7 @@ function renderSessionsTable() {
         </td>
         <td>
           <div style="font-size:12px; font-weight:600;">${formatISTDateTime(scheduledAt)}</div>
+          ${countdownBadge}
         </td>
         <td>${statusBadge}</td>
         <td>

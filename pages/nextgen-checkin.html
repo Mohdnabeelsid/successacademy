@@ -31,7 +31,7 @@
       <p style="font-size:0.9rem; color:#4B5E58; font-weight:600; margin:0;">Connecting to NEXTGEN session...</p>
     </div>
 
-    <!-- No Live Session Screen -->
+    <!-- No Live Session Screen (When no live and no scheduled upcoming) -->
     <div id="no-session-card" class="no-session-card" style="display:none;">
       <div class="no-session-icon">📡</div>
       <h2 class="no-session-title">No Live Session Right Now</h2>
@@ -44,6 +44,62 @@
         <button type="button" id="retry-check-btn" class="btn-submit-checkin" style="width:auto; padding:10px 22px; font-size:0.88rem;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
           Check Again
+        </button>
+      </div>
+    </div>
+
+    <!-- Upcoming Scheduled Session Card with Live Countdown Timer -->
+    <div id="upcoming-session-card" style="display:none;">
+      <div class="nextgen-pill-scheduled">
+        <span class="scheduled-pulse-dot"></span> Upcoming Session Scheduled
+      </div>
+
+      <div class="session-info-box">
+        <h2 class="session-title" id="upcoming-session-title">NEXTGEN Session</h2>
+        <div class="session-meta-row">
+          <div class="session-meta-item">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span id="upcoming-session-facilitator">Facilitator</span>
+          </div>
+          <div class="session-meta-item">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span id="upcoming-session-time">Scheduled Date &amp; Time</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Real-Time Countdown Block -->
+      <div class="countdown-timer-box">
+        <div style="font-size:0.75rem; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:#475569;">
+          Session Starts In
+        </div>
+        <div class="countdown-digits-grid">
+          <div class="timer-block">
+            <div class="timer-value" id="countdown-days">00</div>
+            <div class="timer-label">Days</div>
+          </div>
+          <div class="timer-block">
+            <div class="timer-value" id="countdown-hours">00</div>
+            <div class="timer-label">Hours</div>
+          </div>
+          <div class="timer-block">
+            <div class="timer-value" id="countdown-minutes">00</div>
+            <div class="timer-label">Mins</div>
+          </div>
+          <div class="timer-block">
+            <div class="timer-value" id="countdown-seconds">00</div>
+            <div class="timer-label">Secs</div>
+          </div>
+        </div>
+        <div id="countdown-note" style="font-size:0.8rem; color:#64748B; margin-top:8px; line-height:1.4;">
+          Student check-in will open as soon as this session goes live. Stay tuned!
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:16px;">
+        <button type="button" id="refresh-upcoming-btn" class="btn-submit-checkin" style="width:auto; padding:10px 22px; font-size:0.88rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Check If Live Now
         </button>
       </div>
     </div>

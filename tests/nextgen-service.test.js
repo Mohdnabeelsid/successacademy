@@ -39,7 +39,9 @@ import {
   submitCheckIn,
   listSessionAttendees,
   exportSessionAttendeesToCSV,
-  getNextgenDashboardStats
+  getNextgenDashboardStats,
+  calculateCountdown,
+  getUpcomingSessionInfo
 } from "../js/services/nextgen-service.js";
 
 import { setSupabaseClient } from "../js/config/supabase-config.js";
@@ -436,6 +438,21 @@ function createMockSupabase() {
         });
       }
 
+      if (funcName === "get_upcoming_nextgen_session") {
+        const scheduled = mockSessions.find(s => s.status === "scheduled");
+        if (!scheduled) return Promise.resolve({ data: null, error: null });
+        return Promise.resolve({
+          data: {
+            id: scheduled.id,
+            title: scheduled.title,
+            facilitator_name: scheduled.facilitator_name,
+            scheduled_at: scheduled.scheduled_at,
+            status: "scheduled"
+          },
+          error: null
+        });
+      }
+
       if (funcName === "activate_nextgen_session") {
         const existingLive = mockSessions.find(s => s.status === "live" && s.id !== args.p_session_id);
         if (existingLive) {
@@ -525,11 +542,30 @@ async function runAsyncTests() {
   });
   assertEqual(session2.status, NEXTGEN_STATUS.SCHEDULED, "Session 2 status is scheduled");
 
-  // Test 5.3: Public safe info when NO session is live
+  // Test 5.3: Upcoming Scheduled Session Info & Countdown Timer
+  const upcomingInfo = await getUpcomingSessionInfo();
+  assert(upcomingInfo !== null, "getUpcomingSessionInfo returns upcoming session when scheduled");
+  assertEqual(upcomingInfo.title, "Engineering & NEET Orientation", "Upcoming session title matches");
+  assertEqual(upcomingInfo.meet_url, undefined, "CRITICAL: meet_url is NEVER exposed in getUpcomingSessionInfo");
+
+  // Countdown timer calculations
+  const nowMs = 1700000000000;
+  const targetFutureMs = nowMs + (2 * 86400 + 4 * 3600 + 30 * 60 + 15) * 1000;
+  const cd = calculateCountdown(new Date(targetFutureMs).toISOString(), nowMs);
+  assertEqual(cd.days, 2, "Countdown calculates 2 days");
+  assertEqual(cd.hours, 4, "Countdown calculates 4 hours");
+  assertEqual(cd.minutes, 30, "Countdown calculates 30 minutes");
+  assertEqual(cd.seconds, 15, "Countdown calculates 15 seconds");
+  assertEqual(cd.isPassed, false, "Countdown is not passed");
+
+  const cdPast = calculateCountdown(new Date(nowMs - 5000).toISOString(), nowMs);
+  assertEqual(cdPast.isPassed, true, "Past date marked as isPassed = true");
+
+  // Test 5.4: Public safe info when NO session is live
   const publicInfoNone = await getLiveSessionInfo();
   assertEqual(publicInfoNone, null, "getLiveSessionInfo returns null when no session is live");
 
-  // Test 5.4: Submit check-in when no session is live -> fails
+  // Test 5.5: Submit check-in when no session is live -> fails
   await assertRejects(
     () => submitCheckIn({
       student_name: "Kavya S",

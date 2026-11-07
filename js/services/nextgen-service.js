@@ -281,6 +281,80 @@ export async function getLiveSessionInfo() {
 }
 
 /**
+ * Calculates countdown remaining time components.
+ * @param {string|Date} targetDate
+ * @param {number} [nowMs=Date.now()]
+ * @returns {{ days: number, hours: number, minutes: number, seconds: number, totalMs: number, isPassed: boolean, formatted: string }}
+ */
+export function calculateCountdown(targetDate, nowMs = Date.now()) {
+  if (!targetDate) {
+    return { days: 0, hours: 0, minutes: 0, seconds: 0, totalMs: 0, isPassed: true, formatted: "00:00:00" };
+  }
+  const target = new Date(targetDate).getTime();
+  const diff = target - nowMs;
+  if (isNaN(diff) || diff <= 0) {
+    return { days: 0, hours: 0, minutes: 0, seconds: 0, totalMs: 0, isPassed: true, formatted: "00:00:00" };
+  }
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+  const minutes = Math.floor((diff / (1000 * 60)) % 60);
+  const seconds = Math.floor((diff / 1000) % 60);
+
+  const pad = n => String(n).padStart(2, "0");
+  const formatted = days > 0
+    ? `${days}d ${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`
+    : `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+
+  return {
+    days,
+    hours,
+    minutes,
+    seconds,
+    totalMs: diff,
+    isPassed: false,
+    formatted
+  };
+}
+
+/**
+ * Retrieves the nearest upcoming scheduled NEXTGEN session safe info.
+ * Excludes meet_url for public privacy until check-in.
+ * @returns {Promise<Object|null>}
+ */
+export async function getUpcomingSessionInfo() {
+  try {
+    const { data, error } = await supabase.rpc("get_upcoming_nextgen_session");
+    const rpcRow = Array.isArray(data) ? data[0] : data;
+    if (!error && rpcRow && rpcRow.title) {
+      const safe = normalizeSession(rpcRow);
+      delete safe.meetUrl;
+      delete safe.meet_url;
+      return safe;
+    }
+
+    // Direct table query fallback for scheduled sessions
+    const { data: rows, error: qErr } = await supabase
+      .from(TABLES.NEXTGEN_SESSIONS)
+      .select("id, title, facilitator_name, scheduled_at, status")
+      .eq("status", NEXTGEN_STATUS.SCHEDULED)
+      .order("scheduled_at", { ascending: true })
+      .limit(1);
+
+    if (qErr || !rows || rows.length === 0) {
+      return null;
+    }
+
+    const safe = normalizeSession(rows[0]);
+    delete safe.meetUrl;
+    delete safe.meet_url;
+    return safe;
+  } catch (err) {
+    console.error("Error fetching upcoming NEXTGEN session:", err);
+    return null;
+  }
+}
+
+/**
  * Submits student check-in.
  * Atomically verifies session is live, inserts attendee record, and returns Google Meet URL.
  * @param {Object} formData { studentName, classLevel, schoolName, phone }

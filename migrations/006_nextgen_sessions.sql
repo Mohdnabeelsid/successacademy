@@ -110,6 +110,28 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.get_live_nextgen_session() TO anon, authenticated;
 
+-- Safe RPC: Get nearest upcoming scheduled session (WITHOUT exposing meet_url!)
+CREATE OR REPLACE FUNCTION public.get_upcoming_nextgen_session()
+RETURNS TABLE (
+  id UUID,
+  title TEXT,
+  facilitator_name TEXT,
+  scheduled_at TIMESTAMPTZ,
+  status TEXT
+)
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+AS $$
+  SELECT s.id, s.title, s.facilitator_name, s.scheduled_at, s.status
+  FROM public.nextgen_sessions s
+  WHERE s.status = 'scheduled'
+  ORDER BY s.scheduled_at ASC
+  LIMIT 1;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.get_upcoming_nextgen_session() TO anon, authenticated;
+
 -- B. Atomic Session Activation (Prevents concurrent/double live sessions)
 CREATE OR REPLACE FUNCTION public.activate_nextgen_session(p_session_id UUID)
 RETURNS JSONB

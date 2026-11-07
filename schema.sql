@@ -1088,6 +1088,49 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.create_nextgen_session(TEXT, TEXT, TIMESTAMPTZ, TEXT) TO authenticated, anon;
 
+-- Get safe live session info (no meet_url)
+CREATE OR REPLACE FUNCTION public.get_live_nextgen_session()
+RETURNS TABLE (
+  id UUID,
+  title TEXT,
+  facilitator_name TEXT,
+  scheduled_at TIMESTAMPTZ,
+  status TEXT
+) 
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+AS $$
+  SELECT s.id, s.title, s.facilitator_name, s.scheduled_at, s.status
+  FROM public.nextgen_sessions s
+  WHERE s.status = 'live'
+  LIMIT 1;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.get_live_nextgen_session() TO anon, authenticated;
+
+-- Safe RPC: Get nearest upcoming scheduled session (WITHOUT exposing meet_url!)
+CREATE OR REPLACE FUNCTION public.get_upcoming_nextgen_session()
+RETURNS TABLE (
+  id UUID,
+  title TEXT,
+  facilitator_name TEXT,
+  scheduled_at TIMESTAMPTZ,
+  status TEXT
+)
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+AS $$
+  SELECT s.id, s.title, s.facilitator_name, s.scheduled_at, s.status
+  FROM public.nextgen_sessions s
+  WHERE s.status = 'scheduled'
+  ORDER BY s.scheduled_at ASC
+  LIMIT 1;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.get_upcoming_nextgen_session() TO anon, authenticated;
+
 -- ==========================================================================
 -- INSTRUCTIONS TO BOOTSTRAP FIRST ADMIN:
 -- 1. In Supabase Dashboard → Authentication → Users → Add User:

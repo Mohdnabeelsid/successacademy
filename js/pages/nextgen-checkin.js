@@ -5,6 +5,8 @@
 
 import {
   getLiveSessionInfo,
+  getUpcomingSessionInfo,
+  calculateCountdown,
   submitCheckIn,
   normalizeIndianPhone
 } from "../services/nextgen-service.js";
@@ -12,8 +14,19 @@ import {
 // DOM Elements
 const sessionLoading = document.getElementById("session-loading");
 const noSessionCard = document.getElementById("no-session-card");
+const upcomingSessionCard = document.getElementById("upcoming-session-card");
 const checkinContainer = document.getElementById("checkin-container");
 const retryCheckBtn = document.getElementById("retry-check-btn");
+const refreshUpcomingBtn = document.getElementById("refresh-upcoming-btn");
+
+const upcomingSessionTitle = document.getElementById("upcoming-session-title");
+const upcomingSessionFacilitator = document.getElementById("upcoming-session-facilitator");
+const upcomingSessionTime = document.getElementById("upcoming-session-time");
+const countdownDays = document.getElementById("countdown-days");
+const countdownHours = document.getElementById("countdown-hours");
+const countdownMinutes = document.getElementById("countdown-minutes");
+const countdownSeconds = document.getElementById("countdown-seconds");
+const countdownNote = document.getElementById("countdown-note");
 
 const sessionTitle = document.getElementById("session-title");
 const sessionFacilitator = document.getElementById("session-facilitator");
@@ -36,6 +49,8 @@ const countdownEl = document.getElementById("countdown");
 const manualJoinMeetBtn = document.getElementById("manual-join-meet-btn");
 
 let currentLiveSession = null;
+let currentUpcomingSession = null;
+let countdownInterval = null;
 let isSubmitting = false;
 
 /**
@@ -92,36 +107,99 @@ function setLoading(loading) {
 }
 
 /**
- * Initialize page and check for currently live session
+ * Start real-time countdown timer for upcoming scheduled session
+ */
+function startCountdown(targetDate) {
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+    countdownInterval = null;
+  }
+
+  function update() {
+    const cd = calculateCountdown(targetDate);
+    const pad = n => String(n).padStart(2, "0");
+
+    if (countdownDays) countdownDays.textContent = pad(cd.days);
+    if (countdownHours) countdownHours.textContent = pad(cd.hours);
+    if (countdownMinutes) countdownMinutes.textContent = pad(cd.minutes);
+    if (countdownSeconds) countdownSeconds.textContent = pad(cd.seconds);
+
+    if (cd.isPassed) {
+      if (countdownNote) {
+        countdownNote.textContent = "Session is due to start! Waiting for session to be activated...";
+        countdownNote.style.color = "#0FA15D";
+        countdownNote.style.fontWeight = "700";
+      }
+      // Periodically probe if session transitioned to live
+      getLiveSessionInfo().then(live => {
+        if (live && live.status === "live") {
+          if (countdownInterval) clearInterval(countdownInterval);
+          init();
+        }
+      });
+    }
+  }
+
+  update();
+  countdownInterval = setInterval(update, 1000);
+}
+
+/**
+ * Initialize page and check for currently live or upcoming session
  */
 async function init() {
   clearError();
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+    countdownInterval = null;
+  }
+
   if (sessionLoading) sessionLoading.style.display = "block";
   if (noSessionCard) noSessionCard.style.display = "none";
+  if (upcomingSessionCard) upcomingSessionCard.style.display = "none";
   if (checkinContainer) checkinContainer.style.display = "none";
   if (successScreen) successScreen.style.display = "none";
 
   try {
-    const session = await getLiveSessionInfo();
+    // 1. Check for live session first
+    const liveSession = await getLiveSessionInfo();
 
-    if (!session || session.status !== "live") {
-      currentLiveSession = null;
+    if (liveSession && liveSession.status === "live") {
+      currentLiveSession = liveSession;
+
+      // Populate live session details
+      if (sessionTitle) sessionTitle.textContent = liveSession.title || "NEXTGEN Interactive Session";
+      if (sessionFacilitator) sessionFacilitator.textContent = liveSession.facilitator_name || liveSession.facilitatorName || "Success Academy Facilitator";
+      if (sessionTime) sessionTime.textContent = formatSessionDateTime(liveSession.scheduled_at || liveSession.scheduledAt || liveSession.live_at || liveSession.liveAt);
+
       if (sessionLoading) sessionLoading.style.display = "none";
-      if (noSessionCard) noSessionCard.style.display = "block";
+      if (checkinContainer) checkinContainer.style.display = "block";
       return;
     }
 
-    currentLiveSession = session;
+    currentLiveSession = null;
 
-    // Populate live session details
-    if (sessionTitle) sessionTitle.textContent = session.title || "NEXTGEN Interactive Session";
-    if (sessionFacilitator) sessionFacilitator.textContent = session.facilitator_name || session.facilitatorName || "Success Academy Facilitator";
-    if (sessionTime) sessionTime.textContent = formatSessionDateTime(session.scheduled_at || session.scheduledAt || session.live_at || session.liveAt);
+    // 2. Check for upcoming scheduled session
+    const upcoming = await getUpcomingSessionInfo();
+    if (upcoming && (upcoming.scheduled_at || upcoming.scheduledAt)) {
+      currentUpcomingSession = upcoming;
 
+      if (upcomingSessionTitle) upcomingSessionTitle.textContent = upcoming.title || "NEXTGEN Session";
+      if (upcomingSessionFacilitator) upcomingSessionFacilitator.textContent = upcoming.facilitator_name || upcoming.facilitatorName || "Success Academy Facilitator";
+      if (upcomingSessionTime) upcomingSessionTime.textContent = formatSessionDateTime(upcoming.scheduled_at || upcoming.scheduledAt);
+
+      startCountdown(upcoming.scheduled_at || upcoming.scheduledAt);
+
+      if (sessionLoading) sessionLoading.style.display = "none";
+      if (upcomingSessionCard) upcomingSessionCard.style.display = "block";
+      return;
+    }
+
+    // 3. No live or scheduled session found
     if (sessionLoading) sessionLoading.style.display = "none";
-    if (checkinContainer) checkinContainer.style.display = "block";
+    if (noSessionCard) noSessionCard.style.display = "block";
   } catch (err) {
-    console.error("Failed to load live NEXTGEN session:", err);
+    console.error("Failed to load NEXTGEN session:", err);
     currentLiveSession = null;
     if (sessionLoading) sessionLoading.style.display = "none";
     if (noSessionCard) noSessionCard.style.display = "block";
@@ -227,6 +305,12 @@ if (checkinForm) {
 
 if (retryCheckBtn) {
   retryCheckBtn.addEventListener("click", () => {
+    init();
+  });
+}
+
+if (refreshUpcomingBtn) {
+  refreshUpcomingBtn.addEventListener("click", () => {
     init();
   });
 }
