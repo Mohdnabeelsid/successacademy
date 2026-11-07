@@ -31,6 +31,68 @@ export const NEXTGEN_STATUS = {
 export const ALLOWED_CLASSES = [8, 9, 10, 11, 12];
 
 /**
+ * Normalizes a NEXTGEN session object so both camelCase and snake_case properties
+ * are present, preventing frontend rendering mismatches.
+ * Deliberately preserves undefined for meet_url if not present (e.g. in public safe info).
+ * @param {Object} raw
+ * @returns {Object|null}
+ */
+export function normalizeSession(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const item = toCamelCase(raw);
+
+  if (item.facilitatorName !== undefined || raw.facilitator_name !== undefined) {
+    const val = item.facilitatorName !== undefined ? item.facilitatorName : raw.facilitator_name;
+    item.facilitator_name = val;
+    item.facilitatorName = val;
+  }
+  if (item.scheduledAt !== undefined || raw.scheduled_at !== undefined) {
+    const val = item.scheduledAt !== undefined ? item.scheduledAt : raw.scheduled_at;
+    item.scheduled_at = val;
+    item.scheduledAt = val;
+  }
+  if (item.meetUrl !== undefined || raw.meet_url !== undefined) {
+    const val = item.meetUrl !== undefined ? item.meetUrl : raw.meet_url;
+    item.meet_url = val;
+    item.meetUrl = val;
+  }
+  if (item.liveAt !== undefined || raw.live_at !== undefined) {
+    const val = item.liveAt !== undefined ? item.liveAt : raw.live_at;
+    item.live_at = val;
+    item.liveAt = val;
+  }
+  if (item.finishedAt !== undefined || raw.finished_at !== undefined) {
+    const val = item.finishedAt !== undefined ? item.finishedAt : raw.finished_at;
+    item.finished_at = val;
+    item.finishedAt = val;
+  }
+  if (item.createdAt !== undefined || raw.created_at !== undefined) {
+    const val = item.createdAt !== undefined ? item.createdAt : raw.created_at;
+    item.created_at = val;
+    item.createdAt = val;
+  }
+  if (item.updatedAt !== undefined || raw.updated_at !== undefined) {
+    const val = item.updatedAt !== undefined ? item.updatedAt : raw.updated_at;
+    item.updated_at = val;
+    item.updatedAt = val;
+  }
+
+  // Handle attendee count
+  let count = 0;
+  if (item.attendeeCount !== undefined) {
+    count = item.attendeeCount;
+  } else if (raw.attendee_count !== undefined) {
+    count = raw.attendee_count;
+  } else if (Array.isArray(raw.nextgen_attendees) && raw.nextgen_attendees[0]?.count !== undefined) {
+    count = raw.nextgen_attendees[0].count;
+  }
+  item.attendee_count = Number(count) || 0;
+  item.attendeeCount = Number(count) || 0;
+
+  return item;
+}
+
+/**
  * Validates Google Meet URL.
  * Accepts official Google Meet links: e.g. https://meet.google.com/abc-defg-hij
  * Also tolerates http:// or bare meet.google.com/
@@ -185,8 +247,12 @@ export async function getLiveSessionInfo() {
   try {
     // Attempt RPC first (Security Definer with strictly safe fields)
     const { data, error } = await supabase.rpc("get_live_nextgen_session");
-    if (!error && data && data.length > 0) {
-      return toCamelCase(data[0]);
+    const rpcRow = Array.isArray(data) ? data[0] : data;
+    if (!error && rpcRow && rpcRow.title) {
+      const safe = normalizeSession(rpcRow);
+      delete safe.meetUrl;
+      delete safe.meet_url;
+      return safe;
     }
 
     // Fallback query for live session
@@ -202,7 +268,10 @@ export async function getLiveSessionInfo() {
     }
 
     if (rows && rows.length > 0) {
-      return toCamelCase(rows[0]);
+      const safe = normalizeSession(rows[0]);
+      delete safe.meetUrl;
+      delete safe.meet_url;
+      return safe;
     }
     return null;
   } catch (err) {
@@ -353,26 +422,16 @@ export async function listNextgenSessions(filters = {}) {
       .order("scheduled_at", { ascending: false });
 
     if (sErr) return [];
-    return (simpleData || []).map(row => {
-      const item = toCamelCase(row);
-      item.attendeeCount = 0;
-      return item;
-    });
+    return (simpleData || []).map(row => normalizeSession(row));
   }
 
-  let list = (data || []).map(row => {
-    const item = toCamelCase(row);
-    // Extract attendee count from Supabase count aggregate
-    const countArr = row.nextgen_attendees;
-    item.attendeeCount = (countArr && countArr[0]?.count) ? countArr[0].count : 0;
-    return item;
-  });
+  let list = (data || []).map(row => normalizeSession(row));
 
   if (filters.search && String(filters.search).trim()) {
     const q = String(filters.search).trim().toLowerCase();
     list = list.filter(s =>
       (s.title || "").toLowerCase().includes(q) ||
-      (s.facilitatorName || "").toLowerCase().includes(q)
+      (s.facilitator_name || s.facilitatorName || "").toLowerCase().includes(q)
     );
   }
 
@@ -423,12 +482,7 @@ export async function createNextgenSession(sessionData) {
     });
 
     if (!rpcErr && rpcData) {
-      const res = toCamelCase(rpcData);
-      res.facilitator_name = res.facilitatorName;
-      res.scheduled_at = res.scheduledAt;
-      res.meet_url = res.meetUrl;
-      res.attendee_count = 0;
-      return res;
+      return normalizeSession(rpcData);
     }
   } catch (_e) {
     // Fall back to direct insert if RPC not present in DB
@@ -439,13 +493,12 @@ export async function createNextgenSession(sessionData) {
     const id = await createRow(TABLES.NEXTGEN_SESSIONS, payload);
     if (id) {
       const session = await getNextgenSession(id);
-      if (session) return session;
+      if (session) return normalizeSession(session);
     }
-    return {
+    return normalizeSession({
       id: id || "session-" + Date.now(),
-      ...payload,
-      attendee_count: 0
-    };
+      ...payload
+    });
   } catch (err) {
     // If foreign key constraint on created_by failed, retry without created_by
     if (payload.createdBy && (err.message?.includes("foreign key") || err.message?.includes("created_by") || err.message?.includes("23503"))) {
@@ -453,13 +506,12 @@ export async function createNextgenSession(sessionData) {
       const id = await createRow(TABLES.NEXTGEN_SESSIONS, payload);
       if (id) {
         const session = await getNextgenSession(id);
-        if (session) return session;
+        if (session) return normalizeSession(session);
       }
-      return {
+      return normalizeSession({
         id: id || "session-" + Date.now(),
-        ...payload,
-        attendee_count: 0
-      };
+        ...payload
+      });
     }
     throw err;
   }
@@ -494,7 +546,22 @@ export async function updateNextgenSession(id, updates) {
     }
     payload.meetUrl = url;
   }
-  if (updates.status !== undefined) payload.status = updates.status;
+  if (updates.status !== undefined) {
+    if (updates.status === NEXTGEN_STATUS.LIVE) {
+      const { data: existingLive } = await supabase
+        .from(TABLES.NEXTGEN_SESSIONS)
+        .select("id, title")
+        .eq("status", NEXTGEN_STATUS.LIVE);
+      const otherLive = (existingLive || []).find(s => s.id !== id);
+      if (otherLive) {
+        throw new Error(`Another session is already live: "${otherLive.title}". Please finish it first.`);
+      }
+      payload.liveAt = getISTNowIsoTimestamp();
+    } else if (updates.status === NEXTGEN_STATUS.FINISHED) {
+      payload.finishedAt = getISTNowIsoTimestamp();
+    }
+    payload.status = updates.status;
+  }
 
   await updateRowById(TABLES.NEXTGEN_SESSIONS, id, payload);
   return await getNextgenSession(id);
@@ -604,12 +671,15 @@ export async function finishNextgenSession(sessionId) {
 }
 
 /**
- * Deletes a session if it has NO attendance records.
- * Prevents accidental loss of historical check-in records.
+ * Deletes a session and optionally its attendance records if forced.
+ * Prevents accidental loss of historical check-in records unless explicitly confirmed.
  * @param {string} sessionId
+ * @param {Object} [options]
+ * @param {boolean} [options.force=false]
+ * @param {boolean} [options.deleteAttendees=false]
  * @returns {Promise<boolean>}
  */
-export async function deleteNextgenSession(sessionId) {
+export async function deleteNextgenSession(sessionId, options = {}) {
   if (!sessionId) throw new Error("Session ID is required.");
 
   // Check attendee count first
@@ -621,7 +691,16 @@ export async function deleteNextgenSession(sessionId) {
   if (countErr) throw new Error("Failed to verify session attendees.");
 
   if (count > 0) {
-    throw new Error(`Cannot delete this session because it contains ${count} recorded attendees / check-in records. Finished sessions must be preserved for historical records.`);
+    if (!options.force && !options.deleteAttendees) {
+      throw new Error(`Cannot delete this session because it contains ${count} recorded attendees / check-in records. Finished sessions must be preserved for historical records.`);
+    }
+    // Delete child attendees first (satisfies ON DELETE RESTRICT foreign key)
+    const { error: delAttErr } = await supabase
+      .from(TABLES.NEXTGEN_ATTENDEES)
+      .delete()
+      .eq("session_id", sessionId);
+
+    if (delAttErr) throw new Error("Failed to delete associated session attendees: " + delAttErr.message);
   }
 
   await deleteRowById(TABLES.NEXTGEN_SESSIONS, sessionId);
@@ -637,10 +716,7 @@ export async function getNextgenSession(id) {
   if (!id) return null;
   const res = await getRowById(TABLES.NEXTGEN_SESSIONS, id);
   if (!res) return null;
-  res.facilitator_name = res.facilitatorName;
-  res.scheduled_at = res.scheduledAt;
-  res.meet_url = res.meetUrl;
-  return res;
+  return normalizeSession(res);
 }
 
 /**
@@ -714,17 +790,17 @@ export function exportSessionAttendeesToCSV(session, attendees = []) {
     { label: "Submitted At", key: "submittedAtFormatted" }
   ];
 
-  const sessionDateFormatted = session.scheduledAt ? formatLogDate(session.scheduledAt) : "—";
+  const sessionDateFormatted = (session.scheduledAt || session.scheduled_at) ? formatLogDate(session.scheduledAt || session.scheduled_at) : "—";
 
   const rows = attendees.map(a => ({
     sessionTitle: session.title || "NEXTGEN Session",
-    facilitatorName: session.facilitatorName || "SUCCESS ACADEMY",
+    facilitatorName: session.facilitatorName || session.facilitator_name || "SUCCESS ACADEMY",
     sessionDate: sessionDateFormatted,
-    studentName: a.studentName || "",
-    classLevel: a.classLevel ? `Class ${a.classLevel}` : "",
-    schoolName: a.schoolName || "",
-    phone: a.phone || a.phoneNormalized || "",
-    submittedAtFormatted: a.submittedAt ? formatISTTimestamp(a.submittedAt) : ""
+    studentName: a.studentName || a.student_name || "",
+    classLevel: (a.classLevel || a.class_level) ? `Class ${a.classLevel || a.class_level}` : "",
+    schoolName: a.schoolName || a.school_name || "",
+    phone: a.phone || a.phoneNormalized || a.phone_normalized || "",
+    submittedAtFormatted: (a.submittedAt || a.submitted_at) ? formatISTTimestamp(a.submittedAt || a.submitted_at) : ""
   }));
 
   const csvContent = toCSV(rows, columns);
@@ -762,7 +838,7 @@ export async function getNextgenDashboardStats() {
     totalSessions: sessions.length,
     totalCheckIns,
     totalAttendees: totalCheckIns,
-    liveSession: liveSession ? toCamelCase(liveSession) : null,
+    liveSession: liveSession ? normalizeSession(liveSession) : null,
     scheduledCount,
     scheduledSessions: scheduledCount,
     finishedCount,

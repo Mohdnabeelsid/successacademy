@@ -234,9 +234,25 @@
         <div style="font-size:11px; color:var(--c-text-muted); margin-top:4px;">Must start with <strong>https://meet.google.com/</strong>. Hidden from public until check-in.</div>
       </div>
 
-      <div class="modal-footer" style="padding-top:var(--sp-3); border-top:1px solid var(--c-border); display:flex; justify-content:flex-end; gap:8px;">
-        <button type="button" class="btn btn-ghost" id="cancel-session-btn">Cancel</button>
-        <button type="submit" class="btn btn-primary" id="save-session-btn">Save Session</button>
+      <div class="field" id="modal-status-field" style="display:none;">
+        <label for="modal-session-status">Session Status</label>
+        <select id="modal-session-status">
+          <option value="scheduled">Scheduled</option>
+          <option value="live">Live (Accepting Check-Ins)</option>
+          <option value="finished">Finished (Closed)</option>
+        </select>
+        <div style="font-size:11px; color:var(--c-text-muted); margin-top:4px;">Only one session can be live at any time.</div>
+      </div>
+
+      <div class="modal-footer" style="padding-top:var(--sp-3); border-top:1px solid var(--c-border); display:flex; justify-content:space-between; align-items:center;">
+        <button type="button" class="btn btn-ghost btn-sm text-danger" id="modal-delete-session-btn" style="display:none;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+          Delete Session
+        </button>
+        <div style="display:flex; gap:8px; margin-left:auto;">
+          <button type="button" class="btn btn-ghost" id="cancel-session-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="save-session-btn">Save Session</button>
+        </div>
       </div>
     </form>
   </div>

@@ -115,8 +115,8 @@ async function init() {
 
     // Populate live session details
     if (sessionTitle) sessionTitle.textContent = session.title || "NEXTGEN Interactive Session";
-    if (sessionFacilitator) sessionFacilitator.textContent = session.facilitator_name || "Success Academy Facilitator";
-    if (sessionTime) sessionTime.textContent = formatSessionDateTime(session.scheduled_at || session.live_at);
+    if (sessionFacilitator) sessionFacilitator.textContent = session.facilitator_name || session.facilitatorName || "Success Academy Facilitator";
+    if (sessionTime) sessionTime.textContent = formatSessionDateTime(session.scheduled_at || session.scheduledAt || session.live_at || session.liveAt);
 
     if (sessionLoading) sessionLoading.style.display = "none";
     if (checkinContainer) checkinContainer.style.display = "block";

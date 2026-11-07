@@ -55,6 +55,9 @@ const modalSessionTitle = document.getElementById("modal-session-title");
 const modalSessionFacilitator = document.getElementById("modal-session-facilitator");
 const modalSessionScheduledAt = document.getElementById("modal-session-scheduled-at");
 const modalSessionMeetUrl = document.getElementById("modal-session-meet-url");
+const modalStatusField = document.getElementById("modal-status-field");
+const modalSessionStatus = document.getElementById("modal-session-status");
+const modalDeleteSessionBtn = document.getElementById("modal-delete-session-btn");
 const closeSessionModalBtn = document.getElementById("close-session-modal-btn");
 const cancelSessionBtn = document.getElementById("cancel-session-btn");
 const saveSessionBtn = document.getElementById("save-session-btn");
@@ -201,6 +204,14 @@ function wireEvents() {
     sessionForm.addEventListener("submit", handleSaveSession);
   }
 
+  // Delete from Edit Modal
+  if (modalDeleteSessionBtn) {
+    modalDeleteSessionBtn.addEventListener("click", () => {
+      const id = (modalSessionId?.value || "").trim();
+      if (id) handleDeleteSession(id);
+    });
+  }
+
   // Close Attendees Modal
   if (closeAttendeesModalBtn) closeAttendeesModalBtn.addEventListener("click", closeAttendeesModal);
   if (doneAttendeesBtn) doneAttendeesBtn.addEventListener("click", closeAttendeesModal);
@@ -243,7 +254,7 @@ async function refreshData() {
     if (statLiveSession && statLiveFacilitator) {
       if (stats.liveSession) {
         statLiveSession.textContent = stats.liveSession.title;
-        statLiveFacilitator.textContent = `Facilitator: ${stats.liveSession.facilitator_name}`;
+        statLiveFacilitator.textContent = `Facilitator: ${stats.liveSession.facilitator_name || stats.liveSession.facilitatorName || "—"}`;
       } else {
         statLiveSession.textContent = "None";
         statLiveFacilitator.textContent = "Currently accepting check-ins";
@@ -303,12 +314,16 @@ function renderSessionsTable() {
 
     // Action Buttons
     const actions = [];
+    const attendeeCount = session.attendee_count ?? session.attendeeCount ?? 0;
+    const facilitator = session.facilitator_name || session.facilitatorName || "";
+    const scheduledAt = session.scheduled_at || session.scheduledAt || "";
+    const meetUrl = session.meet_url || session.meetUrl || "";
 
     // Attendees action (for all)
     actions.push(`
       <button type="button" class="btn btn-ghost btn-xs view-attendees-btn" data-id="${session.id}" title="View Attendees">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:2px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        Attendees (${session.attendee_count || 0})
+        Attendees (${attendeeCount})
       </button>
     `);
 
@@ -317,11 +332,6 @@ function renderSessionsTable() {
         <button type="button" class="btn btn-primary btn-xs activate-session-btn" data-id="${session.id}" style="background:#0FA15D; border-color:#0FA15D;" title="Set Live">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:2px;"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
           Set Live
-        </button>
-      `);
-      actions.push(`
-        <button type="button" class="btn btn-ghost btn-xs edit-session-btn" data-id="${session.id}" title="Edit">
-          Edit
         </button>
       `);
     } else if (session.status === "live") {
@@ -333,39 +343,46 @@ function renderSessionsTable() {
       `);
     }
 
-    // Delete (only if 0 attendees)
-    if (session.attendee_count === 0) {
-      actions.push(`
-        <button type="button" class="btn btn-ghost btn-xs delete-session-btn text-danger" data-id="${session.id}" title="Delete">
-          ✕
-        </button>
-      `);
-    }
+    // Edit (available for all sessions)
+    actions.push(`
+      <button type="button" class="btn btn-ghost btn-xs edit-session-btn" data-id="${session.id}" title="Edit Session">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:2px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Edit
+      </button>
+    `);
+
+    // Delete (available for all sessions)
+    actions.push(`
+      <button type="button" class="btn btn-ghost btn-xs text-danger delete-session-btn" data-id="${session.id}" title="Delete Session">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:2px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+        Delete
+      </button>
+    `);
 
     return `
       <tr data-session-id="${session.id}">
         <td>
           <div style="font-weight:700; color:var(--c-text); font-size:13px;">${escapeHtml(session.title)}</div>
           <div style="font-size:11px; color:var(--c-text-muted); margin-top:2px;">
-            Facilitator: <strong>${escapeHtml(session.facilitator_name)}</strong>
+            Facilitator: <strong>${escapeHtml(facilitator)}</strong>
           </div>
         </td>
         <td>
-          <div style="font-size:12px; font-weight:600;">${formatISTDateTime(session.scheduled_at)}</div>
+          <div style="font-size:12px; font-weight:600;">${formatISTDateTime(scheduledAt)}</div>
         </td>
         <td>${statusBadge}</td>
         <td>
           <div class="meet-link-cell">
-            <a href="${escapeHtml(session.meet_url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(session.meet_url)}">
-              ${escapeHtml(session.meet_url)}
+            <a href="${escapeHtml(meetUrl)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(meetUrl)}">
+              ${escapeHtml(meetUrl)}
             </a>
-            <button type="button" class="btn-icon copy-meet-link-btn" data-url="${escapeHtml(session.meet_url)}" title="Copy Google Meet Link" style="width:22px; height:22px;">
+            <button type="button" class="btn-icon copy-meet-link-btn" data-url="${escapeHtml(meetUrl)}" title="Copy Google Meet Link" style="width:22px; height:22px;">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
             </button>
           </div>
         </td>
         <td style="text-align:center;">
-          <span class="attendee-count-pill">${session.attendee_count || 0}</span>
+          <span class="attendee-count-pill">${attendeeCount}</span>
         </td>
         <td style="text-align:right;">
           <div style="display:inline-flex; gap:4px; align-items:center; justify-content:flex-end; flex-wrap:wrap;">
@@ -420,9 +437,12 @@ function openSessionModal(session = null) {
     if (sessionModalTitle) sessionModalTitle.textContent = "Edit NEXTGEN Session";
     if (modalSessionId) modalSessionId.value = session.id;
     if (modalSessionTitle) modalSessionTitle.value = session.title || "";
-    if (modalSessionFacilitator) modalSessionFacilitator.value = session.facilitator_name || "";
-    if (modalSessionScheduledAt) modalSessionScheduledAt.value = toLocalDatetimeInput(session.scheduled_at);
-    if (modalSessionMeetUrl) modalSessionMeetUrl.value = session.meet_url || "";
+    if (modalSessionFacilitator) modalSessionFacilitator.value = session.facilitator_name || session.facilitatorName || "";
+    if (modalSessionScheduledAt) modalSessionScheduledAt.value = toLocalDatetimeInput(session.scheduled_at || session.scheduledAt);
+    if (modalSessionMeetUrl) modalSessionMeetUrl.value = session.meet_url || session.meetUrl || "";
+    if (modalStatusField) modalStatusField.style.display = "block";
+    if (modalSessionStatus) modalSessionStatus.value = session.status || "scheduled";
+    if (modalDeleteSessionBtn) modalDeleteSessionBtn.style.display = "inline-flex";
   } else {
     if (sessionModalTitle) sessionModalTitle.textContent = "Create NEXTGEN Session";
     if (modalSessionId) modalSessionId.value = "";
@@ -430,6 +450,8 @@ function openSessionModal(session = null) {
     const defaultDate = new Date();
     defaultDate.setHours(19, 0, 0, 0);
     if (modalSessionScheduledAt) modalSessionScheduledAt.value = toLocalDatetimeInput(defaultDate.toISOString());
+    if (modalStatusField) modalStatusField.style.display = "none";
+    if (modalDeleteSessionBtn) modalDeleteSessionBtn.style.display = "none";
   }
 
   sessionModal.classList.add("active");
@@ -489,12 +511,16 @@ async function handleSaveSession(e) {
 
   try {
     if (id) {
-      await updateNextgenSession(id, {
+      const updateData = {
         title,
         facilitator_name,
         scheduled_at,
         meet_url: cleanMeetUrl
-      });
+      };
+      if (modalSessionStatus && modalSessionStatus.value) {
+        updateData.status = modalSessionStatus.value;
+      }
+      await updateNextgenSession(id, updateData);
       toast.success("NEXTGEN session updated successfully.");
     } else {
       await createNextgenSession({
@@ -534,22 +560,23 @@ async function handleActivateSession(id) {
     return;
   }
 
-  showConfirmModal({
+  const confirmed = await showConfirmModal({
     title: "Activate NEXTGEN Session?",
     message: `You are about to make "${session.title}" LIVE. Students accessing /nextgen will be able to check in and receive the Google Meet link. Only ONE session can be live at a time.`,
     confirmText: "Set Live Now",
-    confirmVariant: "primary",
-    onConfirm: async () => {
-      try {
-        await activateNextgenSession(id);
-        toast.success(`Session "${session.title}" is now LIVE!`);
-        await refreshData();
-      } catch (err) {
-        console.error("Activate session failed:", err);
-        toast.error(err.message || "Failed to activate session.");
-      }
-    }
+    confirmVariant: "primary"
   });
+
+  if (!confirmed) return;
+
+  try {
+    await activateNextgenSession(id);
+    toast.success(`Session "${session.title}" is now LIVE!`);
+    await refreshData();
+  } catch (err) {
+    console.error("Activate session failed:", err);
+    toast.error(err.message || "Failed to activate session.");
+  }
 }
 
 // Finish Session
@@ -557,22 +584,23 @@ async function handleFinishSession(id) {
   const session = allSessions.find(s => s.id === id);
   if (!session) return;
 
-  showConfirmModal({
+  const confirmed = await showConfirmModal({
     title: "Finish NEXTGEN Session?",
     message: `Are you sure you want to finish "${session.title}"? This will close student check-in. Students will no longer be able to check in through /nextgen.`,
     confirmText: "Finish Session",
-    confirmVariant: "danger",
-    onConfirm: async () => {
-      try {
-        await finishNextgenSession(id);
-        toast.success(`Session "${session.title}" marked as finished.`);
-        await refreshData();
-      } catch (err) {
-        console.error("Finish session failed:", err);
-        toast.error(err.message || "Failed to finish session.");
-      }
-    }
+    confirmVariant: "danger"
   });
+
+  if (!confirmed) return;
+
+  try {
+    await finishNextgenSession(id);
+    toast.success(`Session "${session.title}" marked as finished.`);
+    await refreshData();
+  } catch (err) {
+    console.error("Finish session failed:", err);
+    toast.error(err.message || "Failed to finish session.");
+  }
 }
 
 // Delete Session
@@ -580,27 +608,36 @@ async function handleDeleteSession(id) {
   const session = allSessions.find(s => s.id === id);
   if (!session) return;
 
-  if (session.attendee_count > 0) {
-    toast.error("Cannot delete a session that has recorded attendees.");
-    return;
+  const count = session.attendee_count ?? session.attendeeCount ?? 0;
+
+  let confirmTitle = "Delete NEXTGEN Session?";
+  let confirmMessage = `Are you sure you want to permanently delete "${session.title}"? This cannot be undone.`;
+  let confirmText = "Delete Session";
+
+  if (count > 0) {
+    confirmTitle = "Delete Session & Attendees?";
+    confirmMessage = `WARNING: "${session.title}" contains ${count} recorded attendee check-in(s). Deleting this session will also permanently remove all its attendee check-in records. Are you sure you want to delete this session?`;
+    confirmText = "Delete All";
   }
 
-  showConfirmModal({
-    title: "Delete Scheduled Session?",
-    message: `Are you sure you want to permanently delete "${session.title}"?`,
-    confirmText: "Delete",
-    confirmVariant: "danger",
-    onConfirm: async () => {
-      try {
-        await deleteNextgenSession(id);
-        toast.success("Session deleted.");
-        await refreshData();
-      } catch (err) {
-        console.error("Delete session failed:", err);
-        toast.error(err.message || "Failed to delete session.");
-      }
-    }
+  const confirmed = await showConfirmModal({
+    title: confirmTitle,
+    message: confirmMessage,
+    confirmText: confirmText,
+    confirmVariant: "danger"
   });
+
+  if (!confirmed) return;
+
+  try {
+    await deleteNextgenSession(id, { force: true });
+    toast.success(`Session "${session.title}" deleted successfully.`);
+    closeSessionModal();
+    await refreshData();
+  } catch (err) {
+    console.error("Delete session failed:", err);
+    toast.error(err.message || "Failed to delete session.");
+  }
 }
 
 // Attendees Modal & Management
@@ -612,7 +649,9 @@ async function handleOpenAttendeesModal(sessionId) {
 
   if (attendeesModalTitle) attendeesModalTitle.textContent = session.title;
   if (attendeesModalSub) {
-    attendeesModalSub.textContent = `Facilitator: ${session.facilitator_name} · Scheduled: ${formatISTDateTime(session.scheduled_at)} · Status: ${session.status.toUpperCase()}`;
+    const facilitator = session.facilitator_name || session.facilitatorName || "—";
+    const scheduled = formatISTDateTime(session.scheduled_at || session.scheduledAt);
+    attendeesModalSub.textContent = `Facilitator: ${facilitator} · Scheduled: ${scheduled} · Status: ${(session.status || "").toUpperCase()}`;
   }
 
   if (attendeeSearchInput) attendeeSearchInput.value = "";

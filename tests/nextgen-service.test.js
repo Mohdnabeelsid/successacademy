@@ -385,6 +385,18 @@ function createMockSupabase() {
                 return p;
               }
             };
+          },
+          delete: () => {
+            return {
+              eq: (col, val) => {
+                for (let i = mockAttendees.length - 1; i >= 0; i--) {
+                  if (mockAttendees[i][col] === val) {
+                    mockAttendees.splice(i, 1);
+                  }
+                }
+                return Promise.resolve({ error: null });
+              }
+            };
           }
         };
       }

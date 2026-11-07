@@ -29,7 +29,9 @@ export function showConfirmModal({
   message = "This action cannot be undone.",
   confirmText = "Confirm",
   cancelText = "Cancel",
-  confirmVariant = "danger"
+  confirmVariant = "danger",
+  onConfirm = null,
+  onCancel = null
 }) {
   return new Promise((resolve) => {
     const region = ensureConfirmContainer();
@@ -75,10 +77,19 @@ export function showConfirmModal({
     const okBtn = overlay.querySelector("#confirm-ok-btn");
     const cancelBtn = overlay.querySelector("#confirm-cancel-btn");
 
-    function cleanup(result) {
+    async function cleanup(result) {
       document.removeEventListener("keydown", onKeyDown);
       overlay.classList.remove("active");
       setTimeout(() => overlay.remove(), 180);
+      try {
+        if (result && typeof onConfirm === "function") {
+          await onConfirm();
+        } else if (!result && typeof onCancel === "function") {
+          await onCancel();
+        }
+      } catch (err) {
+        console.error("Error executing confirm modal callback:", err);
+      }
       resolve(result);
     }
 
